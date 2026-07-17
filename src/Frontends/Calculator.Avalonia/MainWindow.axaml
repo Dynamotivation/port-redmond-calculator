@@ -22,12 +22,26 @@
           <SolidColorBrush x:Key="SolidSurfaceBrush" Color="#202027" />
           <SolidColorBrush x:Key="CardBrush" Color="#303139" />
           <SolidColorBrush x:Key="SettingsExpanderBrush" Color="#80303139" />
-          <SolidColorBrush x:Key="NumericButtonBrush" Color="#383B3F" />
-          <SolidColorBrush x:Key="NumericButtonHoverBrush" Color="#45484C" />
-          <SolidColorBrush x:Key="NumericButtonPressedBrush" Color="#303236" />
-          <SolidColorBrush x:Key="OperatorButtonBrush" Color="#303139" />
-          <SolidColorBrush x:Key="OperatorButtonHoverBrush" Color="#3B3C45" />
-          <SolidColorBrush x:Key="OperatorButtonPressedBrush" Color="#292A31" />
+          <SolidColorBrush x:Key="NumericButtonBrush" Color="#3C3C3C" />
+          <LinearGradientBrush x:Key="CalculatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#18FFFFFF" Offset="0" />
+            <GradientStop Color="#12FFFFFF" Offset="1" />
+          </LinearGradientBrush>
+          <SolidColorBrush x:Key="CalculatorButtonPressedBorderBrush" Color="#12FFFFFF" />
+          <BoxShadows x:Key="CalculatorButtonShadow">0 1 2 0 #50000000</BoxShadows>
+          <BoxShadows x:Key="CalculatorButtonPressedShadow">0 0 1 0 #30000000</BoxShadows>
+          <SolidColorBrush x:Key="NumericButtonHoverBrush" Color="#323232" />
+          <SolidColorBrush x:Key="NumericButtonPressedBrush" Color="#292827" />
+          <SolidColorBrush x:Key="OperatorButtonBrush" Color="#80323232" />
+          <SolidColorBrush x:Key="OperatorButtonHoverBrush" Color="#803C3C3C" />
+          <SolidColorBrush x:Key="OperatorButtonPressedBrush" Color="#80323232" />
+          <LinearGradientBrush x:Key="OperatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#0CFFFFFF" Offset="0" />
+            <GradientStop Color="#09FFFFFF" Offset="1" />
+          </LinearGradientBrush>
+          <SolidColorBrush x:Key="OperatorButtonPressedBorderBrush" Color="#09FFFFFF" />
+          <BoxShadows x:Key="OperatorButtonShadow">0 1 2 0 #28000000</BoxShadows>
+          <BoxShadows x:Key="OperatorButtonPressedShadow">0 0 1 0 #18000000</BoxShadows>
           <SolidColorBrush x:Key="ChromeHoverBrush" Color="#34343B" />
           <SolidColorBrush x:Key="ChromeForegroundBrush" Color="#F5F5F5" />
           <SolidColorBrush x:Key="SettingsSecondaryForegroundBrush" Color="#C7C7C7" />
@@ -49,11 +63,35 @@
           <SolidColorBrush x:Key="CardBrush" Color="#FBFBFB" />
           <SolidColorBrush x:Key="SettingsExpanderBrush" Color="#80FBFBFB" />
           <SolidColorBrush x:Key="NumericButtonBrush" Color="#FCFCFC" />
+          <LinearGradientBrush x:Key="CalculatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#E5E5E5" Offset="0" />
+            <GradientStop Color="#E5E5E5" Offset="0.94" />
+            <GradientStop Color="#CCCCCC" Offset="1" />
+          </LinearGradientBrush>
+          <LinearGradientBrush x:Key="CalculatorButtonPressedBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#E5E5E5" Offset="0" />
+            <GradientStop Color="#E5E5E5" Offset="0.94" />
+            <GradientStop Color="#CCCCCC" Offset="1" />
+          </LinearGradientBrush>
+          <BoxShadows x:Key="CalculatorButtonShadow">0 0 0 0 #00000000</BoxShadows>
+          <BoxShadows x:Key="CalculatorButtonPressedShadow">0 0 0 0 #00000000</BoxShadows>
           <SolidColorBrush x:Key="NumericButtonHoverBrush" Color="#FFFFFF" />
           <SolidColorBrush x:Key="NumericButtonPressedBrush" Color="#F4F4F4" />
-          <SolidColorBrush x:Key="OperatorButtonBrush" Color="#F2F2F2" />
-          <SolidColorBrush x:Key="OperatorButtonHoverBrush" Color="#F8F8F8" />
-          <SolidColorBrush x:Key="OperatorButtonPressedBrush" Color="#EAEAEA" />
+          <SolidColorBrush x:Key="OperatorButtonBrush" Color="#80F9F9F9" />
+          <SolidColorBrush x:Key="OperatorButtonHoverBrush" Color="#80F6F6F6" />
+          <SolidColorBrush x:Key="OperatorButtonPressedBrush" Color="#80EAEAEA" />
+          <LinearGradientBrush x:Key="OperatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#80E5E5E5" Offset="0" />
+            <GradientStop Color="#80E5E5E5" Offset="0.94" />
+            <GradientStop Color="#80CCCCCC" Offset="1" />
+          </LinearGradientBrush>
+          <LinearGradientBrush x:Key="OperatorButtonPressedBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#80E5E5E5" Offset="0" />
+            <GradientStop Color="#80E5E5E5" Offset="0.94" />
+            <GradientStop Color="#80CCCCCC" Offset="1" />
+          </LinearGradientBrush>
+          <BoxShadows x:Key="OperatorButtonShadow">0 0 0 0 #00000000</BoxShadows>
+          <BoxShadows x:Key="OperatorButtonPressedShadow">0 0 0 0 #00000000</BoxShadows>
           <SolidColorBrush x:Key="ChromeHoverBrush" Color="#0F000000" />
           <SolidColorBrush x:Key="ChromeForegroundBrush" Color="#1A1A1A" />
           <SolidColorBrush x:Key="SettingsSecondaryForegroundBrush" Color="#5E5E5E" />
@@ -330,7 +368,7 @@
       <Setter Property="BorderBrush" Value="Transparent" />
     </Style>
     <Style Selector="Button.calcButton">
-      <Setter Property="Margin" Value="1" />
+      <Setter Property="Margin" Value="1.75" />
       <Setter Property="Padding" Value="0" />
       <Setter Property="MinWidth" Value="24" />
       <Setter Property="MinHeight" Value="12" />
@@ -339,12 +377,14 @@
       <Setter Property="HorizontalContentAlignment" Value="Center" />
       <Setter Property="VerticalContentAlignment" Value="Center" />
       <Setter Property="CornerRadius" Value="5" />
-      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonBorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
       <Setter Property="FontSize" Value="20" />
       <Setter Property="FontWeight" Value="Normal" />
       <Setter Property="Template">
         <ControlTemplate>
-          <Border Background="{TemplateBinding Background}"
+          <Border Name="CalcButtonSurface"
+                  Background="{TemplateBinding Background}"
                   BorderBrush="{TemplateBinding BorderBrush}"
                   BorderThickness="{TemplateBinding BorderThickness}"
                   CornerRadius="{TemplateBinding CornerRadius}">
@@ -354,6 +394,15 @@
           </Border>
         </ControlTemplate>
       </Setter>
+    </Style>
+    <Style Selector="Button.calcButton /template/ Border#CalcButtonSurface">
+      <Setter Property="BoxShadow" Value="{DynamicResource CalculatorButtonShadow}" />
+    </Style>
+    <Style Selector="Button.calcButton:pressed">
+      <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonPressedBorderBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton:pressed /template/ Border#CalcButtonSurface">
+      <Setter Property="BoxShadow" Value="{DynamicResource CalculatorButtonPressedShadow}" />
     </Style>
     <Style Selector="Button.calcButton.numeric">
       <Setter Property="Background" Value="{DynamicResource NumericButtonBrush}" />
@@ -367,12 +416,20 @@
     </Style>
     <Style Selector="Button.calcButton.operator">
       <Setter Property="Background" Value="{DynamicResource OperatorButtonBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource OperatorButtonBorderBrush}" />
     </Style>
     <Style Selector="Button.calcButton.operator:pointerover">
       <Setter Property="Background" Value="{DynamicResource OperatorButtonHoverBrush}" />
     </Style>
     <Style Selector="Button.calcButton.operator:pressed">
       <Setter Property="Background" Value="{DynamicResource OperatorButtonPressedBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource OperatorButtonPressedBorderBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton.operator /template/ Border#CalcButtonSurface">
+      <Setter Property="BoxShadow" Value="{DynamicResource OperatorButtonShadow}" />
+    </Style>
+    <Style Selector="Button.calcButton.operator:pressed /template/ Border#CalcButtonSurface">
+      <Setter Property="BoxShadow" Value="{DynamicResource OperatorButtonPressedShadow}" />
     </Style>
     <Style Selector="Button.calcButton.equalsButton">
       <Setter Property="Background" Value="{DynamicResource AccentButtonBrush}" />
@@ -639,10 +696,10 @@
           <Button Grid.Row="2" Grid.Column="1" Classes="calcButton numeric" Content="2" Command="{Binding SendUnitCommandCommand}" CommandParameter="Two" />
           <Button Grid.Row="2" Grid.Column="2" Classes="calcButton numeric" Content="3" Command="{Binding SendUnitCommandCommand}" CommandParameter="Three" />
 
-          <Button Grid.Row="3" Classes="calcButton operator" Content="⁺/₋" FontSize="21" Command="{Binding SendUnitCommandCommand}" CommandParameter="Negate" />
+          <Button Grid.Row="3" Classes="calcButton numeric" Content="⁺/₋" FontSize="21" Command="{Binding SendUnitCommandCommand}" CommandParameter="Negate" />
           <Button Grid.Row="3" Grid.Column="1" Classes="calcButton numeric" Content="0" Command="{Binding SendUnitCommandCommand}" CommandParameter="Zero" />
           <Grid Grid.Row="3" Grid.Column="2" ColumnDefinitions="*,*">
-            <Button Classes="calcButton operator" Content="." FontSize="22" Command="{Binding SendUnitCommandCommand}" CommandParameter="Decimal" />
+            <Button Classes="calcButton numeric" Content="." FontSize="22" Command="{Binding SendUnitCommandCommand}" CommandParameter="Decimal" />
             <Button Grid.Column="1" Classes="calcButton operator" Content="⌫" FontSize="18" Command="{Binding SendUnitCommandCommand}" CommandParameter="Backspace" />
           </Grid>
         </Grid>

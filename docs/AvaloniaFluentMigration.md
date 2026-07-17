@@ -1,173 +1,240 @@
-# WinUI/UWP Fluent to Avalonia Fluent migration guide
+# Windows XAML Fluent to Avalonia Fluent migration guide
 
-This is a living, evidence-based guide for the Redmond Calculator port. It
-documents the Fluent behavior encountered while rebuilding Microsoft Windows
-Calculator in Avalonia. It is exhaustive for the controls and interactions
-ported so far, not a claim that every WinUI or Avalonia control has been
-compared.
+This guide records reusable behavior differences encountered when porting a
+Fluent WPF, UWP, or WinUI application to Avalonia. It is a framework migration guide,
+not an application changelog or a list of pending work.
 
-## Compared stack
+Avalonia Fluent is a Fluent-inspired theme, not a template-compatible or
+pixel-equivalent implementation of Windows Fluent. A successful port preserves the source
+application's visual states, layout contracts, composition, accessibility, and
+interaction semantics instead of merely translating XAML namespaces.
 
-| Windows source application | Cross-platform frontend |
+## Classify differences before overriding them
+
+Every discrepancy should be classified as one of the following:
+
+1. a UWP/WinUI default versus an Avalonia Fluent default;
+2. an application-owned source template that must be ported explicitly;
+3. a host-platform windowing or composition difference; or
+4. a renderer difference that requires perceptual rather than numeric parity.
+
+Read the source style's complete inheritance chain. A custom UWP template can
+still inherit brushes, borders, elevation, minimum sizes, and state resources
+from `DefaultButtonStyle`. Copying only its local setters silently drops those
+inherited behaviors.
+
+### Port semantics, not toolkit numbers
+
+Do not copy dimensions from a visually correct implementation in another UI
+toolkit and assume Avalonia will render them identically. Padding, border
+placement, antialiasing, device-pixel snapping, default minimums, and shadow
+kernels differ between renderers. A fractional margin in one toolkit can need a
+larger Avalonia value to produce the same physical gap.
+
+Use another implementation to identify the intended color, state, radius,
+stroke, and elevation contract. Then tune Avalonia values against rendered
+output. Record both the source intent and the Avalonia compensation so later
+maintainers do not “correct” a deliberate numerical difference.
+
+## Buttons and owned templates
+
+| Behavior | UWP/WinUI behavior | Common Avalonia difference | Migration rule |
+|---|---|---|---|
+| Geometry | Application-owned controls often stretch in a grid with deliberate minimums, margins, corner radius, and centered content. | A stock Avalonia `Button` retains its own padding, minimums, border, and presenter geometry. | For fidelity-critical controls, own the template and make sizing responsibilities explicit. Let the parent grid own proportional width. |
+| Perceived elevation | A custom source template can inherit a gradient stroke, shadow, or elevation from its base style even when it locally replaces the fill. Some Light-mode controls use no shadow at all: a one-pixel light bezel surrounds the control and its lower pixels transition to a darker stroke. | An owned Avalonia template receives none of that treatment automatically. Copying a generic shadow, a full-height top-to-bottom gradient, or a uniform two-pixel border makes the control too dark or reduces its apparent face on every edge. | Inspect the fully resolved visual result, not one property. For a bottom-weighted bezel, keep a uniform one-pixel border, hold the upper and side color constant through most of the gradient, place the darker stop near the bottom, and omit `BoxShadow`. Recreate pressed treatment separately only when the source changes it. Compare the rendered edge at target scale and tune fractional control margins independently of border thickness. |
+| Key spacing | Source margins and renderer antialiasing combine to produce the apparent gap. | Updating only horizontal margins leaves row spacing inconsistent. Copying a fractional value from another renderer can halve the apparent Avalonia gap. | Audit all four sides and tune against physical output. Use equal four-sided spacing when the reference grid is symmetric, even when Avalonia needs a different numeric value to achieve it. |
+| Hover and press | Visual states target named template elements with explicit brushes. | Avalonia pseudo-classes can combine with Fluent template layers and override a locally assigned `Background`. | Assign normal, `:pointerover`, and `:pressed` states to the owned surface rather than stacking color setters onto an unknown template. |
+| Accent buttons | Emphasized controls remain accent-colored during hover and press. | A stock pointer-over layer can replace the accent fill. | Define explicit accent normal, hover, and pressed resources on the owned surface. |
+| Mixed opaque and material keys | Primary entry controls can be fully opaque while secondary commands use the same backdrop-compatible material system as panes and cards. When reproducing the light Fluent palette, secondary command surfaces may use `#F9F9F9` as their material base and `#F6F6F6` on hover. | Applying one shared button fill makes every key opaque, while setting `Opacity` on the whole secondary control also fades text and icons. | Keep primary inputs and accent actions in opaque classes. Give secondary commands alpha-bearing fill, hover, pressed, bezel, and shadow resources; do not lower control opacity. Classify sign and decimal controls by their entry role rather than by their glyph shape. Treat documented colors as material base colors and apply alpha to the brushes, not the whole control. |
+| Disabled controls | Source templates can keep a transparent background while changing only foreground and opacity. | The stock disabled template may draw a rounded fill and alter apparent scale. | Explicitly define disabled background, border, foreground, and opacity. |
+| Small responsive buttons | Parent grids can enforce a fixed ratio to larger input controls. | Default minimum width and padding can defeat the ratio. | Set `MinWidth=0`, `MinHeight=0`, zero padding, stretch alignment, and let the grid define width. |
+| Brush transitions | WinUI templates may specify short `BrushTransition` durations. | Avalonia property changes are immediate unless a transition is declared. | Port timing and easing when the transition is visually material. |
+| Template state targeting | WinUI visual states usually target named elements directly. | Avalonia selector specificity and declaration order can let generic rules beat specialized rules. | Name important template surfaces and target them through `/template/`. Order selected and disabled overrides deliberately. |
+
+### Transparent is not the same as visually inert
+
+Setting `Background="Transparent"` does not remove interaction layers inside a
+stock Fluent template. Use a minimal owned template when a button must remain
+visually transparent in every state.
+
+Conversely, replacing a template solely to remove its resting fill can also
+remove legitimate hover and pressed feedback. Preserve the stock presenter when
+those states are desired and tune its resources instead.
+
+Invisible full-window hit targets require an owned transparent template. A
+stock transparent button can still draw a pressed layer and flash the entire
+window.
+
+## Color compositing
+
+When a reference specifies the final composited color, calculate the overlay
+instead of guessing an opaque replacement. For source-over blending:
+
+```text
+result = overlay × alpha + background × (1 - alpha)
+```
+
+For example, black at alpha `9/255` over `#F3F3F3` rounds to `#EAEAEA`.
+Represent that as `#09000000`. If selected and hovered rows use the same visual
+fill, do not stack the hover overlay over the selected fill; the result would be
+darker than either intended state.
+
+Use explicit secondary-foreground brushes when an exact color is required.
+Applying opacity to inherited foreground changes the result with every surface
+behind the text.
+
+## Navigation drawers
+
+Avalonia does not provide a template-compatible replacement for WinUI
+`NavigationView`. Recreate its layout, state, motion, and accessibility as a
+coordinated shell.
+
+| Behavior | Migration rule |
 |---|---|
-| UWP targeting Windows SDK `10.0.26100.0` | .NET 10 desktop application |
-| WinUI 2 `Microsoft.UI.Xaml` 2.8.7 | Avalonia 12.1.0 |
-| `CommunityToolkit.Uwp.Controls.SettingsControls` 8.2.251219 | `Avalonia.Themes.Fluent` 12.1.0 |
-| Calculator-owned XAML templates and theme resources | Calculator-owned Avalonia styles and templates |
-| Segoe/Calculator Fluent icon assets | Inter plus the original `CalculatorIcons.ttf` |
+| Overlay mode | Keep the drawer separate from page layout so opening it does not resize the active page. |
+| Toggle layering | Keep one toggle later in the visual tree than the moving pane so the pane slides underneath it. |
+| Re-entry | Track transition state separately from destination state and disable the toggle until motion completes. |
+| Motion | Keep the pane mounted and animate margin or translation with the source duration and easing. Visibility changes alone snap. |
+| Light dismiss | Use an invisible hit target only when the reference has no modal scrim. Give it a truly transparent template. |
+| Footer | Keep scrolling navigation content separate from a fixed footer. Draw a real one-pixel separator instead of using text or a disabled control as a divider. |
+| Selection | Store selection explicitly. Keep hover, press, selected fill, and accent indicator as separate visual concepts. |
+| Disabled rows | Preserve source order and suppress hover fills when disabled. |
 
-The most important migration rule is that **Avalonia Fluent is a Fluent-looking
-theme, not a template-compatible implementation of WinUI**. Matching a WinUI
-application requires porting the source application's intent and visual states,
-not merely changing XAML namespaces and relying on Avalonia defaults.
+### Translucent panes must not reveal covered controls
 
-The Windows application itself also overrides WinUI extensively. A difference
-must therefore be classified as one of:
+A translucent Avalonia pane normally blends with controls already rendered
+behind it. Acrylic-like composition should sample the backdrop without exposing
+covered page content.
 
-1. a WinUI-versus-Avalonia default difference;
-2. a Calculator-specific WinUI template that has not yet been ported; or
-3. a native-platform difference such as window chrome or backdrop composition.
+Place page content and the pane in separate layers. Animate a clip or culling
+boundary on the page content in lockstep with the moving pane edge. Remove the
+clip entirely when its width returns to zero so the closed state has no ongoing
+masking cost. Draw the translucent pane over the host's backdrop layer after
+the covered page region has been culled.
 
-## Current source-of-truth files
+## Page hosting
 
-- WinUI resource overrides and Calculator control templates:
-  [`src/Calculator/App.xaml`](../src/Calculator/App.xaml)
-- WinUI navigation shell:
-  [`src/Calculator/Views/MainPage.xaml`](../src/Calculator/Views/MainPage.xaml)
-- WinUI settings surface:
-  [`src/Calculator/Views/Settings.xaml`](../src/Calculator/Views/Settings.xaml)
-- WinUI calculator layout:
-  [`src/Calculator/Views/Calculator.xaml`](../src/Calculator/Views/Calculator.xaml)
-- Avalonia shell and migrated templates:
-  [`src/Frontends/Calculator.Avalonia/MainWindow.axaml`](../src/Frontends/Calculator.Avalonia/MainWindow.axaml)
-- Avalonia native macOS backdrop:
-  [`src/Frontends/Calculator.Avalonia/MacOSMicaBackdrop.cs`](../src/Frontends/Calculator.Avalonia/MacOSMicaBackdrop.cs)
+UWP navigation replaces the active page beneath shared window chrome. Do not
+simulate navigation by placing a transparent page over the previous page.
+Doing so leaks old visuals through material surfaces and leaves inactive
+controls in layout and hit testing.
 
-## Behavior matrix
+Use mutually exclusive sibling page containers. Keep only genuinely shared
+chrome outside those containers.
 
-### Buttons and interaction states
+## Settings cards and expanders
 
-| Behavior | WinUI / Calculator behavior | Avalonia Fluent 12.1 default | Migration rule used here |
-|---|---|---|---|
-| Calculator key geometry | Calculator replaces the default button template. Keys stretch in both axes, have `Margin=1`, `MinWidth=24`, `MinHeight=12`, centered content, and `ControlCornerRadius`. | A stock `Button` keeps Fluent padding, minimum sizing, borders, and its own content presenter geometry. | Use a dedicated `calcButton` template with an explicit border and centered presenter. Do not use a stock button with only color setters. |
-| Key hover and press | `CalculatorButton` has separate `HoverBackground`, `PressBackground`, foreground, border, and disabled resources. The template applies them through visual states. | Pseudo-classes and the Fluent template can apply theme layers in addition to locally assigned `Background`. | Own the key template and assign `:pointerover` and `:pressed` brushes explicitly. |
-| Background transition | Calculator's template applies an 83 ms WinUI `BrushTransition`. | A property change is immediate unless an Avalonia transition is added. | Add an Avalonia transition when the timing is visually material; do not assume Fluent supplies the WinUI duration. |
-| Accent equals key | Calculator uses an accent/emphasized style whose hover and pressed states remain accent-colored. | A locally set accent background can be replaced by the stock pointer-over layer, making the key lose its accent. | Use an owned template plus explicit accent default/hover/pressed brushes. |
-| Disabled small buttons | Calculator's caption template keeps the intended transparent geometry and changes disabled brushes/foreground. | The stock disabled template can draw a rounded background layer and alter apparent control scale. | Use an owned caption/memory template; make disabled background and border explicitly transparent. |
-| Memory-button width | Calculator's responsive grid controls width. In the compared layout, each small memory button remains two-thirds of an input-key width. | Button minimums and padding can override grid geometry and make the content/background look too large. | Set `MinWidth=0`, `MinHeight=0`, zero padding, stretch alignment, and let the parent grid own width. |
-| Hamburger hover/press | The Calculator navigation toggle retains the standard Fluent hover and pressed feedback around its glyph. | Replacing the button template with a permanently transparent presenter removes both interaction states. | Keep Avalonia's Fluent button presenter for the toggle and tune its size and brushes through the specialized chrome-button style; do not replace its template merely to make the resting state transparent. |
-| Invisible dismiss target | WinUI NavigationView owns light-dismiss hit testing without exposing a full-window button visual. | A transparent Avalonia button still draws its Fluent pressed layer, causing a full-window white flash. | Give the dismiss button a template containing only a transparent border. |
-| Navigation-row hover | Enabled Calculator pane entries and the persistently selected entry use the same subtle fill as the hamburger; disabled entries remain unfilled. | Stock buttons draw stronger generic hover and pressed layers, while a separate opaque selected brush makes selection darker than hover. | Own the navigation-row template and apply `#09000000` in Light mode for hover, press, and the selected fill. Over the inactive `#F3F3F3` surface, this composites to `#EAEAEA`. Do not stack the transient overlay on the selected row; its accent bar remains the additional selection cue. |
-| Style precedence | WinUI visual states target named template elements and are mostly explicit. | Avalonia selector specificity and declaration order can allow a generic `Button:pointerover` rule to beat an intended specialized rule. | Use a dedicated class and, for fidelity-critical controls, own the template instead of stacking more color selectors. |
+Toolkit `SettingsCard` and `SettingsExpander` controls are not equivalent to a
+plain Avalonia `Expander`. Their surface ownership, spacing, separator, and
+motion need deliberate templates.
 
-### NavigationView and sidebar behavior
-
-Avalonia does not provide a drop-in equivalent of WinUI 2 `NavigationView`.
-The shell behavior has to be composed from layout, transitions, hit testing,
-selection state, and accessibility metadata.
-
-| Behavior | WinUI / Calculator behavior | Avalonia implementation requirement |
+| Behavior | Common failure | Migration rule |
 |---|---|---|
-| Display mode | `PaneDisplayMode="LeftMinimal"`; the closed shell shows only the pane toggle. | Build an overlay drawer rather than resizing the calculator content. |
-| Pane contents | Menu items come from the authoritative `NavCategory` manifest, grouped into Calculator and Converter sections. Settings is a built-in footer entry. | Preserve source order, IDs, enabled state, localized names, and groups in frontend state. Do not derive order from the unit catalog. |
-| Toggle layering | NavigationView keeps one toggle above the moving pane. The pane slides underneath it. | Keep one persistent toggle later in the visual tree than the pane; do not place a second toggle inside the drawer. |
-| Toggle during motion | The toggle is not interactable while the pane is transitioning. Its hamburger glyph remains stable in the compared build. | Track an explicit transition state, block hit testing for the 220 ms motion interval, and retain the hamburger glyph. |
-| Motion | NavigationView supplies pane animation. | Avalonia visibility changes are instantaneous. Keep the pane in the tree and transition its margin/translation with easing. Current match: 220 ms cubic ease-out. |
-| Light dismiss | Clicking outside closes the pane without visibly tinting the Calculator content in the compared build. | Use a transparent hit target. Do not add a modal scrim color. |
-| Pane surface | Calculator overrides WinUI's pane resource with `AcrylicInAppFillColorDefaultBrush`. Acrylic samples the app backdrop without exposing the controls beneath the pane. | A translucent Avalonia border normally blends with already-rendered Calculator controls. Animate a clip on the Calculator page in lockstep with the drawer edge, then draw the pane over the host's behind-window material using the Light base tint `#F9F9F9` at 50% alpha. Remove the clip when its width returns to zero so the closed state has no masking cost. |
-| Pane corners | The exposed right edge is rounded. | Apply top-right and bottom-right corner radii and clip pane content. |
-| Footer divider | NavigationView supplies visual separation before Settings. | Draw a dedicated one-pixel divider. A disabled button border or glyph is not a separator. |
-| Selection | WinUI owns selection state and its accent indicator. | Store selection explicitly, use a persistent selected background plus accent bar, and synchronize converter dropdown changes back to navigation state. |
-| Disabled modes | WinUI can retain disabled navigation items in the manifest. | Keep them in source order, lower foreground opacity, and suppress hover/disabled area fills. |
-| Pane scrolling | Menu content scrolls while Settings remains fixed in the footer. | Put only grouped items inside the scroll viewer and keep Settings in a fixed row. |
+| Stretching | The header sizes to content and leaves unused space at the right. | Set both `HorizontalAlignment` and `HorizontalContentAlignment` to `Stretch`. |
+| Double bezel | An outer card, header `ToggleButton`, and `ExpanderContent` each draw a slightly different surface. | Choose one owner for fill, border, radius, and shadow. Clear nested header/content borders and padding. |
+| Material ownership | Applying translucent fill to both an outer card and its inner header double-stacks opacity. | Give the fixed header and animated content host one material layer each; leave the enclosing fill transparent. Apply the same material policy to non-expanding cards. |
+| Bezel composition | An opaque one-pixel border remains visually detached from a translucent card. | Preserve the specified RGB but apply the material alpha to the stroke and proportionally reduce inner/outer fade alpha. |
+| Chevron interaction | The stock chevron draws its own rounded hover and pressed backplate. | Make chevron backplates transparent while preserving foreground and rotation. |
+| Chevron animation | Rotation can appear only in one direction. | Transition one render transform between collapsed and expanded states. |
+| Expansion motion | Visibility changes reserve space immediately; content either snaps or flies over the header. | Keep the content host mounted, measure natural height, and animate both host height and content translation with cancellation-safe reversals. |
+| Header layering | Moving content appears through the header during reveal. | Keep the header above the content, square its lower corners immediately, and let the rounded content surface slide from underneath. |
+| Separator | A border added to header thickness changes measurement or appears only after animation. | Overlay a one-pixel separator at the fixed header wrapper's bottom edge. It must not participate in measurement. |
+| Header layout shift | Expanded state changes header height by a pixel. | Use a fixed-height wrapper and vertically center an unchanged inner header grid. |
+| Padding | Removing nested surfaces can leave icon and text close to the frame. | Measure visible artwork bounds. Apply balanced frame-to-icon and icon-to-text clearance, then align expanded content with the header text start. |
+| Choice padding | Radio groups can have zero space above the first item and nonzero space below the last. | Give expanded choice panels matching top and bottom margins. Keep inter-item spacing independent. |
+| Typography | One corrected card can leave sibling option headlines heavier or tighter. | Encode option headline weight, primary/secondary colors, and card padding as shared styles, not one-off values. |
 
-### Settings controls
+## Theme resources and persistence
 
-The Windows page uses Community Toolkit `SettingsExpander` and `SettingsCard`,
-not plain UWP `Expander` controls. Avalonia Fluent has no template-compatible
-counterpart.
+| Area | Migration rule |
+|---|---|
+| Runtime theme lookup | Use Light/Dark theme dictionaries and `DynamicResource` for custom surfaces. `StaticResource` does not reevaluate after a theme change. |
+| System theme | Map the source's system/default option to `ThemeVariant.Default`. Audit high contrast separately. |
+| Custom glyphs | Route strokes and fills through dynamic foreground resources. Hard-coded light glyphs become unreadable in Light mode. |
+| Persistence | Keep theme preference framework-neutral. Persist it in the host's application-data location and apply it before constructing the first window. |
+| Host material | Theme changes do not automatically reconfigure a native backdrop. Treat backdrop appearance as a host concern and test Light, Dark, and system changes independently. |
 
-| Behavior | Windows Toolkit control | Avalonia Fluent default | Migration rule |
-|---|---|---|---|
-| Settings card | Header icon, title, description, chevron, full-width card, and expanded items are one coordinated control. | A stock `Expander` is generic and has different spacing, background layers, and presenter alignment. | Wrap the expander in a themed card and explicitly define header and content layouts. |
-| Header/content width | Toolkit SettingsExpander stretches its header and expanded card content across the available width. | Avalonia's presenter can size to its content, leaving a large unused rectangle at the right. | Set both `HorizontalAlignment` and `HorizontalContentAlignment` to `Stretch`; use a transparent expander background so the outer card owns the surface. |
-| Header padding | Toolkit SettingsExpander keeps icon artwork and text comfortably inset from the card bezel on every side, with balanced clearance before and after the icon. | Once Avalonia's nested default surfaces are removed, a 48-pixel custom header leaves only about 6–8 pixels around two-line header content, and the fixed icon column leaves only about 8 pixels before text. | Add a 16-pixel outer horizontal inset, a further 16-pixel text inset after the icon column, and use a fixed 72-pixel header wrapper. This produces roughly 22–24 pixels on both sides of the icon and about 18 pixels above and below two-line text. Align expanded content to the resulting 68-pixel text start. |
-| Settings option typography and padding | Calculator applies consistent option-card typography and clearance across expandable and standalone Settings controls. | One-off XAML values easily leave App theme corrected while platform appearance options retain heavier headings and tighter padding. | Use normal font weight for every option headline. Apply the 72-pixel padded header geometry to every Expander, and give standalone option cards 24-pixel horizontal and 18-pixel vertical padding so the treatment remains global rather than card-specific. |
-| Expanded choice padding | Toolkit SettingsExpander balances the space above the first radio choice and below the last. | A content panel with zero top margin and a nonzero bottom margin makes the choices appear vertically displaced even when individual row spacing is correct. | Give radio-choice panels matching 14-pixel top and bottom margins; keep inter-choice spacing independent. |
-| Settings-card bezel | Toolkit `SettingsCard` and `SettingsExpander` expose one coordinated card surface with matching outer geometry. | Wrapping a stock Avalonia `Expander` in a card leaves two themed inner surfaces: the header `ToggleButton`, and an `ExpanderContent` border that appears only while expanded. Each is slightly smaller and owns separate fill, border, padding, and corner geometry, producing a double bezel. | Make the outer card the only surface. Scope every header-state background and border brush plus `ExpanderContentBackground` and `ExpanderContentBorderBrush` to transparent. Set header/content padding and all directional Expander content border thicknesses to zero, and remove custom header-grid margin. The outer card then owns both collapsed and expanded geometry. |
-| Expander chevron interaction | Toolkit SettingsExpander keeps its chevron visually integrated into the card header. | Avalonia Fluent gives the chevron a separate rounded hover and pressed background, even after the header surface is made transparent. | Override the chevron background and border brushes to transparent for normal, hover, pressed, and disabled states. Preserve its foreground resources and rotation animation so only the unwanted interaction rectangle is removed. |
-| Expander motion and layering | Toolkit SettingsExpander animates both the chevron and content in both directions. Its opaque header stays above the reveal, immediately squares its lower corners, and retains a separator while the rounded content surface slides out underneath. | Avalonia Fluent's stock chevron keyframes can be visibly asymmetric. `ContentTransition` receives the inner `Presenter`, not the `ExpanderContent` template border that owns layout. A height-only animation merely uncovers static controls. Using header `BorderThickness` for the separator both changes measurement and places the line beneath moving content. | Derive a focused Settings Expander that keeps `ExpanderContent` mounted, measures its natural height, and animates both that template part's actual `Height` and the content presenter's vertical translation with cancellation-safe reversals. Use a fixed 72-pixel wrapper for the header, center the unchanged original header grid inside it, and overlay a one-pixel separator at the wrapper's bottom edge. The wrapper owns geometry while the inner grid retains its original auto-row spacing. |
-| Light Settings palette | Toolkit Settings controls use Calculator's tuned light Fluent palette and material composition. | Avalonia's generic control resources differ slightly in fill, hover, border, foreground, and opacity. | Preserve `#FBFBFB` as the Settings-card and Expander tint and `#F6F6F6` as the header-hover tint, applying both with 50% material alpha. Give the fixed header and animated content host one material layer each; keep the enclosing fill transparent so the layers do not double-stack. Apply the same material to non-expanding Settings cards. Preserve the bezel RGB at `#CCCCCC`, but apply the material factor to its stroke (`#80CCCCCC`) and halve the one-pixel fade alpha accordingly. Use `#1A1A1A` for primary text and icons and explicit `#5E5E5E`—not inherited foreground opacity—for secondary text. |
-| Inactive window material | Windows composition falls back to an inactive solid surface when the app loses activation. | A host-native material can remain visibly translucent while another app has focus, while an opaque Settings root can suppress the material even when active. | Keep the Settings root transparent so the window owns one composition layer. Cover that material with the solid surface brush while inactive (`#F3F3F3` in light mode), then transition the window background back on activation over 250 ms using Fluent's existing-element curve, `cubic-bezier(0.55,0.55,0,1)`. |
-| Theme choices | Light, Dark, and system-default radio choices update the app theme. | `RequestedThemeVariant` updates stock Fluent controls, but custom hard-coded brushes remain unchanged. | Raise a framework-neutral preference event from the managed view model, map it to Avalonia `ThemeVariant`, and use theme dictionaries plus `DynamicResource` for every custom surface. |
-| Theme persistence | Calculator's `ThemeHelper` stores `SelectedAppTheme` in UWP `ApplicationData.Current.LocalSettings` and restores it during startup. | Avalonia does not provide an application-settings store as part of its Fluent theme. | Persist the framework-neutral preference in the host's application-data directory and apply it before constructing the main window. The macOS/desktop host uses an atomic JSON-file replacement. |
-| Platform appearance | The Windows application naturally follows Windows composition and caption conventions. | A cross-platform Avalonia window otherwise keeps the same custom Windows presentation on every host. | Expose only host capabilities that are genuinely supported. On macOS this port offers an optional backdrop, one corner-style radio group, and one title-control radio group; hide the group on other platforms. |
-| Independent appearance axes | Windows owns its frame, clipping, shadow, and caption as one composition system. | A cross-platform host may need different implementations for the same requested controls under different geometry. | Model corner shape as one enum and control style as another. Persist them independently, then let the host select the compatible implementation for each combination instead of rewriting either preference. |
-| Radio binding | UWP handlers update app state after `SelectionChanged`. | A normal `IsChecked` binding may default to two-way and try to write into a computed read-only property. | Bind computed checked state explicitly one-way and send selection through a command. |
-| Page hosting | UWP navigation replaces the active page beneath shared window chrome. | A transparent Settings overlay leaves the Calculator page visible and interactive underneath it. | Put Calculator and Settings in mutually exclusive sibling page containers, and keep only the title bar shared. Do not use an opaque page background to disguise an overlay architecture. |
-| Back navigation | With Windows chrome, Calculator places the Settings back button in the title bar before the app icon. | Avalonia has no automatic Settings navigation stack, and AppKit owns different title-bar geometry in macOS-styled modes. | Model `IsSettingsOpen` and expose one back command. For Windows title controls, conditionally insert a 42-pixel title button before the icon while preserving the icon's original margin. For both standalone and fully native AppKit controls, retain the back button in the Settings page header. Treat this as a title-control-style decision, independent of corner style. |
-| About links | WinUI `HyperlinkButton` launches platform URIs. | Avalonia requires the top-level launcher or host-specific navigation. | Use `TopLevel.Launcher`; replace Windows-only schemes with meaningful cross-platform HTTPS destinations. |
+## Window composition and chrome
 
-### Theme resources
+Mica is a Windows composition feature, not a portable Avalonia control.
+Avalonia transparency hints can request transparency, but a true host backdrop
+requires a platform adapter. Keep the managed preference independent from the
+native implementation and provide an opaque fallback.
 
-| Behavior | WinUI / UWP | Avalonia |
-|---|---|---|
-| Theme lookup | Calculator uses `ThemeResource`, so custom brushes are reevaluated when the requested theme changes. | `StaticResource` resolves once. `DynamicResource` is needed for runtime theme updates. | Put custom colors in Light/Dark theme dictionaries and reference them dynamically. |
-| Default versus system theme | UWP distinguishes Default, Light, and HighContrast dictionaries. | Avalonia uses `ThemeVariant.Default`, `Light`, and `Dark`; platform high contrast needs separate auditing. | Map “Use system setting” to `ThemeVariant.Default`. Do not claim High Contrast parity until tested on every host. |
-| Custom foreground | WinUI theme resources update icon/text foregrounds together. | Hard-coded white path strokes remain white in Light mode even when text switches to black. | Route custom icon strokes and title-bar glyphs through a dynamic chrome-foreground brush. |
-| Mica and theme | WinUI's backdrop and theme resources are coordinated by Windows composition. | Changing Avalonia theme does not automatically reconfigure a native `NSVisualEffectView`. | Treat native backdrop appearance as a separate host concern and test Light, Dark, and system changes on macOS. |
+Model corner style and title-control style as separate preferences. The host
+may need different implementations for the same requested controls under
+different outer-window geometry. Do not rewrite one preference when the other
+changes.
 
-### Backdrop, window, and application identity
+Use native caption controls when authentic host behavior matters. Hand-drawn
+imitations generally cannot reproduce hover glyphs, window menus, accessibility,
+or system tiling behavior.
 
-| Area | WinUI/UWP behavior | Avalonia/macOS behavior and port rule |
-|---|---|---|
-| Mica | `BackdropMaterial.ApplyToRootOrPageBackground` integrates with Windows composition. | Avalonia has transparency hints but no cross-platform WinUI Mica implementation. The macOS host inserts an `NSVisualEffectView` behind Avalonia content. |
-| Optional backdrop | Mica is part of the Calculator's Windows visual identity. | Users may prefer an opaque native-app surface for performance, contrast, or personal preference. | Dispose the native effect view immediately when disabled and switch the Avalonia root to an opaque themed brush; recreate it when enabled. |
-| Rounded backdrop | Windows composition clips with the app window. | A native effect view does not inherit Avalonia border clipping. In the custom Windows-frame mode, set the native layer corner radius and clip the Avalonia root. In native-geometry modes, use a zero inner radius and let AppKit own the outer mask and shadow. |
-| Drag region | Windows title-bar integration provides drag behavior around caption controls. | A borderless Avalonia window needs explicit `BeginMoveDrag`; bind the complete intended title region, not only the app icon. |
-| Resizing | Native Windows chrome supplies resize hit tests. | `WindowDecorations=None` requires explicit edge and corner hit targets calling `BeginResizeDrag`. |
-| Caption buttons | Windows supplies platform caption semantics and state visuals. Microsoft specifies Segoe Fluent `ChromeMinimize` E921, `ChromeMaximize` E922, `ChromeRestore` E923, and `ChromeClose` E8BB; maximize and restore use rounded corners. | Custom Avalonia buttons need minimize, maximize/restore, close handlers and deliberate hover treatment. Segoe Fluent Icons cannot be redistributed with a macOS build, so reproduce the documented glyph geometry as portable 12.9-pixel monoline vectors with rounded caps/joins. Size logical full-bleed caption backplates to the Windows `57:40` width-to-height ratio—60 by 42 in the current title bar—and own their template so theme internals cannot override state colors. Because the root's one-pixel frame lies outside the content box, extend caption backplates one pixel upward and the close backplate one pixel rightward; retain root clipping for the rounded corner. Use exactly `#C42B1C` for close hover. Do not stretch a zero-height minimize path; render it in its native coordinate space. |
-| Native macOS geometry | Not applicable to the Windows source application. | `WindowDecorations=BorderOnly` plus `ExtendClientAreaToDecorationsHint=true` gives macOS ownership of the outer mask, shadow, and resizing while Calculator continues to draw its Windows caption row. Remove the inner border/radius and custom resize targets in this mode. |
-| Native macOS controls | Not applicable to the Windows source application. | Use three host paths. Windows controls remain Avalonia chrome. macOS controls with Windows geometry use standalone buttons from `+[NSWindow standardWindowButton:forStyleMask:]`. The macOS-controls plus macOS-corners combination uses `WindowDecorations=Full`, a transparent full-size title bar, and AppKit's window-owned buttons so hover glyphs and window-management menus remain authentic. |
-| Corner-style choices | Windows 11 Calculator uses rounded corners; Windows 10 uses square corners. | A borderless transparent window must establish its own clip before data binding and ask AppKit to recalculate its shadow after geometry changes. | Use an eight-pixel custom radius for Windows 11 and zero for Windows 10. Select `BorderOnly` extended-client geometry for macOS corners. Rebuild backdrop clipping, resize handles, and native controls after a geometry transition. |
-| Native-to-custom transition | Windows composition changes frame state as one operation. | A direct change from the full AppKit title bar to Windows 11 geometry while simultaneously inserting standalone AppKit buttons can retain the old frame surface. The equivalent two-step user transition through macOS geometry with Windows controls is stable. | Mirror the stable sequence internally: change `Full` to `BorderOnly`, then on the next dispatcher turn change `BorderOnly` to the custom Windows frame and attach standalone controls. Keep the persisted selections unchanged and guard deferred work against newer preference changes. |
-| Visible product name | The compared Calculator UI does not need to repeat the fork name in its content. | Keep `Redmond Calculator` as window/bundle metadata while avoiding duplicate visible labels in title and drawer content. |
-| Dock/process label | Bundle display name does not rename the executable launched by `dotnet run`. | Set `AssemblyName`/app-host name as well as `CFBundleDisplayName`, `CFBundleName`, and `CFBundleExecutable`. Preserve `RootNamespace` so C# namespaces do not change. |
-| Assembly resource URI | WinUI uses `ms-appx:///` package URIs. | Avalonia uses `avares://Assembly/…`; renaming the assembly invalidates embedded font/image URIs. Encode spaces and update every assembly-qualified URI. |
+### Custom Windows-style caption controls
 
-### Icons and typography
+Microsoft specifies Segoe Fluent `ChromeMinimize` E921, `ChromeMaximize` E922,
+`ChromeRestore` E923, `ChromeClose` E8BB, and `ChromeBack` E830. Maximize and
+restore use rounded corners. Segoe Fluent Icons may not be redistributable on
+every target, so use licensed portable vector geometry when necessary.
 
-| Area | Windows behavior | Avalonia migration rule |
-|---|---|---|
-| Navigation and calculator glyphs | Calculator ships `Assets/CalculatorIcons.ttf` and references its exact glyph values. | Package the same font as an `AvaloniaResource` and use its actual family name. Do not substitute Unicode emoji or platform symbols. |
-| Missing font | UWP package URIs resolve against the application package. | An invalid Avalonia resource authority can compile successfully and fail only during glyph measurement at runtime. Always launch after renaming an assembly or moving assets. |
-| Default UI font | Windows Fluent typography is designed around Segoe UI. | Avalonia's cross-platform setup here uses Inter, so text metrics, baselines, and wrapping differ slightly even at the same nominal size. Audit layout from rendered output rather than copying only font sizes. |
-| Icon alignment | WinUI templates center icon presenters according to their own metrics. | Stock Avalonia content presenters and fallback glyph metrics can make icons appear top-aligned. Use the original font and explicit horizontal/vertical content alignment. |
+Caption controls require:
 
-### Localization and binding
+- full-bleed hover and pressed backplates;
+- explicit active and inactive states;
+- minimize, maximize/restore, and close semantics;
+- rounded line caps and joins for modern glyph geometry;
+- source-accurate button aspect ratio rather than guessed square hitboxes; and
+- an owned template when theme internals override state colors.
 
-| Area | UWP behavior | Portable/Avalonia behavior |
-|---|---|---|
-| `.resw` lookup | `Windows.ApplicationModel.Resources.ResourceLoader` resolves package maps and culture fallback. | The port provides the same namespace and compatible lookup surface over shipped `.resw` files. |
-| `x:Uid` properties | UWP projects resource properties such as `Foo.Text` and attached-property names into XAML automatically. | Avalonia does not understand UWP `x:Uid`. Read keys explicitly or use `GetUidProperties` in an adapter. |
-| Attached-property keys | Resource names can contain forms such as `Uid.[using:…]AutomationProperties.Name`. | Preserve the full suffix. The compatibility loader converts the last `Uid/Property` separator to the `.resw` dot form. |
-| Compiled binding | UWP `x:Bind` has source-specific generated semantics. | Avalonia compiled bindings require `x:DataType`. For a data template that must reach an ancestor window command, either provide a typed binding path or intentionally disable compiled binding for that small template. |
-| Command-generated state | C++/CX view models expose WinRT commands and observable properties. | CommunityToolkit.Mvvm generates commands and property notifications in the managed compatibility layer. Computed visibility/selection properties must declare dependent notifications explicitly. |
+The close hover color in current Windows guidance is `#C42B1C`.
+
+Do not stretch a zero-height minimize path with `Stretch="Uniform"`; its empty
+geometry dimension can collapse it into a dot. Render it in native coordinates
+or use a shape with nonzero layout bounds.
+
+### The one-pixel frame and full-bleed hover bug
+
+An Avalonia root `Border` lays out children inside its `BorderThickness`. A
+caption button aligned to the content edge therefore stops one pixel before the
+physical window edge, leaving the root frame visible above or beside its hover
+backplate.
+
+Do not globally remove a required frame to hide this artifact. Extend caption
+backplates into the frame thickness on the affected outer edges and retain the
+root clip so rounded window corners still mask the fill correctly. Treat frame
+thickness as part of caption geometry and verify every DPI scale.
+
+## Icons and typography
+
+| Area | Migration rule |
+|---|---|
+| Application icon font | Package redistributable source icon assets as `AvaloniaResource` and use the font's actual family name. Do not substitute emoji or unrelated Unicode glyphs. |
+| Resource authority | Assembly-qualified `avares://` URIs change when the assembly name changes. Encode spaces and launch after every identity or asset move. |
+| Default UI font | Segoe metrics differ from cross-platform fonts. Compare rendered baselines, wrapping, and control height rather than copying nominal sizes only. |
+| Icon alignment | Fallback glyph metrics can look top-aligned. Use the intended font and explicit horizontal/vertical alignment. |
+| Font licensing | A font available on Windows is not automatically redistributable to other targets. Verify licensing before embedding it; otherwise use licensed vectors. |
+
+## Localization and binding
+
+| Area | Migration rule |
+|---|---|
+| `.resw` lookup | Provide a compatibility loader that preserves culture fallback and the source key surface. |
+| `x:Uid` | Avalonia does not project UWP `x:Uid` properties automatically. Resolve keys explicitly or through an adapter. |
+| Attached-property keys | Preserve complete suffixes and namespace-qualified property names during lookup. |
+| Compiled bindings | Add `x:DataType`. For a template that deliberately reaches an ancestor command, provide a typed path or disable compiled binding only for that small scope. |
+| Generated state | Computed visibility and selection properties must notify when every dependency changes. |
 
 ## Reusable Avalonia patterns
 
-### Own fidelity-critical button templates
-
-Setting `Background="Transparent"` is not sufficient when the Fluent template
-contains independent pointer-over, pressed, or disabled layers. For controls
-whose WinUI appearance matters, use a minimal template and then add only the
-states present in the source application.
+### Own fidelity-critical surfaces
 
 ```xml
-<Style Selector="Button.transparentInteractionButton">
+<Style Selector="Button.fidelityCritical">
   <Setter Property="Template">
     <ControlTemplate>
-      <Border Background="Transparent">
+      <Border Name="Surface"
+              Background="{TemplateBinding Background}"
+              CornerRadius="{TemplateBinding CornerRadius}">
         <ContentPresenter Content="{TemplateBinding Content}"
                           HorizontalContentAlignment="Center"
                           VerticalContentAlignment="Center" />
@@ -175,47 +242,32 @@ states present in the source application.
     </ControlTemplate>
   </Setter>
 </Style>
+
+<Style Selector="Button.fidelityCritical:pointerover /template/ Border#Surface">
+  <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}" />
+</Style>
 ```
 
-### Keep motion state separate from destination state
+### Separate destination state from motion state
 
-`IsNavigationPaneOpen` describes the destination. A second
-`IsNavigationPaneTransitioning` state prevents reentry and blocks hit testing
-until the visual transition has finished. This avoids double toggles and keeps
-the persistent hamburger above the moving pane without disabled-state dimming.
+An `IsOpen` property describes the destination. A separate transition state
+blocks re-entry and hit testing until motion completes. Keep cancellation and
+rapid reversal behavior explicit.
 
-### Use dynamic resources for user-selectable themes
+### Remove dormant composition work
 
-Stock controls react to `RequestedThemeVariant`; custom Calculator surfaces do
-not unless their values come from theme dictionaries through `DynamicResource`.
-Any literal dark color in a control template should be treated as a Light-mode
-bug until proven otherwise.
+When a drawer closes, set its culling clip to `null` rather than retaining a
+zero-width geometry. Dispose native effect objects when material is disabled.
 
-## Visual QA checklist for each migrated surface
+## Verification checklist
 
-1. Compare normal, pointer-over, pressed, disabled, focused, and selected states.
-2. Test minimum size, reference size, wide size, and live resizing.
-3. Test Dark, Light, and system theme while the surface is already open.
-4. Check keyboard focus and activation separately from pointer visuals.
-5. Inspect icon font loading in both `dotnet run` and packaged app builds.
-6. Verify text and geometry with a long-string locale and an RTL locale.
-7. Verify window drag and resize hit targets after adding any full-window overlay.
-8. Check that invisible hit targets have owned transparent templates and cannot flash.
-9. Verify animation layering frame-by-frame: stationary controls must remain above translating surfaces.
-10. Launch the packaged macOS app and confirm bundle, Dock, process, and window labels independently.
-
-## Known gaps still requiring comparison
-
-- Scientific and Programmer toggle/radio templates
-- DatePicker and CalendarView parity for Date Calculation
-- History and Memory flyouts
-- Compact Overlay / Always-on-top mode
-- Keyboard accelerators, access keys, focus visuals, and narrator announcements
-- High Contrast behavior
-- RTL pane motion and content mirroring
-- Currency network/error/loading states
-- Graphing controls and unavailable proprietary graphing-engine states
-
-Add each newly observed discrepancy to the behavior matrix before applying an
-override. This keeps source behavior, framework defaults, and port-specific
-decisions distinguishable during the remainder of the migration.
+1. Compare normal, hover, pressed, disabled, focused, selected, active, and inactive states.
+2. Test minimum, reference, and wide sizes while resizing live.
+3. Test Light, Dark, system theme, and high contrast where supported.
+4. Inspect exact composited colors over both opaque and material backgrounds.
+5. Verify shadows, borders, and full-bleed fills at multiple DPI scales.
+6. Step through expansion, drawer, and theme animations frame by frame.
+7. Confirm hidden pages and covered controls are absent from layout, rendering, and hit testing.
+8. Test keyboard focus, access keys, screen readers, and automation names.
+9. Test long localized strings and right-to-left layout.
+10. Launch packaged builds on every supported host; do not rely only on a development runner.
