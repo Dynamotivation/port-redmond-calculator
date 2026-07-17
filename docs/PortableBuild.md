@@ -7,6 +7,7 @@ without the UWP user interface. It currently includes:
 - CalcEngine parsing and command processing
 - CalculatorManager, history, expression commands, and number formatting
 - UnitConverter input, conversion, suggestion, and preference behavior
+- the original UnitConverter category, unit, factor, temperature, and regional-default catalog
 - A versioned C ABI suitable for .NET P/Invoke or other foreign-function interfaces
 
 The native library does not reimplement or stub Calculator behavior. It links the
@@ -80,11 +81,25 @@ is represented by the standard C++ `std::future`, and currency refresh
 continuations run with `std::async`. This is a real asynchronous implementation;
 the conversion engine is not compiled with currency methods removed or stubbed.
 
+## Portable unit catalog
+
+The original `CalcViewModel/DataLoaders/UnitConverterDataLoader.cpp` now builds
+inside `CalculatorCore` both with C++/CX on UWP and as standard C++20 elsewhere.
+The portable constructor takes a two-letter region code and a resource-lookup
+function. This preserves one authoritative Microsoft table for unit IDs,
+ordering, factors, whimsical units, temperature offsets, and regional source/
+target defaults.
+
+`UnitConverterDataLoaderPortableTests` loads the real English resources and
+verifies US customary, SI, Fahrenheit, and Japanese Pyeong selection along with
+localized metadata and explicit temperature conversion data. Required resource
+keys are checked rather than silently replaced by blank strings.
+
 ## Remaining portability boundary
 
-The Windows `UnitConverterDataLoader` and `CurrencyDataLoader` remain in the
-C++/CX view-model project. Resource lookup is no longer a portability blocker,
-but their catalog construction still uses C++/CX types and their region, HTTP,
-and storage services use Windows APIs. Their framework-neutral interfaces and
-the full conversion engine are portable; those remaining services are the next
-data-layer boundary.
+The non-currency `UnitConverterDataLoader` and its complete catalog are now
+portable. The remaining Windows-only conversion component is
+`CurrencyDataLoader`, whose HTTP, cache storage, JSON, and network-policy code
+still uses Windows APIs. Frontends must also provide the current two-letter
+region code; the portable catalog itself has no dependency on
+`Windows.Globalization.GeographicRegion`.

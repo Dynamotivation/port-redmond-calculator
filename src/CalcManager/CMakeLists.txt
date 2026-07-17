@@ -4,6 +4,7 @@ set(CALCULATOR_CORE_SOURCES
     ExpressionCommand.cpp
     NumberFormattingUtils.cpp
     UnitConverter.cpp
+    ../CalcViewModel/DataLoaders/UnitConverterDataLoader.cpp
     CEngine/calc.cpp
     CEngine/CalcInput.cpp
     CEngine/CalcUtils.cpp
