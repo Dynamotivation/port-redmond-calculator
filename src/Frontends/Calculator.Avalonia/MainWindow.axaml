@@ -12,7 +12,6 @@
         Background="Transparent"
         TransparencyLevelHint="Transparent"
         TransparencyBackgroundFallback="#202027"
-        FontFamily="{StaticResource SelawikFont}"
         Title="{Binding ApplicationName}">
 
   <Window.Resources>
@@ -460,7 +459,7 @@
       <Setter Property="CornerRadius" Value="5" />
       <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonBorderBrush}" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="FontSize" Value="20" />
+      <Setter Property="FontSize" Value="22" />
       <Setter Property="FontWeight" Value="Normal" />
       <Setter Property="Template">
         <ControlTemplate>
@@ -487,7 +486,7 @@
     </Style>
     <Style Selector="Button.calcButton.numeric">
       <Setter Property="Background" Value="{DynamicResource NumericButtonBrush}" />
-      <Setter Property="FontSize" Value="24" />
+      <Setter Property="FontSize" Value="26.4" />
       <Setter Property="FontWeight" Value="Light" />
     </Style>
     <Style Selector="Button.calcButton.numeric:pointerover">
@@ -515,7 +514,7 @@
     </Style>
     <Style Selector="Button.calcButton.symbolOperator">
       <Setter Property="FontFamily" Value="{StaticResource CalculatorIconFont}" />
-      <Setter Property="FontSize" Value="15.4" />
+      <Setter Property="FontSize" Value="16.94" />
       <Setter Property="FontWeight" Value="Normal" />
     </Style>
     <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator">
@@ -539,7 +538,7 @@
       <Setter Property="Background" Value="{DynamicResource AccentButtonBrush}" />
       <Setter Property="Foreground" Value="#101010" />
       <Setter Property="FontFamily" Value="{StaticResource CalculatorIconFont}" />
-      <Setter Property="FontSize" Value="15.4" />
+      <Setter Property="FontSize" Value="16.94" />
       <Setter Property="FontWeight" Value="Normal" />
     </Style>
     <Style Selector="Button.calcButton.equalsButton:pointerover">
@@ -705,7 +704,7 @@
                 ToolTip.Placement="Bottom"
                 Click="AlwaysOnTop_OnClick">
           <ToolTip.Tip>
-            <TextBlock FontFamily="{StaticResource SelawikFont}" Text="{Binding AlwaysOnTopTooltip}" />
+            <TextBlock Text="{Binding AlwaysOnTopTooltip}" />
           </ToolTip.Tip>
           <TextBlock Classes="alwaysOnTopGlyph" Text="{Binding AlwaysOnTopGlyph}" />
         </Button>
@@ -747,13 +746,13 @@
             RowDefinitions="*,*,*,*,*,*" ColumnDefinitions="*,*,*,*"
             IsVisible="{Binding IsStandardMode}">
         <Button Classes="calcButton operator symbolOperator" Content="&#xE94C;" Command="{Binding SendCommandCommand}" CommandParameter="Percent" />
-        <Button Grid.Column="1" Classes="calcButton operator" Content="CE" FontSize="16" Command="{Binding SendCommandCommand}" CommandParameter="ClearEntry" />
-        <Button Grid.Column="2" Classes="calcButton operator" Content="C" FontSize="16" Command="{Binding SendCommandCommand}" CommandParameter="Clear" />
-        <Button Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE94F;" FontSize="17.6" Command="{Binding SendCommandCommand}" CommandParameter="Backspace" />
+        <Button Grid.Column="1" Classes="calcButton operator" Content="CE" FontSize="17.6" Command="{Binding SendCommandCommand}" CommandParameter="ClearEntry" />
+        <Button Grid.Column="2" Classes="calcButton operator" Content="C" FontSize="17.6" Command="{Binding SendCommandCommand}" CommandParameter="Clear" />
+        <Button Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE94F;" FontSize="19.36" Command="{Binding SendCommandCommand}" CommandParameter="Backspace" />
 
-        <Button Grid.Row="1" Classes="calcButton operator symbolOperator" Content="&#xF7C9;" FontSize="19.8" Command="{Binding SendCommandCommand}" CommandParameter="Reciprocal" />
-        <Button Grid.Row="1" Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xF7C8;" FontSize="19.8" Command="{Binding SendCommandCommand}" CommandParameter="Square" />
-        <Button Grid.Row="1" Grid.Column="2" Classes="calcButton operator symbolOperator" Content="&#xF899;" FontSize="19.8" Command="{Binding SendCommandCommand}" CommandParameter="SquareRoot" />
+        <Button Grid.Row="1" Classes="calcButton operator symbolOperator" Content="&#xF7C9;" FontSize="21.78" Command="{Binding SendCommandCommand}" CommandParameter="Reciprocal" />
+        <Button Grid.Row="1" Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xF7C8;" FontSize="21.78" Command="{Binding SendCommandCommand}" CommandParameter="Square" />
+        <Button Grid.Row="1" Grid.Column="2" Classes="calcButton operator symbolOperator" Content="&#xF899;" FontSize="21.78" Command="{Binding SendCommandCommand}" CommandParameter="SquareRoot" />
         <Button Grid.Row="1" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE94A;" Command="{Binding SendCommandCommand}" CommandParameter="Divide" />
 
         <Button Grid.Row="2" Classes="calcButton numeric" Content="7" Command="{Binding SendCommandCommand}" CommandParameter="Seven" />
@@ -771,7 +770,7 @@
         <Button Grid.Row="4" Grid.Column="2" Classes="calcButton numeric" Content="3" Command="{Binding SendCommandCommand}" CommandParameter="Three" />
         <Button Grid.Row="4" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE948;" Command="{Binding SendCommandCommand}" CommandParameter="Add" />
 
-        <Button Grid.Row="5" Classes="calcButton numeric symbolOperator" Content="&#xF898;" FontSize="21" Command="{Binding SendCommandCommand}" CommandParameter="Sign" />
+        <Button Grid.Row="5" Classes="calcButton numeric symbolOperator" Content="&#xF898;" FontSize="23.1" Command="{Binding SendCommandCommand}" CommandParameter="Sign" />
         <Button Grid.Row="5" Grid.Column="1" Classes="calcButton numeric" Content="0" Command="{Binding SendCommandCommand}" CommandParameter="Zero" />
         <Button Grid.Row="5" Grid.Column="2" Classes="calcButton numeric" Content="{Binding DecimalSeparator}" Command="{Binding SendCommandCommand}" CommandParameter="Decimal" />
         <Button Grid.Row="5" Grid.Column="3" Classes="calcButton equalsButton" Content="&#xE94E;" Command="{Binding SendCommandCommand}" CommandParameter="Equals" />
@@ -857,11 +856,11 @@
           <Button Grid.Row="2" Grid.Column="1" Classes="calcButton numeric" Content="2" Command="{Binding SendUnitCommandCommand}" CommandParameter="Two" />
           <Button Grid.Row="2" Grid.Column="2" Classes="calcButton numeric" Content="3" Command="{Binding SendUnitCommandCommand}" CommandParameter="Three" />
 
-          <Button Grid.Row="3" Classes="calcButton numeric symbolOperator" Content="&#xF898;" FontSize="21" Command="{Binding SendUnitCommandCommand}" CommandParameter="Negate" />
+          <Button Grid.Row="3" Classes="calcButton numeric symbolOperator" Content="&#xF898;" FontSize="23.1" Command="{Binding SendUnitCommandCommand}" CommandParameter="Negate" />
           <Button Grid.Row="3" Grid.Column="1" Classes="calcButton numeric" Content="0" Command="{Binding SendUnitCommandCommand}" CommandParameter="Zero" />
           <Grid Grid.Row="3" Grid.Column="2" ColumnDefinitions="*,*">
-            <Button Classes="calcButton numeric" Content="{Binding DecimalSeparator}" FontSize="22" Command="{Binding SendUnitCommandCommand}" CommandParameter="Decimal" />
-            <Button Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xE94F;" FontSize="17.6" Command="{Binding SendUnitCommandCommand}" CommandParameter="Backspace" />
+            <Button Classes="calcButton numeric" Content="{Binding DecimalSeparator}" FontSize="24.2" Command="{Binding SendUnitCommandCommand}" CommandParameter="Decimal" />
+            <Button Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xE94F;" FontSize="19.36" Command="{Binding SendUnitCommandCommand}" CommandParameter="Backspace" />
           </Grid>
         </Grid>
       </Grid>
@@ -1037,9 +1036,48 @@
               </local:AnimatedSettingsExpander>
             </Border>
 
+            <Border Classes="settingsCard" Background="Transparent"
+                    CornerRadius="6" Padding="0" ClipToBounds="True">
+              <local:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                        Background="Transparent">
+                <Expander.Header>
+                  <Grid Height="72">
+                    <Grid Classes="settingsExpanderHeader" VerticalAlignment="Center"
+                          ColumnDefinitions="36,*,32" RowDefinitions="Auto,Auto">
+                      <TextBlock Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                 FontSize="18" FontWeight="Normal" Text="Aa" />
+                      <TextBlock Grid.Column="1" Margin="16,0,0,0" FontSize="15" FontWeight="Normal"
+                                 Text="{Binding AppFontName}" />
+                      <TextBlock Grid.Row="1" Grid.Column="1" Margin="16,2,0,0" FontSize="13"
+                                 Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
+                                 Text="{Binding AppFontDescription}" />
+                      <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
+                            Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
+                            Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
+                            Data="M 1,1 L 6,6 L 11,1" />
+                    </Grid>
+                    <Border Height="1" VerticalAlignment="Bottom" ZIndex="3"
+                            Background="{DynamicResource SettingsCardBorderBrush}"
+                            IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" />
+                  </Grid>
+                </Expander.Header>
+                <ComboBox Margin="68,14,16,14"
+                          HorizontalAlignment="Stretch"
+                          IsTextSearchEnabled="True"
+                          MaxDropDownHeight="360"
+                          ItemsSource="{Binding AvailableFontFamilies}"
+                          SelectedItem="{Binding SelectedFontFamily}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock FontFamily="{Binding}" Text="{Binding}" />
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+              </local:AnimatedSettingsExpander>
+            </Border>
+
             <StackPanel IsVisible="{Binding SupportsPlatformAppearanceSettings}">
-              <TextBlock Classes="sectionHeading" Margin="0,22,0,4"
-                         Text="{Binding PlatformAppearanceName}" />
               <Border Classes="settingsCard" Background="{DynamicResource SettingsExpanderBrush}"
                       CornerRadius="6" Padding="24,18">
                 <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">

@@ -2,9 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Calculator.Avalonia.App"
              RequestedThemeVariant="Dark">
-  <Application.Resources>
-    <FontFamily x:Key="SelawikFont">avares://Redmond%20Calculator/Assets/Selawik#Selawik</FontFamily>
-  </Application.Resources>
   <Application.Styles>
     <FluentTheme />
   </Application.Styles>

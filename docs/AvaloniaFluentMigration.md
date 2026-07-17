@@ -171,6 +171,11 @@ may need different implementations for the same requested controls under
 different outer-window geometry. Do not rewrite one preference when the other
 changes.
 
+Keep shared appearance choices in one section, then gate only controls whose
+implementation actually depends on host capabilities. A platform-named section
+that also contains portable choices makes future hosts either duplicate the UI
+or expose irrelevant settings.
+
 Use native caption controls when authentic host behavior matters. Hand-drawn
 imitations generally cannot reproduce hover glyphs, window menus, accessibility,
 or system tiling behavior.
@@ -225,7 +230,8 @@ thickness as part of caption geometry and verify every DPI scale.
 | Stateful icon-font controls | A source control may use different private-use glyphs for enter and exit states rather than transforming one drawing. | Preserve both source code points and notify the glyph property when state changes; otherwise the command and tooltip can update while its icon continues to advertise the previous action. |
 | Resource authority | Assembly-qualified `avares://` URIs change when the assembly name changes. Encode spaces and launch after every identity or asset move. |
 | Default UI font | Segoe metrics differ from cross-platform fonts. Compare rendered baselines, wrapping, and control height rather than copying nominal sizes only. |
-| Redistributable Segoe substitute | Selawik is Microsoft's OFL-1.1 open-source replacement for Segoe UI and can be bundled unmodified when its copyright notice and full license accompany every distribution. It is not a perfect metric clone: the upstream project documents missing Segoe-matching kerning and incomplete hinting. Package every required weight as one font family, retain the reserved font name only for unmodified binaries, and keep system fallback available for scripts Selawik does not cover. |
+| User-selectable text fonts | Apply the selected family at a common text-bearing ancestor and persist the preference independently from theme and platform appearance. Keep semantic icon controls pinned to their licensed icon font so a text-font change cannot reinterpret private-use code points or alter operator geometry. |
+| Installed-font picker | Enumerate families through the UI framework's font manager, pin the recommended default ahead of the sorted device list, persist the family name, and fall back when that family is unavailable on the next host. Preview each entry in its own family, but keep application layout usable when a font has unusual metrics. |
 | Icon alignment | Fallback glyph metrics can look top-aligned. Even the intended icon font can have different line-box/baseline treatment between XAML engines, so copying the source's nominal font size may render too small and optically displaced. Use the intended font, center a fixed-size child presenter inside the unchanged hitbox, scale from rendered artwork bounds, and apply any measured optical translation to that child rather than moving the control. |
 | Font licensing | A font available on Windows is not automatically redistributable to other targets. Verify licensing before embedding it; otherwise use licensed vectors. |
 

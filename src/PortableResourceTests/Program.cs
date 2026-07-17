@@ -117,7 +117,9 @@ using (var converter = new NativeUnitConverter(
 using (var viewModel = new CalculatorViewModel(
     initialPlatformAppearance: new PlatformAppearancePreferences(),
     supportsPlatformAppearanceSettings: true,
-    numberCulture: CultureInfo.GetCultureInfo("de-DE")))
+    numberCulture: CultureInfo.GetCultureInfo("de-DE"),
+    availableFontFamilies: ["Aptos", "Inter"],
+    initialFontFamily: "Missing Font"))
 {
     Require(viewModel.DecimalSeparator == ",", "The keypad did not expose the active culture's decimal separator.");
     Require(viewModel.TitleBarApplicationName == "Calculator",
@@ -154,6 +156,11 @@ using (var viewModel = new CalculatorViewModel(
     viewModel.SelectThemeCommand.Execute(nameof(AppThemePreference.Light));
     Require(viewModel.IsLightThemeSelected && changedTheme == AppThemePreference.Light,
         "Settings theme selection did not update state or notify the frontend host.");
+    string? changedFont = null;
+    viewModel.FontPreferenceChanged += value => changedFont = value;
+    Require(viewModel.SelectedFontFamily == "Inter", "Inter was not retained as the recommended default font.");
+    viewModel.SelectedFontFamily = "Aptos";
+    Require(changedFont == "Aptos", "An available device font was not selected.");
     PlatformAppearancePreferences? changedAppearance = null;
     viewModel.PlatformAppearancePreferencesChanged += value => changedAppearance = value;
     viewModel.UseMicaEffect = false;

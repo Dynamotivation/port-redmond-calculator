@@ -68,8 +68,16 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public bool IsSystemThemeSelected => SelectedThemePreference == AppThemePreference.System;
     public event Action<AppThemePreference>? ThemePreferenceChanged;
 
+    public ObservableCollection<string> AvailableFontFamilies { get; } = [];
+
+    [ObservableProperty]
+    public partial string SelectedFontFamily { get; set; } = "Inter";
+
+    public event Action<string>? FontPreferenceChanged;
+
     public bool SupportsPlatformAppearanceSettings { get; }
-    public string PlatformAppearanceName { get; } = "macOS appearance";
+    public string AppFontName { get; } = "App font";
+    public string AppFontDescription { get; } = "Choose the font used for text and numbers";
     public string MicaEffectName { get; } = "Translucent background";
     public string MicaEffectDescription { get; } = "Blur the desktop behind the calculator window";
     public string WindowCornersName { get; } = "Window corners";
@@ -180,12 +188,23 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         AppThemePreference initialThemePreference = AppThemePreference.Dark,
         PlatformAppearancePreferences? initialPlatformAppearance = null,
         bool supportsPlatformAppearanceSettings = false,
-        CultureInfo? numberCulture = null)
+        CultureInfo? numberCulture = null,
+        IEnumerable<string>? availableFontFamilies = null,
+        string? initialFontFamily = null)
     {
         var platformAppearance = initialPlatformAppearance ?? new PlatformAppearancePreferences();
         var numberFormat = CalculatorNumberFormat.FromCulture(numberCulture);
         DecimalSeparator = numberFormat.DecimalSeparator;
         SelectedThemePreference = initialThemePreference;
+        var fontFamilies = (availableFontFamilies ?? [])
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Append("Inter")
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(name => name.Equals("Inter", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+            .ThenBy(name => name, StringComparer.CurrentCultureIgnoreCase);
+        Replace(AvailableFontFamilies, fontFamilies);
+        SelectedFontFamily = AvailableFontFamilies.FirstOrDefault(
+            name => name.Equals(initialFontFamily, StringComparison.OrdinalIgnoreCase)) ?? "Inter";
         UseMicaEffect = platformAppearance.UseMicaEffect;
         SelectedWindowCornerStyle = platformAppearance.WindowCornerStyle;
         SelectedWindowControlStyle = platformAppearance.WindowControlStyle;
@@ -398,6 +417,13 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     partial void OnSelectedToUnitChanged(UnitConverterUnit? value) => ApplySelectedUnits();
 
     partial void OnUseMicaEffectChanged(bool value) => NotifyPlatformAppearanceChanged();
+    partial void OnSelectedFontFamilyChanged(string value)
+    {
+        if (AvailableFontFamilies.Contains(value, StringComparer.OrdinalIgnoreCase))
+        {
+            FontPreferenceChanged?.Invoke(value);
+        }
+    }
     partial void OnSelectedWindowCornerStyleChanged(WindowCornerStyle value) => NotifyPlatformAppearanceChanged();
     partial void OnSelectedWindowControlStyleChanged(WindowControlStyle value) => NotifyPlatformAppearanceChanged();
 

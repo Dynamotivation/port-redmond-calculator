@@ -36,6 +36,7 @@ internal static class AppSettingsStore
                 ? new AppSettings()
                 : new AppSettings(
                     persisted.ThemePreference ?? AppThemePreference.Dark,
+                    persisted.FontFamily ?? "Inter",
                     persisted.UseMicaEffect ?? true,
                     cornerStyle,
                     controlStyle);
@@ -75,6 +76,7 @@ internal static class AppSettingsStore
 
     private sealed record PersistedSettings(
         AppThemePreference? ThemePreference,
+        string? FontFamily,
         bool? UseMicaEffect,
         WindowCornerStyle? WindowCornerStyle,
         WindowControlStyle? WindowControlStyle,
@@ -88,6 +90,7 @@ internal static class AppSettingsStore
 
 internal sealed record AppSettings(
     AppThemePreference ThemePreference = AppThemePreference.Dark,
+    string FontFamily = "Inter",
     bool UseMicaEffect = true,
     WindowCornerStyle WindowCornerStyle = WindowCornerStyle.Windows11,
     WindowControlStyle WindowControlStyle = WindowControlStyle.Windows11)

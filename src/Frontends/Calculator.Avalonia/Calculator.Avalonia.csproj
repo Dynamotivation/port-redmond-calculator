@@ -24,11 +24,6 @@
     <ProjectReference Include="../../Calculator.ResourceLoader/Calculator.ResourceLoader.csproj" />
     <AvaloniaResource Include="../../Calculator/Assets/CalculatorIcons.ttf"
                       Link="Assets/CalculatorIcons.ttf" />
-    <AvaloniaResource Include="../../Calculator/Assets/Selawik/*.ttf"
-                      Link="Assets/Selawik/%(Filename)%(Extension)" />
-    <Content Include="../../Calculator/Assets/Selawik/LICENSE.txt"
-             Link="Licenses/Selawik-LICENSE.txt"
-             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="../../Calculator/Resources/**/*.resw"
              Link="Resources/%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />

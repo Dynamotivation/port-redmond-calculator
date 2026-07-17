@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Calculator.Managed;
 
@@ -30,10 +32,19 @@ public partial class MainWindow : Window
         _viewModel = new CalculatorViewModel(
             settings.ThemePreference,
             appearance,
-            OperatingSystem.IsMacOS());
+            OperatingSystem.IsMacOS(),
+            availableFontFamilies: GetInstalledFontFamilyNames(),
+            initialFontFamily: settings.FontFamily);
         _viewModel.ThemePreferenceChanged += OnThemePreferenceChanged;
+        _viewModel.FontPreferenceChanged += OnFontPreferenceChanged;
         _viewModel.PlatformAppearancePreferencesChanged += OnPlatformAppearancePreferencesChanged;
         DataContext = _viewModel;
+        ApplyFontFamily(_viewModel.SelectedFontFamily);
+        if (!string.Equals(_settings.FontFamily, _viewModel.SelectedFontFamily, StringComparison.Ordinal))
+        {
+            _settings = _settings with { FontFamily = _viewModel.SelectedFontFamily };
+            AppSettingsStore.Save(_settings);
+        }
         ApplyWindowDecorations(appearance);
         Opened += (_, _) =>
         {
@@ -47,6 +58,7 @@ public partial class MainWindow : Window
             _micaBackdrop?.Dispose();
             _macOSWindowControls?.Dispose();
             _viewModel.ThemePreferenceChanged -= OnThemePreferenceChanged;
+            _viewModel.FontPreferenceChanged -= OnFontPreferenceChanged;
             _viewModel.PlatformAppearancePreferencesChanged -= OnPlatformAppearancePreferencesChanged;
             _viewModel.Dispose();
         };
@@ -95,6 +107,24 @@ public partial class MainWindow : Window
         App.ApplyThemePreference(preference);
         _settings = _settings with { ThemePreference = preference };
         AppSettingsStore.Save(_settings);
+    }
+
+    private void OnFontPreferenceChanged(string fontFamily)
+    {
+        ApplyFontFamily(fontFamily);
+        _settings = _settings with { FontFamily = fontFamily };
+        AppSettingsStore.Save(_settings);
+    }
+
+    private void ApplyFontFamily(string fontFamily) => FontFamily = new FontFamily(fontFamily);
+
+    private static IEnumerable<string> GetInstalledFontFamilyNames()
+    {
+        var systemFonts = FontManager.Current.SystemFonts;
+        for (var index = 0; index < systemFonts.Count; index++)
+        {
+            yield return systemFonts[index].Name;
+        }
     }
 
     private void OnPlatformAppearancePreferencesChanged(PlatformAppearancePreferences preferences)
