@@ -7,7 +7,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Avalonia.Styling;
 using Avalonia.Threading;
 
 namespace Calculator.Avalonia;
@@ -17,44 +16,17 @@ public sealed class AnimatedSettingsExpander : Expander
     private static readonly TimeSpan AnimationDuration = TimeSpan.FromMilliseconds(200);
 
     private Border? _contentHost;
-    private Border? _separator;
     private TranslateTransform? _contentTransform;
     private CancellationTokenSource? _animationCancellation;
     private int _animationVersion;
 
     protected override Type StyleKeyOverride => typeof(Expander);
 
-    public AnimatedSettingsExpander()
-    {
-        ActualThemeVariantChanged += (_, _) => RefreshSeparatorBrush();
-        AttachedToVisualTree += (_, _) => RefreshSeparatorBrush();
-    }
-
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
 
         _contentHost = e.NameScope.Find<Border>("ExpanderContent");
-        var header = e.NameScope.Find<ToggleButton>("ExpanderHeader");
-        var headerGrid = e.NameScope.Find<Grid>("ToggleButtonGrid");
-
-        if (header is not null && headerGrid is not null)
-        {
-            _separator = new Border
-            {
-                Height = 1,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Bottom,
-                IsHitTestVisible = false,
-                ZIndex = 3,
-            };
-            Grid.SetColumnSpan(_separator, 2);
-            headerGrid.Children.Add(_separator);
-            RefreshSeparatorBrush();
-            Dispatcher.UIThread.Post(RefreshSeparatorBrush, DispatcherPriority.Background);
-            RefreshSeparatorVisibility();
-        }
-
         if (_contentHost is null)
         {
             return;
@@ -87,7 +59,6 @@ public sealed class AnimatedSettingsExpander : Expander
 
         if (change.Property == IsExpandedProperty && _contentHost is not null)
         {
-            RefreshSeparatorVisibility();
             StartHeightAnimation(IsExpanded);
         }
     }
@@ -186,33 +157,4 @@ public sealed class AnimatedSettingsExpander : Expander
         }
     }
 
-    private void RefreshSeparatorBrush()
-    {
-        if (_separator is null)
-        {
-            return;
-        }
-
-        if (this.TryFindResource("CalculatorBorderBrush", out var resource)
-            && resource is IBrush brush)
-        {
-            _separator.Background = brush;
-            return;
-        }
-
-        // Template construction can precede attachment to the themed resource
-        // tree. Keep the separator visible until the deferred lookup succeeds.
-        _separator.Background = new SolidColorBrush(
-            ActualThemeVariant == ThemeVariant.Dark
-                ? Color.Parse("#505158")
-                : Color.Parse("#D0D0D0"));
-    }
-
-    private void RefreshSeparatorVisibility()
-    {
-        if (_separator is not null)
-        {
-            _separator.IsVisible = IsExpanded;
-        }
-    }
 }

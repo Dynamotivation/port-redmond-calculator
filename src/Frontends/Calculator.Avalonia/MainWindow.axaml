@@ -30,6 +30,9 @@
           <SolidColorBrush x:Key="ChromeHoverBrush" Color="#34343B" />
           <SolidColorBrush x:Key="ChromeForegroundBrush" Color="#F5F5F5" />
           <SolidColorBrush x:Key="CalculatorBorderBrush" Color="#505158" />
+          <SolidColorBrush x:Key="SettingsCardBorderBrush" Color="#505158" />
+          <SolidColorBrush x:Key="SettingsExpanderHeaderHoverBrush" Color="#383941" />
+          <BoxShadows x:Key="SettingsCardBezelShadow">inset 0 0 1 0 #40505158, 0 0 1 0 #40505158</BoxShadows>
           <SolidColorBrush x:Key="NavigationSelectedBrush" Color="#303139" />
           <SolidColorBrush x:Key="DividerBrush" Color="#35FFFFFF" />
           <SolidColorBrush x:Key="AccentButtonBrush" Color="#4CC2FF" />
@@ -49,6 +52,9 @@
           <SolidColorBrush x:Key="ChromeHoverBrush" Color="#0F000000" />
           <SolidColorBrush x:Key="ChromeForegroundBrush" Color="#1A1A1A" />
           <SolidColorBrush x:Key="CalculatorBorderBrush" Color="#D0D0D0" />
+          <SolidColorBrush x:Key="SettingsCardBorderBrush" Color="#CCCCCC" />
+          <SolidColorBrush x:Key="SettingsExpanderHeaderHoverBrush" Color="#F6F6F6" />
+          <BoxShadows x:Key="SettingsCardBezelShadow">inset 0 0 1 0 #60CCCCCC, 0 0 1 0 #60CCCCCC</BoxShadows>
           <SolidColorBrush x:Key="NavigationSelectedBrush" Color="#E7E7E7" />
           <SolidColorBrush x:Key="DividerBrush" Color="#18000000" />
           <SolidColorBrush x:Key="AccentButtonBrush" Color="#0067C0" />
@@ -219,7 +225,7 @@
       <Setter Property="Background" Value="{DynamicResource CardBrush}" />
     </Style>
     <Style Selector="Expander.settingsExpander /template/ ToggleButton#ExpanderHeader:pointerover /template/ Border#ToggleButtonBackground">
-      <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+      <Setter Property="Background" Value="{DynamicResource SettingsExpanderHeaderHoverBrush}" />
     </Style>
     <Style Selector="Expander.settingsExpander /template/ ToggleButton#ExpanderHeader:pressed /template/ Border#ToggleButtonBackground">
       <Setter Property="Background" Value="{DynamicResource CardBrush}" />
@@ -230,6 +236,11 @@
     <Style Selector="Expander.settingsExpander /template/ Border#ExpanderContent">
       <Setter Property="Panel.ZIndex" Value="1" />
       <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+    <Style Selector="Border.settingsCard">
+      <Setter Property="BorderBrush" Value="{DynamicResource SettingsCardBorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BoxShadow" Value="{DynamicResource SettingsCardBezelShadow}" />
     </Style>
     <Style Selector="Button.memoryButton">
       <Setter Property="MinWidth" Value="0" />
@@ -339,6 +350,9 @@
     <Style Selector="Border.windowSurface.noBackdrop">
       <Setter Property="Background" Value="{DynamicResource SolidSurfaceBrush}" />
     </Style>
+    <Style Selector="Border.windowSurface.inactive">
+      <Setter Property="Background" Value="{DynamicResource SolidSurfaceBrush}" />
+    </Style>
     <Style Selector="Border.windowSurface.nativeFrame">
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="CornerRadius" Value="0" />
@@ -351,10 +365,20 @@
   <Grid>
     <Border Classes="windowSurface"
             Classes.noBackdrop="{Binding !UseMicaEffect}"
+            Classes.inactive="{Binding !IsActive, RelativeSource={RelativeSource AncestorType=Window}}"
             Classes.nativeFrame="{Binding UsesNativeWindowGeometry}"
             Classes.squareCorners="{Binding UsesSquareWindowCorners}"
             ClipToBounds="True"
             BorderBrush="{DynamicResource CalculatorBorderBrush}">
+    <Border.Transitions>
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.25">
+          <BrushTransition.Easing>
+            <SplineEasing X1="0.55" Y1="0.55" X2="0" Y2="1" />
+          </BrushTransition.Easing>
+        </BrushTransition>
+      </Transitions>
+    </Border.Transitions>
     <Grid RowDefinitions="Auto,54,*,42,3.05*">
       <!-- Source-faithful replacement for CalculatorApp.TitleBar. -->
       <Grid Grid.Row="0" Height="42" ColumnDefinitions="Auto,*,Auto,Auto,Auto" Background="Transparent"
@@ -384,8 +408,13 @@
         </Button>
       </Grid>
 
+      <!-- Calculator and Settings are separate page surfaces beneath the
+           shared title bar. Keep the inactive page out of layout and hit
+           testing instead of covering it with a transparent overlay. -->
+      <Grid Grid.Row="1" Grid.RowSpan="4" RowDefinitions="54,*,42,3.05*"
+            IsVisible="{Binding !IsSettingsOpen}">
       <!-- Hamburger/category/history row from MainPage + Calculator. -->
-      <Grid Grid.Row="1" ColumnDefinitions="56,Auto,62,*,56">
+      <Grid Grid.Row="0" ColumnDefinitions="56,Auto,62,*,56">
         <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="24" FontWeight="SemiBold" Text="{Binding ModeDisplayName}" />
         <Button Grid.Column="2" Classes="chromeButton" Margin="10,3,0,3" AutomationProperties.Name="Compact overlay">
           <Canvas Width="24" Height="24">
@@ -402,7 +431,7 @@
       </Grid>
 
       <!-- The original uses proportional Expression and Result rows. -->
-      <Grid Grid.Row="2" Margin="8,0,14,0" IsVisible="{Binding IsStandardMode}">
+      <Grid Grid.Row="1" Margin="8,0,14,0" IsVisible="{Binding IsStandardMode}">
         <TextBlock HorizontalAlignment="Right" VerticalAlignment="Top"
                    Margin="0,8,0,0" Opacity="0.64" FontSize="14" Text="{Binding ExpressionDisplay}" />
         <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,0,24"
@@ -410,7 +439,7 @@
       </Grid>
 
       <!-- MemoryPanel: MC, MR, M+, M−, MS, memory flyout. -->
-      <Grid Grid.Row="3" Margin="3,0" ColumnDefinitions="*,*,*,*,*,*" IsVisible="{Binding IsStandardMode}">
+      <Grid Grid.Row="2" Margin="3,0" ColumnDefinitions="*,*,*,*,*,*" IsVisible="{Binding IsStandardMode}">
         <Button Classes="memoryButton" Content="MC" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryClearAllCommand}" />
         <Button Grid.Column="1" Classes="memoryButton" Content="MR" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryRecallCommand}" />
         <Button Grid.Column="2" Classes="memoryButton" Content="M+" Command="{Binding MemoryAddCommand}" />
@@ -420,7 +449,7 @@
       </Grid>
 
       <!-- CalculatorStandardOperators + NumberPad, flattened without changing geometry. -->
-      <Grid Grid.Row="4" Margin="3,0,3,3"
+      <Grid Grid.Row="3" Margin="3,0,3,3"
             RowDefinitions="*,*,*,*,*,*" ColumnDefinitions="*,*,*,*"
             IsVisible="{Binding IsStandardMode}">
         <Button Classes="calcButton operator" Content="%" Command="{Binding SendCommandCommand}" CommandParameter="Percent" />
@@ -456,7 +485,7 @@
 
       <!-- Unit converter: the controls are backed by CalcViewModel's native
            UnitConverter and the original Microsoft conversion catalog. -->
-      <Grid Grid.Row="2" Grid.RowSpan="3" Margin="12,2,12,12"
+      <Grid Grid.Row="1" Grid.RowSpan="3" Margin="12,2,12,12"
             RowDefinitions="Auto,1.12*,Auto,1.12*,Auto,1.65*"
             IsVisible="{Binding IsUnitConverterMode}">
         <ComboBox Grid.Row="0" Classes="unitSelector" Margin="0,0,0,7"
@@ -545,7 +574,7 @@
 
       <!-- Source NavigationView replacement. The pane overlays content in the
            original LeftMinimal mode and keeps the title bar unobstructed. -->
-      <Grid Grid.Row="1" Grid.RowSpan="4" ColumnDefinitions="320,*"
+      <Grid Grid.Row="0" Grid.RowSpan="4" ColumnDefinitions="320,*"
             Classes="navigationOverlay" Classes.open="{Binding IsNavigationPaneOpen}">
         <Button Grid.ColumnSpan="2" Classes="navigationScrim" Padding="0" Background="Transparent" BorderThickness="0"
                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
@@ -600,9 +629,8 @@
       <!-- NavigationView keeps one pane-toggle button above the translating
            pane. Its behavior changes to close while open, but its hamburger
            glyph remains stable. It is locked until the pane stops moving. -->
-      <Button Grid.Row="1" Classes="chromeButton navigationToggle" Margin="5,3"
+      <Button Grid.Row="0" Classes="chromeButton navigationToggle" Margin="5,3"
               AutomationProperties.Name="Switch calculator mode"
-              IsVisible="{Binding !IsSettingsOpen}"
               IsHitTestVisible="{Binding CanInteractWithNavigationToggle}"
               Command="{Binding ToggleNavigationPaneCommand}">
         <Grid Width="24" Height="24">
@@ -612,9 +640,10 @@
           </Canvas>
         </Grid>
       </Button>
+      </Grid>
 
       <!-- Settings mirrors the source page's Appearance and About groups. -->
-      <Grid Grid.Row="1" Grid.RowSpan="4" Background="{DynamicResource SolidSurfaceBrush}"
+      <Grid Grid.Row="1" Grid.RowSpan="4" Background="Transparent"
             RowDefinitions="54,*" IsVisible="{Binding IsSettingsOpen}">
         <Grid.Resources>
           <!-- The outer Settings card owns its fill, border, and radius. Do not
@@ -668,22 +697,28 @@
             <TextBlock Margin="0,12,0,4" FontSize="14" FontWeight="SemiBold"
                        Text="{Binding SettingsAppearanceName}" />
 
-            <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource CalculatorBorderBrush}" BorderThickness="1"
+            <Border Classes="settingsCard" Background="{DynamicResource CardBrush}"
                     CornerRadius="6" Padding="0" ClipToBounds="True">
               <local:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="True"
                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                         Background="Transparent">
                 <Expander.Header>
-                  <Grid Classes="settingsExpanderHeader" ColumnDefinitions="36,*,32" RowDefinitions="Auto,Auto">
-                    <TextBlock Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center"
-                               FontFamily="{StaticResource CalculatorIconFont}" FontSize="20" Text="&#xE790;" />
-                    <TextBlock Grid.Column="1" FontSize="15" FontWeight="SemiBold" Text="{Binding AppThemeName}" />
-                    <TextBlock Grid.Row="1" Grid.Column="1" Margin="0,2,0,0" FontSize="13" Opacity="0.65"
-                               Text="{Binding AppThemeDescription}" />
-                    <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
-                          Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
-                          Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
-                          Data="M 1,1 L 6,6 L 11,1" />
+                  <Grid Height="48">
+                    <Grid Classes="settingsExpanderHeader" VerticalAlignment="Center"
+                          ColumnDefinitions="36,*,32" RowDefinitions="Auto,Auto">
+                      <TextBlock Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                 FontFamily="{StaticResource CalculatorIconFont}" FontSize="20" Text="&#xE790;" />
+                      <TextBlock Grid.Column="1" FontSize="15" FontWeight="SemiBold" Text="{Binding AppThemeName}" />
+                      <TextBlock Grid.Row="1" Grid.Column="1" Margin="0,2,0,0" FontSize="13" Opacity="0.65"
+                                 Text="{Binding AppThemeDescription}" />
+                      <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
+                            Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
+                            Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
+                            Data="M 1,1 L 6,6 L 11,1" />
+                    </Grid>
+                    <Border Height="1" VerticalAlignment="Bottom" ZIndex="3"
+                            Background="{DynamicResource SettingsCardBorderBrush}"
+                            IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" />
                   </Grid>
                 </Expander.Header>
                 <StackPanel Margin="50,0,16,14" Spacing="7">
@@ -703,8 +738,8 @@
             <StackPanel IsVisible="{Binding SupportsPlatformAppearanceSettings}">
               <TextBlock Margin="0,22,0,4" FontSize="14" FontWeight="SemiBold"
                          Text="{Binding PlatformAppearanceName}" />
-              <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource CalculatorBorderBrush}"
-                      BorderThickness="1" CornerRadius="6" Padding="14,8">
+              <Border Classes="settingsCard" Background="{DynamicResource CardBrush}"
+                      CornerRadius="6" Padding="14,8">
                 <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" Margin="0,4">
                   <TextBlock FontSize="14" FontWeight="SemiBold" Text="{Binding MicaEffectName}" />
                   <TextBlock Grid.Row="1" Margin="0,2,16,0" FontSize="12" Opacity="0.65"
@@ -714,23 +749,28 @@
                 </Grid>
               </Border>
 
-              <Border Margin="0,4,0,0" Background="{DynamicResource CardBrush}"
-                      BorderBrush="{DynamicResource CalculatorBorderBrush}" BorderThickness="1"
+              <Border Classes="settingsCard" Margin="0,4,0,0" Background="{DynamicResource CardBrush}"
                       CornerRadius="6" Padding="0" ClipToBounds="True">
                 <local:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
                           HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                           Background="Transparent">
                   <Expander.Header>
-                    <Grid Classes="settingsExpanderHeader" ColumnDefinitions="36,*,32" RowDefinitions="Auto,Auto">
-                      <TextBlock Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center"
-                                 FontSize="20" Text="⌜" />
-                      <TextBlock Grid.Column="1" FontSize="14" FontWeight="SemiBold" Text="{Binding WindowCornersName}" />
-                      <TextBlock Grid.Row="1" Grid.Column="1" Margin="0,2,0,0" FontSize="12" Opacity="0.65"
-                                 Text="{Binding WindowCornersDescription}" />
-                      <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
-                            Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
-                            Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
-                            Data="M 1,1 L 6,6 L 11,1" />
+                    <Grid Height="48">
+                      <Grid Classes="settingsExpanderHeader" VerticalAlignment="Center"
+                            ColumnDefinitions="36,*,32" RowDefinitions="Auto,Auto">
+                        <TextBlock Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                   FontSize="20" Text="⌜" />
+                        <TextBlock Grid.Column="1" FontSize="14" FontWeight="SemiBold" Text="{Binding WindowCornersName}" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Margin="0,2,0,0" FontSize="12" Opacity="0.65"
+                                   Text="{Binding WindowCornersDescription}" />
+                        <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
+                              Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
+                              Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
+                              Data="M 1,1 L 6,6 L 11,1" />
+                      </Grid>
+                      <Border Height="1" VerticalAlignment="Bottom" ZIndex="3"
+                              Background="{DynamicResource SettingsCardBorderBrush}"
+                              IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" />
                     </Grid>
                   </Expander.Header>
                   <StackPanel Margin="50,0,16,14" Spacing="7">
@@ -747,23 +787,28 @@
                 </local:AnimatedSettingsExpander>
               </Border>
 
-              <Border Margin="0,4,0,0" Background="{DynamicResource CardBrush}"
-                      BorderBrush="{DynamicResource CalculatorBorderBrush}" BorderThickness="1"
+              <Border Classes="settingsCard" Margin="0,4,0,0" Background="{DynamicResource CardBrush}"
                       CornerRadius="6" Padding="0" ClipToBounds="True">
                 <local:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
                           HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                           Background="Transparent">
                   <Expander.Header>
-                    <Grid Classes="settingsExpanderHeader" ColumnDefinitions="36,*,32" RowDefinitions="Auto,Auto">
-                      <TextBlock Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center"
-                                 FontSize="18" Text="•••" />
-                      <TextBlock Grid.Column="1" FontSize="14" FontWeight="SemiBold" Text="{Binding WindowControlsName}" />
-                      <TextBlock Grid.Row="1" Grid.Column="1" Margin="0,2,0,0" FontSize="12" Opacity="0.65"
-                                 Text="{Binding WindowControlsDescription}" />
-                      <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
-                            Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
-                            Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
-                            Data="M 1,1 L 6,6 L 11,1" />
+                    <Grid Height="48">
+                      <Grid Classes="settingsExpanderHeader" VerticalAlignment="Center"
+                            ColumnDefinitions="36,*,32" RowDefinitions="Auto,Auto">
+                        <TextBlock Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                   FontSize="18" Text="•••" />
+                        <TextBlock Grid.Column="1" FontSize="14" FontWeight="SemiBold" Text="{Binding WindowControlsName}" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Margin="0,2,0,0" FontSize="12" Opacity="0.65"
+                                   Text="{Binding WindowControlsDescription}" />
+                        <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
+                              Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
+                              Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
+                              Data="M 1,1 L 6,6 L 11,1" />
+                      </Grid>
+                      <Border Height="1" VerticalAlignment="Bottom" ZIndex="3"
+                              Background="{DynamicResource SettingsCardBorderBrush}"
+                              IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" />
                     </Grid>
                   </Expander.Header>
                   <StackPanel Margin="50,0,16,14" Spacing="7">
@@ -780,27 +825,32 @@
 
             <TextBlock Margin="0,26,0,4" FontSize="14" FontWeight="SemiBold"
                        Text="{Binding AboutGroupName}" />
-            <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource CalculatorBorderBrush}" BorderThickness="1"
+            <Border Classes="settingsCard" Background="{DynamicResource CardBrush}"
                     CornerRadius="6" Padding="0" ClipToBounds="True">
               <local:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                         Background="Transparent">
                 <Expander.Header>
-                  <Grid Classes="settingsExpanderHeader" ColumnDefinitions="36,*,32">
-                    <Grid Width="24" Height="24">
-                      <Border CornerRadius="3" Background="#6EC7E8" />
-                      <Grid Margin="5" RowDefinitions="5,*" ColumnDefinitions="*,*" ColumnSpacing="2" RowSpacing="2">
-                        <Border Grid.ColumnSpan="2" Background="#E9F7FC" />
-                        <Border Grid.Row="1" Background="#315368" />
-                        <Border Grid.Row="1" Grid.Column="1" Background="#315368" />
+                  <Grid Height="48">
+                    <Grid Classes="settingsExpanderHeader" VerticalAlignment="Center" ColumnDefinitions="36,*,32">
+                      <Grid Width="24" Height="24">
+                        <Border CornerRadius="3" Background="#6EC7E8" />
+                        <Grid Margin="5" RowDefinitions="5,*" ColumnDefinitions="*,*" ColumnSpacing="2" RowSpacing="2">
+                          <Border Grid.ColumnSpan="2" Background="#E9F7FC" />
+                          <Border Grid.Row="1" Background="#315368" />
+                          <Border Grid.Row="1" Grid.Column="1" Background="#315368" />
+                        </Grid>
                       </Grid>
+                      <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0"
+                                 FontSize="14" Opacity="0.68" Text="{Binding AboutVersionText}" />
+                      <Path Grid.Column="2" Classes="settingsExpanderChevron"
+                            Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
+                            Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
+                            Data="M 1,1 L 6,6 L 11,1" />
                     </Grid>
-                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0"
-                               FontSize="14" Opacity="0.68" Text="{Binding AboutVersionText}" />
-                    <Path Grid.Column="2" Classes="settingsExpanderChevron"
-                          Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
-                          Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
-                          Data="M 1,1 L 6,6 L 11,1" />
+                    <Border Height="1" VerticalAlignment="Bottom" ZIndex="3"
+                            Background="{DynamicResource SettingsCardBorderBrush}"
+                            IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" />
                   </Grid>
                 </Expander.Header>
                 <StackPanel Margin="50,0,16,14" Spacing="12">
