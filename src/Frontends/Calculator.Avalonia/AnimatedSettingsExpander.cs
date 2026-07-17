@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -16,6 +17,7 @@ public sealed class AnimatedSettingsExpander : Expander
     private static readonly TimeSpan AnimationDuration = TimeSpan.FromMilliseconds(200);
 
     private Border? _contentHost;
+    private ToggleButton? _headerToggle;
     private TranslateTransform? _contentTransform;
     private CancellationTokenSource? _animationCancellation;
     private int _animationVersion;
@@ -26,6 +28,17 @@ public sealed class AnimatedSettingsExpander : Expander
     {
         base.OnApplyTemplate(e);
 
+        if (_headerToggle is not null)
+        {
+            _headerToggle.Click -= HeaderToggleOnClick;
+        }
+
+        _headerToggle = e.NameScope.Find<ToggleButton>("ExpanderHeader");
+        if (_headerToggle is not null)
+        {
+            _headerToggle.Click += HeaderToggleOnClick;
+        }
+
         _contentHost = e.NameScope.Find<Border>("ExpanderContent");
         if (_contentHost is null)
         {
@@ -33,7 +46,8 @@ public sealed class AnimatedSettingsExpander : Expander
         }
 
         // The stock template binds visibility directly to IsExpanded, which
-        // removes the layout host before a collapse animation can run.
+        // removes the layout host before a collapse animation can run. The
+        // owned template deliberately leaves this part unbound.
         _contentHost.IsVisible = true;
         _contentHost.MinHeight = 0;
         _contentHost.ClipToBounds = true;
@@ -51,6 +65,11 @@ public sealed class AnimatedSettingsExpander : Expander
         {
             _contentHost.Height = 0;
         }
+    }
+
+    private void HeaderToggleOnClick(object? sender, RoutedEventArgs e)
+    {
+        IsExpanded = !IsExpanded;
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)

@@ -339,6 +339,41 @@
     <Style Selector="Path.settingsExpanderChevron.expanded">
       <Setter Property="RenderTransform" Value="rotate(180deg)" />
     </Style>
+    <!-- Avalonia 12.1 binds ExpanderContent.IsVisible to IsExpanded with
+         Mode=TwoWay. AnimatedSettingsExpander must keep the content mounted,
+         so own this small template and deliberately leave IsVisible unbound. -->
+    <Style Selector="Expander.settingsExpander">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <DockPanel MinWidth="{TemplateBinding MinWidth}"
+                     MaxWidth="{TemplateBinding MaxWidth}">
+            <ToggleButton Name="ExpanderHeader"
+                          DockPanel.Dock="Top"
+                          MinHeight="{TemplateBinding MinHeight}"
+                          CornerRadius="{TemplateBinding CornerRadius}"
+                          IsEnabled="{TemplateBinding IsEnabled}"
+                          Content="{TemplateBinding Header}"
+                          ContentTemplate="{TemplateBinding HeaderTemplate}"
+                          IsChecked="{TemplateBinding IsExpanded}" />
+            <Border Name="ExpanderContent"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    MinHeight="{TemplateBinding MinHeight}"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Padding="{TemplateBinding Padding}">
+              <ContentPresenter Name="PART_ContentPresenter"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                Foreground="{TemplateBinding Foreground}"
+                                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+            </Border>
+          </DockPanel>
+        </ControlTemplate>
+      </Setter>
+    </Style>
     <Style Selector="Expander.settingsExpander /template/ ToggleButton#ExpanderHeader">
       <Setter Property="Panel.ZIndex" Value="2" />
       <Setter Property="Height" Value="72" />
@@ -885,7 +920,7 @@
 
             <Border Classes="settingsCard" Background="Transparent"
                     CornerRadius="6" Padding="0" ClipToBounds="True">
-              <local:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="True"
+              <local:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                         Background="Transparent">
                 <Expander.Header>
