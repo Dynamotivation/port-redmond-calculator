@@ -75,6 +75,12 @@
     <Style Selector="Button.chromeButton:pointerover">
       <Setter Property="Background" Value="#34343B" />
     </Style>
+    <Style Selector="Button.chromeButton.navigationToggle:pointerover">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.chromeButton.navigationToggle:pressed">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
     <Style Selector="Button.navigationItem">
       <Setter Property="Height" Value="40" />
       <Setter Property="Margin" Value="4,1,8,1" />
@@ -227,7 +233,7 @@
 
       <!-- Hamburger/category/history row from MainPage + Calculator. -->
       <Grid Grid.Row="1" ColumnDefinitions="56,Auto,62,*,56">
-        <Button Classes="chromeButton" Margin="5,3" AutomationProperties.Name="Switch calculator mode"
+        <Button Classes="chromeButton navigationToggle" Margin="5,3" AutomationProperties.Name="Switch calculator mode"
                 Command="{Binding ToggleNavigationPaneCommand}">
           <Canvas Width="24" Height="24">
             <Path Stroke="#F5F5F5" StrokeThickness="1.5" Data="M 3,6 L 21,6 M 3,12 L 21,12 M 3,18 L 21,18" />
@@ -401,7 +407,7 @@
                 BoxShadow="8 0 18 0 #50000000">
           <Grid RowDefinitions="54,*,48">
             <Grid Grid.Row="0" ColumnDefinitions="56,*">
-              <Button Classes="chromeButton" Margin="5,3" AutomationProperties.Name="Close navigation"
+              <Button Classes="chromeButton navigationToggle" Margin="5,3" AutomationProperties.Name="Close navigation"
                       Command="{Binding CloseNavigationPaneCommand}">
                 <Canvas Width="24" Height="24">
                   <Path Stroke="#F5F5F5" StrokeThickness="1.5"
