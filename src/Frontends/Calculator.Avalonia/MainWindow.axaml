@@ -186,6 +186,22 @@
     <Style Selector="Button.chromeButton.navigationToggle:pressed">
       <Setter Property="Background" Value="{DynamicResource NavigationInteractionBrush}" />
     </Style>
+    <Style Selector="Canvas.hamburgerGlyph">
+      <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+      <Setter Property="RenderTransform" Value="scale(1,1)" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.24">
+            <TransformOperationsTransition.Easing>
+              <SpringEasing Mass="1" Stiffness="180" Damping="18" />
+            </TransformOperationsTransition.Easing>
+          </TransformOperationsTransition>
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Button.navigationToggle:pressed Canvas.hamburgerGlyph">
+      <Setter Property="RenderTransform" Value="scale(0.6,1)" />
+    </Style>
     <Style Selector="Grid.navigationOverlay">
       <Setter Property="IsHitTestVisible" Value="False" />
     </Style>
@@ -544,10 +560,11 @@
       <Grid Grid.Row="1" Grid.RowSpan="4" RowDefinitions="54,*,42,3.05*"
             IsVisible="{Binding !IsSettingsOpen}">
       <local:NavigationCulledGrid Grid.RowSpan="4" RowDefinitions="54,*,42,3.05*"
+                                 Margin="0,6,0,0"
                                  Classes="calculatorPageContent"
                                  Classes.paneOpen="{Binding IsNavigationPaneOpen}">
       <!-- Hamburger/category/history row from MainPage + Calculator. -->
-      <Grid Grid.Row="0" ColumnDefinitions="56,Auto,62,*,56">
+      <Grid Grid.Row="0" ColumnDefinitions="68,Auto,62,*,56">
         <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="24" FontWeight="SemiBold" Text="{Binding ModeDisplayName}" />
         <Button Grid.Column="2" Classes="chromeButton" Margin="10,3,0,3" AutomationProperties.Name="Compact overlay">
           <Canvas Width="24" Height="24">
@@ -764,12 +781,12 @@
       <!-- NavigationView keeps one pane-toggle button above the translating
            pane. Its behavior changes to close while open, but its hamburger
            glyph remains stable. It is locked until the pane stops moving. -->
-      <Button Grid.Row="0" Classes="chromeButton navigationToggle" Margin="5,3"
+      <Button Grid.Row="0" Classes="chromeButton navigationToggle" Margin="5,9,5,3"
               AutomationProperties.Name="Switch calculator mode"
               IsHitTestVisible="{Binding CanInteractWithNavigationToggle}"
               Command="{Binding ToggleNavigationPaneCommand}">
         <Grid Width="24" Height="24">
-          <Canvas Width="24" Height="24">
+          <Canvas Classes="hamburgerGlyph" Width="24" Height="24">
             <Path Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
                   Data="M 3,6 L 21,6 M 3,12 L 21,12 M 3,18 L 21,18" />
           </Canvas>
