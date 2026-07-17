@@ -251,7 +251,7 @@
     </Style>
     <Style Selector="Button.navigationItem">
       <Setter Property="Height" Value="40" />
-      <Setter Property="Margin" Value="4,1,8,1" />
+      <Setter Property="Margin" Value="4,2,8,2" />
       <Setter Property="Padding" Value="0" />
       <Setter Property="HorizontalAlignment" Value="Stretch" />
       <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -539,6 +539,16 @@
       <Setter Property="FontSize" Value="34" />
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
+    <Style Selector="TextBlock.pageHeading">
+      <Setter Property="FontSize" Value="25.2" />
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="RenderTransform" Value="translate(0px, -3.5px)" />
+    </Style>
+    <Style Selector="TextBlock.sectionHeading">
+      <Setter Property="FontSize" Value="14.7" />
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="RenderTransform" Value="translate(0px, -1px)" />
+    </Style>
     <Style Selector="Border.windowSurface">
       <Setter Property="Background" Value="{DynamicResource CalculatorBackgroundBrush}" />
       <Setter Property="BorderThickness" Value="1" />
@@ -630,7 +640,7 @@
                                  Classes.paneOpen="{Binding IsNavigationPaneOpen}">
       <!-- Hamburger/category/history row from MainPage + Calculator. -->
       <Grid Grid.Row="0" ColumnDefinitions="68,Auto,62,*,56">
-        <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="24" FontWeight="SemiBold" Text="{Binding ModeDisplayName}" />
+        <TextBlock Grid.Column="1" Classes="pageHeading" VerticalAlignment="Center" Text="{Binding ModeDisplayName}" />
         <Button Grid.Column="2" Classes="chromeButton" Margin="10,3,0,3" AutomationProperties.Name="Compact overlay">
           <Canvas Width="24" Height="24">
             <Path Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.4"
@@ -814,20 +824,20 @@
             </Grid>
 
             <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-              <StackPanel Margin="0,4,0,12">
-                <TextBlock Margin="16,8,8,5" FontSize="12" FontWeight="SemiBold" Opacity="0.62"
+              <StackPanel Margin="0,4,0,6">
+                <TextBlock Margin="16,11,8,5" FontSize="19" FontWeight="Medium" Opacity="0.62"
                            Text="{Binding CalculatorGroupName}" />
                 <ItemsControl ItemsSource="{Binding CalculatorNavigationItems}"
                               ItemTemplate="{StaticResource NavigationItemTemplate}" />
 
-                <TextBlock Margin="16,18,8,5" FontSize="12" FontWeight="SemiBold" Opacity="0.62"
+                <TextBlock Margin="16,18,8,5" FontSize="19" FontWeight="Medium" Opacity="0.62"
                            Text="{Binding ConverterGroupName}" />
                 <ItemsControl ItemsSource="{Binding ConverterNavigationItems}"
                               ItemTemplate="{StaticResource NavigationItemTemplate}" />
               </StackPanel>
             </ScrollViewer>
 
-            <Border Grid.Row="2" Height="1" Margin="8,0,8,0" VerticalAlignment="Top"
+            <Border Grid.Row="2" Height="1" Margin="0" VerticalAlignment="Top"
                     Background="{DynamicResource DividerBrush}" />
             <Button Grid.Row="2" Classes="navigationItem" Margin="4,16,8,4"
                     AutomationProperties.Name="{Binding SettingsName}"
@@ -898,7 +908,7 @@
           <SolidColorBrush x:Key="ExpanderChevronForegroundDisabled" Color="Transparent" />
         </Grid.Resources>
         <Grid Grid.Row="0" IsVisible="{Binding UsesWindowsWindowControls}">
-          <TextBlock Margin="24,0,0,0" VerticalAlignment="Center" FontSize="24" FontWeight="SemiBold"
+          <TextBlock Classes="pageHeading" Margin="24,0,0,0" VerticalAlignment="Center"
                      Text="{Binding SettingsName}" />
         </Grid>
         <Grid Grid.Row="0" ColumnDefinitions="56,*" IsVisible="{Binding UsesMacOSWindowControls}">
@@ -908,14 +918,14 @@
             <Path Width="18" Height="18" Stretch="Uniform" Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.25"
                   Data="M 12.5,5.5 L 6,12 L 12.5,18.5 M 6,12 L 20,12" />
           </Button>
-          <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="24" FontWeight="SemiBold"
+          <TextBlock Grid.Column="1" Classes="pageHeading" VerticalAlignment="Center"
                      Text="{Binding SettingsName}" />
         </Grid>
 
         <ScrollViewer Grid.Row="1" Padding="24,0,24,16"
                       HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
           <StackPanel Spacing="4">
-            <TextBlock Margin="0,12,0,4" FontSize="14" FontWeight="SemiBold"
+            <TextBlock Classes="sectionHeading" Margin="0,12,0,4"
                        Text="{Binding SettingsAppearanceName}" />
 
             <Border Classes="settingsCard" Background="Transparent"
@@ -958,7 +968,7 @@
             </Border>
 
             <StackPanel IsVisible="{Binding SupportsPlatformAppearanceSettings}">
-              <TextBlock Margin="0,22,0,4" FontSize="14" FontWeight="SemiBold"
+              <TextBlock Classes="sectionHeading" Margin="0,22,0,4"
                          Text="{Binding PlatformAppearanceName}" />
               <Border Classes="settingsCard" Background="{DynamicResource SettingsExpanderBrush}"
                       CornerRadius="6" Padding="24,18">
@@ -1048,7 +1058,7 @@
               </Border>
             </StackPanel>
 
-            <TextBlock Margin="0,26,0,4" FontSize="14" FontWeight="SemiBold"
+            <TextBlock Classes="sectionHeading" Margin="0,26,0,4"
                        Text="{Binding AboutGroupName}" />
             <Border Classes="settingsCard" Background="Transparent"
                     CornerRadius="6" Padding="0" ClipToBounds="True">
