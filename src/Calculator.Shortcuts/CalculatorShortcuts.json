@@ -1,0 +1,2658 @@
+{
+  "schemaVersion": 1,
+  "shortcuts": [
+    {
+      "id": "ClearHistory",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "ClearHistory",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "D"
+            },
+            "modifiers": [
+              "Shift",
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "HistoryButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "HistoryButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "H"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "memButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "memButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "M"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "clearButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "clearButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "ESCAPE"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "clearEntryButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "clearEntryButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "DELETE"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "closeParenthesisButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "closeParenthesisButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": ")"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "cosButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "cosButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "O"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "coshButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "coshButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "O"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "expButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "expButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "X"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "dmsButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "dmsButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "M"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "decimalSeparatorButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "decimalSeparatorButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "DECIMAL"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "divideButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "divideButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "/"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "equalButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "equalButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "="
+            },
+            "modifiers": []
+          },
+          {
+            "key": {
+              "kind": "Named",
+              "value": "ENTER"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "factorialButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "factorialButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "!"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "ftoeButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "ftoeButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "V"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "invertButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "invertButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "R"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "logBase10Button",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "logBase10Button",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "L"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "logBaseEButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "logBaseEButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "N"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "minusButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "minusButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "-"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "modButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "modButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "%"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "negateButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "negateButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "F9"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "converterNegateButton",
+      "scope": "converter",
+      "source": "UwpResource",
+      "description": "converterNegateButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "F9"
+            },
+            "modifiers": []
+          },
+          {
+            "key": {
+              "kind": "Character",
+              "value": "-"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "num0Button",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "num0Button",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "0"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "num1Button",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "num1Button",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "1"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "num2Button",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "num2Button",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "2"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "num3Button",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "num3Button",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "3"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "num4Button",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "num4Button",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "4"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "num5Button",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "num5Button",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "5"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "num6Button",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "num6Button",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "6"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "num7Button",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "num7Button",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "7"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "num8Button",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "num8Button",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "8"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "num9Button",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "num9Button",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "9"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "aButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "aButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "A"
+            },
+            "modifiers": []
+          },
+          {
+            "key": {
+              "kind": "Named",
+              "value": "A"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "bButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "bButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "B"
+            },
+            "modifiers": []
+          },
+          {
+            "key": {
+              "kind": "Named",
+              "value": "B"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "cButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "C"
+            },
+            "modifiers": []
+          },
+          {
+            "key": {
+              "kind": "Named",
+              "value": "C"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "dButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "dButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "D"
+            },
+            "modifiers": []
+          },
+          {
+            "key": {
+              "kind": "Named",
+              "value": "D"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "eButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "eButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "E"
+            },
+            "modifiers": []
+          },
+          {
+            "key": {
+              "kind": "Named",
+              "value": "E"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "fButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "fButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "F"
+            },
+            "modifiers": []
+          },
+          {
+            "key": {
+              "kind": "Named",
+              "value": "F"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "openParenthesisButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "openParenthesisButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "("
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "percentButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "percentButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "%"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "piButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "piButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "P"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "plusButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "plusButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "\u002B"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "powerButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "powerButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "Y"
+            },
+            "modifiers": []
+          },
+          {
+            "key": {
+              "kind": "Character",
+              "value": "^"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "powerOf10Button",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "powerOf10Button",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "G"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "sinButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "sinButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "S"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "sinhButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "sinhButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "S"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "squareRootButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "squareRootButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "@"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "tanButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "tanButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "T"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "tanhButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "tanhButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "T"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "xpower2Button",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "xpower2Button",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "Q"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "xpower3Button",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "xpower3Button",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "#"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "ySquareRootButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "ySquareRootButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "Y"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "backSpaceButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "backSpaceButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "BACK"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "multiplyButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "multiplyButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "*"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "orButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "orButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "|"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "notButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "notButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "~"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "andButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "andButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "\u0026"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "lshButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "lshButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "\u003C"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "rshButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "rshButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "\u003E"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "xorButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "xorButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "^"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "rolButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "rolButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "\u003C"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "rorButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "rorButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "\u003E"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "decimalButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "decimalButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "F6"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "hexButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "hexButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "F5"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "octButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "octButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "F7"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "binaryButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "binaryButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "F8"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "degreeButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "degreeButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "D"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "invcosButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "invcosButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "O"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "invcoshButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "invcoshButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "O"
+            },
+            "modifiers": [
+              "Shift",
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "invsinButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "invsinButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "S"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "invsinhButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "invsinhButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "S"
+            },
+            "modifiers": [
+              "Shift",
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "invtanButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "invtanButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "T"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "invtanhButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "invtanhButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "T"
+            },
+            "modifiers": [
+              "Shift",
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "powerOfEButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "powerOfEButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "N"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "copyButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "copyButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "C"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "copyButtonAlternate",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "copyButtonAlternate",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "INSERT"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "pasteButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "pasteButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "V"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "pasteButtonAlternate",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "pasteButtonAlternate",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "INSERT"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "ClearMemoryButton",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "ClearMemoryButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "L"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "MemRecall",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "MemRecall",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "R"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "MemPlus",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "MemPlus",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "P"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "MemMinus",
+      "scope": "calculator",
+      "source": "UwpResource",
+      "description": "MemMinus",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "Q"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "degButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "degButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "F4"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "radButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "radButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "F5"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "gradButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "gradButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "F3"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "wordButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "wordButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "F4"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "qwordButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "qwordButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "F2"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "byteButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "byteButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "F12"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "dwordButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "dwordButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "F3"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "logBaseY",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "logBaseY",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "L"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "secButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "secButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "U"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "sechButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "sechButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "U"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "invsecButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "invsecButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "U"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "invsechButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "invsechButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "U"
+            },
+            "modifiers": [
+              "Shift",
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cscButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "cscButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "I"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "cschButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "cschButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "I"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "invcscButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "invcscButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "I"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "invcschButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "invcschButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "I"
+            },
+            "modifiers": [
+              "Shift",
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cotButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "cotButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "J"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "cothButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "cothButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "J"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "invcotButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "invcotButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "J"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "invcothButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "invcothButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "J"
+            },
+            "modifiers": [
+              "Shift",
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "floorButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "floorButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "["
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "ceilButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "ceilButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "]"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "randButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "randButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "R"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "absButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "absButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "|"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "eulerButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "eulerButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "E"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "twoPowerXButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "twoPowerXButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "G"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "nandButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "nandButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "."
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "norButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "norButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "\\"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "rolCarryButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "rolCarryButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "\u003C"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "rorCarryButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "rorCarryButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "\u003E"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "lshLogicalButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "lshLogicalButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "\u003C"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "rshLogicalButton",
+      "scope": "programmer",
+      "source": "UwpResource",
+      "description": "rshLogicalButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "\u003E"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "cubeRootButton",
+      "scope": "scientific",
+      "source": "UwpResource",
+      "description": "cubeRootButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "B"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "plotButton",
+      "scope": "graphing",
+      "source": "UwpResource",
+      "description": "plotButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "ENTER"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "xButton",
+      "scope": "graphing",
+      "source": "UwpResource",
+      "description": "xButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "X"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "yButton",
+      "scope": "graphing",
+      "source": "UwpResource",
+      "description": "yButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "Y"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "graphingPowerButton",
+      "scope": "graphing",
+      "source": "UwpResource",
+      "description": "graphingPowerButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Character",
+              "value": "^"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "graphViewButton",
+      "scope": "graphing",
+      "source": "UwpResource",
+      "description": "graphViewButton",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "HOME"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "navigation.standard",
+      "scope": "navigation",
+      "source": "UwpNavigation",
+      "description": "Standard mode",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "1"
+            },
+            "modifiers": [
+              "Alt"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "navigation.scientific",
+      "scope": "navigation",
+      "source": "UwpNavigation",
+      "description": "Scientific mode",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "2"
+            },
+            "modifiers": [
+              "Alt"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "navigation.graphing",
+      "scope": "navigation",
+      "source": "UwpNavigation",
+      "description": "Graphing mode",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "3"
+            },
+            "modifiers": [
+              "Alt"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "navigation.programmer",
+      "scope": "navigation",
+      "source": "UwpNavigation",
+      "description": "Programmer mode",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "4"
+            },
+            "modifiers": [
+              "Alt"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "navigation.date",
+      "scope": "navigation",
+      "source": "UwpNavigation",
+      "description": "Date mode",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "5"
+            },
+            "modifiers": [
+              "Alt"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "navigation.dateCalculation",
+      "scope": "navigation",
+      "source": "UwpNavigation",
+      "description": "Date Calculation navigation special case",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "E"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "window.alwaysOnTop.enter",
+      "scope": "navigation",
+      "source": "UwpNavigation",
+      "description": "Enter always-on-top",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "UP"
+            },
+            "modifiers": [
+              "Alt"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "window.alwaysOnTop.exit",
+      "scope": "navigation",
+      "source": "UwpNavigation",
+      "description": "Exit always-on-top",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "DOWN"
+            },
+            "modifiers": [
+              "Alt"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "navigation.copy",
+      "scope": "navigation",
+      "source": "UwpNavigation",
+      "description": "Copy",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "C"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "navigation.copyAlternate",
+      "scope": "navigation",
+      "source": "UwpNavigation",
+      "description": "Copy alternate",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "INSERT"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "navigation.paste",
+      "scope": "navigation",
+      "source": "UwpNavigation",
+      "description": "Paste",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "V"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "navigation.pasteAlternate",
+      "scope": "navigation",
+      "source": "UwpNavigation",
+      "description": "Paste alternate",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "INSERT"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "graph.trace.move",
+      "scope": "graphing",
+      "source": "HardCodedControl",
+      "description": "Move the active trace cursor",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "LEFT"
+            },
+            "modifiers": []
+          },
+          {
+            "key": {
+              "kind": "Named",
+              "value": "RIGHT"
+            },
+            "modifiers": []
+          },
+          {
+            "key": {
+              "kind": "Named",
+              "value": "UP"
+            },
+            "modifiers": []
+          },
+          {
+            "key": {
+              "kind": "Named",
+              "value": "DOWN"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "graph.trace.moveFine",
+      "scope": "graphing",
+      "source": "HardCodedControl",
+      "description": "Move the trace cursor by a smaller step",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "LEFT"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          },
+          {
+            "key": {
+              "kind": "Named",
+              "value": "RIGHT"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          },
+          {
+            "key": {
+              "kind": "Named",
+              "value": "UP"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          },
+          {
+            "key": {
+              "kind": "Named",
+              "value": "DOWN"
+            },
+            "modifiers": [
+              "Shift"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "graph.trace.stop",
+      "scope": "graphing",
+      "source": "HardCodedControl",
+      "description": "Stop active graph tracing",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "ESCAPE"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "graph.equation.submit",
+      "scope": "equationInput",
+      "source": "HardCodedControl",
+      "description": "Submit a graph equation",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "ENTER"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "graph.setting.submit",
+      "scope": "graphSettings",
+      "source": "HardCodedControl",
+      "description": "Submit a graph setting or advance focus",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "ENTER"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "converter.unit.select",
+      "scope": "converter",
+      "source": "HardCodedControl",
+      "description": "Select the focused unit value",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "SPACE"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "result.scroll",
+      "scope": "calculationResult",
+      "source": "HardCodedControl",
+      "description": "Scroll an overflowing result",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "LEFT"
+            },
+            "modifiers": []
+          },
+          {
+            "key": {
+              "kind": "Named",
+              "value": "RIGHT"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "mathInput.suppressBold",
+      "scope": "mathInput",
+      "source": "HardCodedControl",
+      "description": "Suppress rich-text bold formatting",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "B"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "calculatorButton.ignoreEnter",
+      "scope": "calculatorButton",
+      "source": "HardCodedControl",
+      "description": "Ignore Enter in custom calculator buttons",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "ENTER"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "shortcutManager.dismiss",
+      "scope": "shortcutManager",
+      "source": "HardCodedControl",
+      "description": "Dismiss unless Escape is temporarily ignored",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "ESCAPE"
+            },
+            "modifiers": []
+          }
+        ]
+      }
+    }
+  ]
+}
