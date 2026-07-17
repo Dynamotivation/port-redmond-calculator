@@ -8,6 +8,7 @@ namespace Calculator.Managed;
 
 public partial class CalculatorViewModel : ObservableObject, IDisposable
 {
+    private const int NavigationTransitionDurationMilliseconds = 220;
     private readonly NativeCalculator _calculator;
     private readonly NativeUnitConverter _unitConverter;
     private bool synchronizingUnitSelection;
@@ -38,6 +39,26 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     public partial bool IsNavigationPaneOpen { get; private set; }
 
+    [ObservableProperty]
+    public partial bool IsSettingsOpen { get; private set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanInteractWithNavigationToggle))]
+    public partial bool IsNavigationPaneTransitioning { get; private set; }
+
+    public bool CanInteractWithNavigationToggle => !IsNavigationPaneTransitioning;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsLightThemeSelected))]
+    [NotifyPropertyChangedFor(nameof(IsDarkThemeSelected))]
+    [NotifyPropertyChangedFor(nameof(IsSystemThemeSelected))]
+    public partial AppThemePreference SelectedThemePreference { get; private set; } = AppThemePreference.Dark;
+
+    public bool IsLightThemeSelected => SelectedThemePreference == AppThemePreference.Light;
+    public bool IsDarkThemeSelected => SelectedThemePreference == AppThemePreference.Dark;
+    public bool IsSystemThemeSelected => SelectedThemePreference == AppThemePreference.System;
+    public event Action<AppThemePreference>? ThemePreferenceChanged;
+
     public bool IsStandardMode => CurrentViewMode == CalculatorViewMode.Standard;
     public bool IsUnitConverterMode => CurrentViewMode is >= CalculatorViewMode.Volume and <= CalculatorViewMode.Angle;
 
@@ -64,15 +85,41 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public string CalculatorGroupName { get; }
     public string ConverterGroupName { get; }
     public string SettingsName { get; }
+    public string SettingsAppearanceName { get; }
+    public string AppThemeName { get; }
+    public string AppThemeDescription { get; }
+    public string LightThemeName { get; }
+    public string DarkThemeName { get; }
+    public string SystemThemeName { get; }
+    public string BackAutomationName { get; }
+    public string AboutGroupName { get; }
+    public string AboutLicenseName { get; }
+    public string AboutServicesName { get; }
+    public string AboutPrivacyName { get; }
+    public string FeedbackName { get; }
+    public string AboutVersionText { get; } = "Redmond Calculator 0.1.0";
     public string HistoryAutomationName { get; }
 
-    public CalculatorViewModel()
+    public CalculatorViewModel(AppThemePreference initialThemePreference = AppThemePreference.Dark)
     {
+        SelectedThemePreference = initialThemePreference;
         var appResources = ResourceLoader.GetForViewIndependentUse();
         ModeDisplayName = appResources.GetString("StandardModeText");
         CalculatorGroupName = appResources.GetString("CalculatorModeTextCaps");
         ConverterGroupName = appResources.GetString("ConverterModeTextCaps");
         SettingsName = appResources.GetString("SettingsHeader.Text");
+        SettingsAppearanceName = appResources.GetString("SettingsAppearance.Text");
+        AppThemeName = appResources.GetString("AppThemeExpander.Header");
+        AppThemeDescription = appResources.GetString("AppThemeExpander.Description");
+        LightThemeName = appResources.GetString("LightThemeRadioButton.Content");
+        DarkThemeName = appResources.GetString("DarkThemeRadioButton.Content");
+        SystemThemeName = appResources.GetString("SystemThemeRadioButton.Content");
+        BackAutomationName = appResources.GetString("TitleBarBackButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
+        AboutGroupName = appResources.GetString("AboutGroupTitle.Text");
+        AboutLicenseName = appResources.GetString("AboutEULA.Text");
+        AboutServicesName = appResources.GetString("AboutControlServicesAgreement.Text");
+        AboutPrivacyName = appResources.GetString("AboutControlPrivacyStatement.Text");
+        FeedbackName = appResources.GetString("FeedbackButton.Content");
         HistoryAutomationName = appResources.GetString("HistoryLabel/Text");
         _calculator = new NativeCalculator(ResourceLoader.GetForViewIndependentUse("CEngineStrings"));
         var regionCode = GetCurrentRegionCode();
@@ -126,16 +173,29 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     private void MemoryClearAll() { _calculator.MemoryClearAll(); Synchronize(); }
 
     [RelayCommand]
-    private void ToggleNavigationPane()
+    private Task ToggleNavigationPane() => SetNavigationPaneOpenAsync(!IsNavigationPaneOpen);
+
+    [RelayCommand]
+    private Task CloseNavigationPane() => SetNavigationPaneOpenAsync(false);
+
+    [RelayCommand]
+    private async Task OpenSettings()
     {
-        IsNavigationPaneOpen = !IsNavigationPaneOpen;
+        await SetNavigationPaneOpenAsync(false);
+        IsSettingsOpen = true;
     }
 
     [RelayCommand]
-    private void CloseNavigationPane() => IsNavigationPaneOpen = false;
+    private void CloseSettings() => IsSettingsOpen = false;
 
     [RelayCommand]
-    private void SelectNavigationItem(CalculatorNavigationItem? item)
+    private void SelectTheme(string preference)
+    {
+        SelectedThemePreference = Enum.Parse<AppThemePreference>(preference, ignoreCase: false);
+    }
+
+    [RelayCommand]
+    private async Task SelectNavigationItem(CalculatorNavigationItem? item)
     {
         if (item is null || !item.IsEnabled)
         {
@@ -160,7 +220,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             }
         }
 
-        IsNavigationPaneOpen = false;
+        await SetNavigationPaneOpenAsync(false);
     }
 
     [RelayCommand]
@@ -326,4 +386,19 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             item.IsSelected = item.Mode == mode;
         }
     }
+
+    private async Task SetNavigationPaneOpenAsync(bool isOpen)
+    {
+        if (IsNavigationPaneTransitioning || IsNavigationPaneOpen == isOpen)
+        {
+            return;
+        }
+
+        IsNavigationPaneTransitioning = true;
+        IsNavigationPaneOpen = isOpen;
+        await Task.Delay(NavigationTransitionDurationMilliseconds);
+        IsNavigationPaneTransitioning = false;
+    }
+
+    partial void OnSelectedThemePreferenceChanged(AppThemePreference value) => ThemePreferenceChanged?.Invoke(value);
 }

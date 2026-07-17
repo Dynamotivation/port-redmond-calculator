@@ -3,6 +3,8 @@ using System.IO;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Styling;
+using Calculator.Managed;
 using Windows.ApplicationModel.Resources;
 
 namespace Calculator.Avalonia;
@@ -17,9 +19,26 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow();
+            var themePreference = AppSettingsStore.LoadThemePreference();
+            ApplyThemePreference(themePreference);
+            desktop.MainWindow = new MainWindow(themePreference);
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    internal static void ApplyThemePreference(AppThemePreference preference)
+    {
+        if (Current is null)
+        {
+            return;
+        }
+
+        Current.RequestedThemeVariant = preference switch
+        {
+            AppThemePreference.Light => ThemeVariant.Light,
+            AppThemePreference.Dark => ThemeVariant.Dark,
+            _ => ThemeVariant.Default,
+        };
     }
 }

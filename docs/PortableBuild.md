@@ -44,6 +44,10 @@ The macOS frontend uses an `NSVisualEffectView` behind Avalonia content for a
 native translucent material. Its borderless window retains drag, resize,
 minimize, maximize, and close behavior through explicit custom chrome.
 
+The observed WinUI/UWP versus Avalonia Fluent defaults, Calculator-specific
+overrides, reusable porting patterns, and visual QA rules are maintained in the
+[Fluent migration guide](AvaloniaFluentMigration.md).
+
 The frontend packages all original Calculator `.resw` files and selects the
 current UI culture at runtime. It is not restricted to the former copied
 `en-US/CEngineStrings.resw` file.
@@ -56,10 +60,11 @@ serialization IDs, localized labels, category groups, and glyphs from
 overlay/light-dismiss behavior and retains the selected mode.
 
 Standard and all 12 static converter categories route to working native-backed
-surfaces. Scientific, Graphing, Programmer, Date, Currency, and Settings are
-present but disabled until their corresponding frontend or platform layer is
-ported. Currency remains unavailable until its Windows HTTP/cache implementation
-is replaced with a real cross-platform loader.
+surfaces. Settings routes to a functional cross-platform page with persisted
+Light, Dark, and system theme preferences. Scientific, Graphing, Programmer,
+Date, and Currency remain present but disabled until their corresponding
+frontend or platform layer is ported. Currency remains unavailable until its
+Windows HTTP/cache implementation is replaced with a real cross-platform loader.
 
 ## Cross-platform UWP resources
 

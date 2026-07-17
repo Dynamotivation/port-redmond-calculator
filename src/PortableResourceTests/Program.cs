@@ -92,14 +92,26 @@ using (var viewModel = new CalculatorViewModel())
         && viewModel.CalculatorNavigationItems.Single(item => item.Mode == CalculatorViewMode.Standard).IsSelected,
         "Navigation did not initialize in Standard mode.");
 
-    viewModel.ToggleNavigationPaneCommand.Execute(null);
+    await viewModel.ToggleNavigationPaneCommand.ExecuteAsync(null);
     Require(viewModel.IsNavigationPaneOpen, "Hamburger command did not open the navigation pane.");
     var temperatureItem = viewModel.ConverterNavigationItems.Single(item => item.Mode == CalculatorViewMode.Temperature);
-    viewModel.SelectNavigationItemCommand.Execute(temperatureItem);
+    await viewModel.SelectNavigationItemCommand.ExecuteAsync(temperatureItem);
     Require(viewModel.IsUnitConverterMode && viewModel.CurrentViewMode == CalculatorViewMode.Temperature
         && viewModel.SelectedUnitCategory?.Id == (int)CalculatorViewMode.Temperature
         && !viewModel.IsNavigationPaneOpen && temperatureItem.IsSelected,
         "Navigation did not route to the selected converter category.");
+
+    await viewModel.ToggleNavigationPaneCommand.ExecuteAsync(null);
+    await viewModel.OpenSettingsCommand.ExecuteAsync(null);
+    Require(viewModel.IsSettingsOpen && !viewModel.IsNavigationPaneOpen,
+        "Settings navigation did not close the pane and open the Settings surface.");
+    AppThemePreference? changedTheme = null;
+    viewModel.ThemePreferenceChanged += value => changedTheme = value;
+    viewModel.SelectThemeCommand.Execute(nameof(AppThemePreference.Light));
+    Require(viewModel.IsLightThemeSelected && changedTheme == AppThemePreference.Light,
+        "Settings theme selection did not update state or notify the frontend host.");
+    viewModel.CloseSettingsCommand.Execute(null);
+    Require(!viewModel.IsSettingsOpen, "Settings back command did not restore calculator content.");
 }
 
 Console.WriteLine("ResourceLoader and managed native-unit-converter compatibility tests passed.");
