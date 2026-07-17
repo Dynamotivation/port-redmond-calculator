@@ -60,10 +60,7 @@ internal sealed class MacOSMicaBackdrop : IDisposable
         SendDouble(layer, Selector("setCornerRadius:"), cornerRadius);
         SendBool(layer, Selector("setMasksToBounds:"), true);
 
-        SendBool(nsWindow, Selector("setOpaque:"), false);
-        var nsColorClass = objc_getClass("NSColor");
-        var clearColor = SendIntPtr(nsColorClass, Selector("clearColor"));
-        SendIntPtrArgument(nsWindow, Selector("setBackgroundColor:"), clearColor);
+        PrepareTransparentWindow(window);
 
         SendAddSubview(frameView, Selector("addSubview:positioned:relativeTo:"), effectView, NSWindowBelow, contentView);
         return new MacOSMicaBackdrop(effectView);
@@ -93,6 +90,25 @@ internal sealed class MacOSMicaBackdrop : IDisposable
         {
             SendVoid(platformHandle.Handle, Selector("invalidateShadow"));
         }
+    }
+
+    public static void PrepareTransparentWindow(Window window)
+    {
+        if (!OperatingSystem.IsMacOS())
+        {
+            return;
+        }
+
+        var platformHandle = window.TryGetPlatformHandle();
+        if (platformHandle is null || platformHandle.Handle == IntPtr.Zero)
+        {
+            return;
+        }
+
+        SendBool(platformHandle.Handle, Selector("setOpaque:"), false);
+        var nsColorClass = objc_getClass("NSColor");
+        var clearColor = SendIntPtr(nsColorClass, Selector("clearColor"));
+        SendIntPtrArgument(platformHandle.Handle, Selector("setBackgroundColor:"), clearColor);
     }
 
     private static IntPtr Selector(string name) => sel_registerName(name);

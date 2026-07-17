@@ -46,12 +46,13 @@ minimize, maximize, and close behavior through explicit custom chrome. The
 Settings page can switch the material off and exposes two independent radio
 choices. Window shape can be Windows 10 square, Windows 11 rounded, or native
 macOS rounded; title-bar controls can be Windows caption buttons or genuine
-AppKit traffic lights. Native geometry uses Avalonia's `BorderOnly`
-extended-client mode so AppKit owns corners, shadow, and resizing. The traffic
-lights are standard AppKit window buttons inserted into the Calculator's custom
-title region, so selecting them does not force a title bar or a particular
-corner style. These host preferences are persisted alongside the app theme and
-are hidden on unsupported platforms.
+AppKit traffic lights. The selections remain independent. macOS controls with a
+Windows corner style use standalone system-rendered buttons in the custom title
+region. Selecting both macOS controls and macOS corners upgrades the window to
+AppKit's complete titled-window implementation, including coordinated hover and
+window-management behavior. macOS corners with Windows controls use Avalonia's
+`BorderOnly` extended-client mode. These host preferences are persisted
+alongside the app theme and are hidden on unsupported platforms.
 
 The observed WinUI/UWP versus Avalonia Fluent defaults, Calculator-specific
 overrides, reusable porting patterns, and visual QA rules are maintained in the

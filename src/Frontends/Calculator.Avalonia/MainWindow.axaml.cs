@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Calculator.Managed;
 
 namespace Calculator.Avalonia;
@@ -14,6 +15,7 @@ public partial class MainWindow : Window
     private readonly CalculatorViewModel _viewModel;
     private AppSettings _settings;
     private bool _isOpened;
+    private int _presentationVersion;
 
     public MainWindow()
         : this(new AppSettings())
@@ -23,20 +25,21 @@ public partial class MainWindow : Window
     internal MainWindow(AppSettings settings)
     {
         InitializeComponent();
+        var appearance = settings.ToPlatformAppearance();
         _settings = settings;
         _viewModel = new CalculatorViewModel(
             settings.ThemePreference,
-            settings.ToPlatformAppearance(),
+            appearance,
             OperatingSystem.IsMacOS());
         _viewModel.ThemePreferenceChanged += OnThemePreferenceChanged;
         _viewModel.PlatformAppearancePreferencesChanged += OnPlatformAppearancePreferencesChanged;
         DataContext = _viewModel;
-        ApplyWindowDecorations(settings.ToPlatformAppearance());
+        ApplyWindowDecorations(appearance);
         Opened += (_, _) =>
         {
             _isOpened = true;
-            RefreshBackdrop(settings.ToPlatformAppearance());
-            RefreshWindowControls(settings.ToPlatformAppearance());
+            RefreshBackdrop(appearance);
+            RefreshWindowPresentation(appearance);
         };
         Closed += (_, _) =>
         {
@@ -90,6 +93,17 @@ public partial class MainWindow : Window
 
     private void OnPlatformAppearancePreferencesChanged(PlatformAppearancePreferences preferences)
     {
+        var previousPreferences = _settings.ToPlatformAppearance();
+        var wasUsingNativeTitleBar = UsesFullNativeTitleBar(previousPreferences);
+        var requiresStagedHostedControls = _isOpened
+            && wasUsingNativeTitleBar
+            && preferences.WindowCornerStyle != WindowCornerStyle.MacOS
+            && preferences.WindowControlStyle == WindowControlStyle.MacOS;
+        var presentationVersion = ++_presentationVersion;
+
+        _macOSWindowControls?.Dispose();
+        _macOSWindowControls = null;
+
         _settings = _settings with
         {
             UseMicaEffect = preferences.UseMicaEffect,
@@ -97,19 +111,49 @@ public partial class MainWindow : Window
             WindowControlStyle = preferences.WindowControlStyle,
         };
         AppSettingsStore.Save(_settings);
+
+        if (requiresStagedHostedControls)
+        {
+            var teardownPreferences = preferences with
+            {
+                WindowCornerStyle = WindowCornerStyle.MacOS,
+                WindowControlStyle = WindowControlStyle.Windows,
+            };
+            ApplyWindowDecorations(teardownPreferences);
+            RefreshBackdrop(teardownPreferences);
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (!_isOpened
+                    || presentationVersion != _presentationVersion
+                    || _settings.ToPlatformAppearance() != preferences)
+                {
+                    return;
+                }
+
+                ApplyWindowDecorations(preferences);
+                RefreshBackdrop(preferences);
+                RefreshWindowPresentation(preferences);
+            }, DispatcherPriority.Background);
+            return;
+        }
+
         ApplyWindowDecorations(preferences);
         RefreshBackdrop(preferences);
-        RefreshWindowControls(preferences);
+        RefreshWindowPresentation(preferences, deferFullNativeTitleBar: true);
     }
 
     private void ApplyWindowDecorations(PlatformAppearancePreferences preferences)
     {
+        var usesNativeTitleBar = UsesFullNativeTitleBar(preferences);
         var usesNativeGeometry = preferences.WindowCornerStyle == WindowCornerStyle.MacOS;
         ExtendClientAreaToDecorationsHint = usesNativeGeometry;
         ExtendClientAreaTitleBarHeightHint = 42;
-        WindowDecorations = usesNativeGeometry
-            ? global::Avalonia.Controls.WindowDecorations.BorderOnly
-            : global::Avalonia.Controls.WindowDecorations.None;
+        WindowDecorations = usesNativeTitleBar
+            ? global::Avalonia.Controls.WindowDecorations.Full
+            : usesNativeGeometry
+                ? global::Avalonia.Controls.WindowDecorations.BorderOnly
+                : global::Avalonia.Controls.WindowDecorations.None;
     }
 
     private void RefreshBackdrop(PlatformAppearancePreferences preferences)
@@ -119,22 +163,53 @@ public partial class MainWindow : Window
 
         if (_isOpened && preferences.UseMicaEffect)
         {
-            _micaBackdrop = MacOSMicaBackdrop.Attach(this, _viewModel.WindowCornerRadius);
+            var cornerRadius = preferences.WindowCornerStyle == WindowCornerStyle.Windows11 ? 8 : 0;
+            _micaBackdrop = MacOSMicaBackdrop.Attach(this, cornerRadius);
         }
 
         MacOSMicaBackdrop.InvalidateWindowShadow(this);
     }
 
-    private void RefreshWindowControls(PlatformAppearancePreferences preferences)
+    private void RefreshWindowPresentation(
+        PlatformAppearancePreferences preferences,
+        bool deferFullNativeTitleBar = false)
     {
-        _macOSWindowControls?.Dispose();
-        _macOSWindowControls = null;
+        if (!_isOpened)
+        {
+            return;
+        }
 
-        if (_isOpened && preferences.WindowControlStyle == WindowControlStyle.MacOS)
+        if (UsesFullNativeTitleBar(preferences))
+        {
+            if (deferFullNativeTitleBar)
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (_isOpened && UsesFullNativeTitleBar(_settings.ToPlatformAppearance()))
+                    {
+                        MacOSNativeTitleBar.Apply(this, enabled: true);
+                        MacOSMicaBackdrop.InvalidateWindowShadow(this);
+                    }
+                }, DispatcherPriority.Background);
+            }
+            else
+            {
+                MacOSNativeTitleBar.Apply(this, enabled: true);
+            }
+        }
+        else if (UsesStandaloneMacOSControls(preferences))
         {
             _macOSWindowControls = MacOSWindowControls.Attach(this);
         }
     }
+
+    private static bool UsesFullNativeTitleBar(PlatformAppearancePreferences preferences) =>
+        preferences.WindowCornerStyle == WindowCornerStyle.MacOS
+        && preferences.WindowControlStyle == WindowControlStyle.MacOS;
+
+    private static bool UsesStandaloneMacOSControls(PlatformAppearancePreferences preferences) =>
+        preferences.WindowCornerStyle != WindowCornerStyle.MacOS
+        && preferences.WindowControlStyle == WindowControlStyle.MacOS;
 
     private async void License_OnClick(object? sender, RoutedEventArgs e) =>
         await Launcher.LaunchUriAsync(new Uri("https://github.com/microsoft/calculator/blob/main/LICENSE"));

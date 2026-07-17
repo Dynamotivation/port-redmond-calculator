@@ -69,7 +69,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public string Windows11CornersName { get; } = "Windows 11 — rounded";
     public string MacOSCornersName { get; } = "macOS — rounded";
     public string WindowControlsName { get; } = "Title bar controls";
-    public string WindowControlsDescription { get; } = "Choose the window button style";
+    public string WindowControlsDescription { get; } = "Fully native behavior is used with macOS corners";
     public string WindowsWindowControlsName { get; } = "Windows";
     public string MacOSWindowControlsName { get; } = "macOS";
 
