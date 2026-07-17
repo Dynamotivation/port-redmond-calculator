@@ -27,9 +27,12 @@ The shared-library output is named `calculator_engine.dll` on Windows,
 
 ## Avalonia vertical slice on macOS
 
-The source-faithful Standard Calculator frontend calls the portable engine
-through the managed C ABI wrapper. Build the native target first so MSBuild can
-copy the dynamic library into the application output:
+The source-faithful Standard Calculator and Unit Converter frontend calls the
+portable engine through the managed C ABI wrapper. The Unit Converter surface
+uses the original `UnitConverter`, catalog, regional defaults, input behavior,
+and suggested-value generation; it is not a UI-only approximation. Build the
+native target first so MSBuild can copy the dynamic library into the application
+output:
 
 ```sh
 cmake -S . -B build/portable -DCMAKE_BUILD_TYPE=Release
@@ -44,6 +47,11 @@ minimize, maximize, and close behavior through explicit custom chrome.
 The frontend packages all original Calculator `.resw` files and selects the
 current UI culture at runtime. It is not restricted to the former copied
 `en-US/CEngineStrings.resw` file.
+
+The hamburger button currently switches between the completed Standard and
+Unit Converter vertical slices. The converter exposes the 12 static categories;
+Currency remains absent until its Windows HTTP/cache implementation is replaced
+with a real cross-platform loader.
 
 ## Cross-platform UWP resources
 
@@ -71,6 +79,11 @@ calculator instance is created.
 
 The ABI is intentionally independent of a UI framework. A Uno Platform,
 Avalonia, Flutter, Qt, or command-line frontend can call the same native library.
+In addition to arithmetic, history, and memory, it exposes an opaque Unit
+Converter handle with category/unit enumeration, regional selection, input
+commands, active-unit switching, display values, suggestions, and max-digit
+events. `Calculator.Managed.NativeUnitConverter` is the .NET binding used by the
+Avalonia frontend.
 
 ## Asynchronous compatibility boundary
 

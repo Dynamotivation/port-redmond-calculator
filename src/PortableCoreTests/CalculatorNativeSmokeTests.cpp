@@ -52,9 +52,9 @@ namespace
         return value;
     }
 
-    std::vector<std::pair<std::string, std::string>> LoadResources()
+    std::vector<std::pair<std::string, std::string>> LoadResources(const std::string& fileName)
     {
-        const std::string path = std::string{ CALCULATOR_SOURCE_DIR } + "/src/Calculator/Resources/en-US/CEngineStrings.resw";
+        const std::string path = std::string{ CALCULATOR_SOURCE_DIR } + "/src/Calculator/Resources/en-US/" + fileName;
         std::ifstream input(path);
         const std::string xml{ std::istreambuf_iterator<char>{ input }, std::istreambuf_iterator<char>{} };
         if (xml.empty())
@@ -97,7 +97,7 @@ namespace
 
 int main()
 {
-    const auto resourceValues = LoadResources();
+    const auto resourceValues = LoadResources("CEngineStrings.resw");
     std::vector<calculator_resource_entry> resources;
     resources.reserve(resourceValues.size());
     for (const auto& [key, value] : resourceValues)
@@ -217,5 +217,107 @@ int main()
     }
 
     calculator_destroy(handle);
+
+    const auto unitResourceValues = LoadResources("Resources.resw");
+    std::vector<calculator_resource_entry> unitResources;
+    unitResources.reserve(unitResourceValues.size());
+    for (const auto& [key, value] : unitResourceValues)
+    {
+        unitResources.push_back({ key.c_str(), value.c_str() });
+    }
+
+    calculator_unit_converter_handle* unitConverter = nullptr;
+    if (calculator_unit_converter_create(unitResources.data(), unitResources.size(), "US", &unitConverter) != CALCULATOR_STATUS_OK)
+    {
+        std::cerr << "calculator_unit_converter_create failed: " << calculator_get_last_error() << '\n';
+        return 1;
+    }
+
+    std::size_t categoryCount = 0;
+    if (calculator_unit_converter_get_category_count(unitConverter, &categoryCount) != CALCULATOR_STATUS_OK || categoryCount != 12)
+    {
+        std::cerr << "portable unit ABI did not expose the non-currency categories\n";
+        calculator_unit_converter_destroy(unitConverter);
+        return 1;
+    }
+    if (calculator_unit_converter_select_category(unitConverter, 7) != CALCULATOR_STATUS_OK)
+    {
+        std::cerr << "portable unit ABI could not select temperature\n";
+        calculator_unit_converter_destroy(unitConverter);
+        return 1;
+    }
+
+    std::size_t unitCount = 0;
+    int32_t selectedFrom = -1;
+    int32_t selectedTo = -1;
+    if (calculator_unit_converter_get_unit_count(unitConverter, &unitCount) != CALCULATOR_STATUS_OK || unitCount != 3
+        || calculator_unit_converter_get_selected_units(unitConverter, &selectedFrom, &selectedTo) != CALCULATOR_STATUS_OK
+        || selectedFrom != 46 || selectedTo != 47)
+    {
+        std::cerr << "US temperature defaults were not exposed through the native ABI\n";
+        calculator_unit_converter_destroy(unitConverter);
+        return 1;
+    }
+
+    const calculator_unit_command unitCommands[] = {
+        CALCULATOR_UNIT_COMMAND_ONE, CALCULATOR_UNIT_COMMAND_ZERO, CALCULATOR_UNIT_COMMAND_ZERO
+    };
+    for (const auto command : unitCommands)
+    {
+        if (calculator_unit_converter_send_command(unitConverter, command) != CALCULATOR_STATUS_OK)
+        {
+            std::cerr << "portable unit ABI command failed\n";
+            calculator_unit_converter_destroy(unitConverter);
+            return 1;
+        }
+    }
+    const auto fromDisplay = ReadString([&](char* buffer, size_t size, size_t* required) {
+        return calculator_unit_converter_get_from_display(unitConverter, buffer, size, required);
+    });
+    const auto toDisplay = ReadString([&](char* buffer, size_t size, size_t* required) {
+        return calculator_unit_converter_get_to_display(unitConverter, buffer, size, required);
+    });
+    if (fromDisplay != "100" || toDisplay != "212")
+    {
+        std::cerr << "expected 100 Celsius = 212 Fahrenheit, got " << fromDisplay << " = " << toDisplay << '\n';
+        calculator_unit_converter_destroy(unitConverter);
+        return 1;
+    }
+
+    std::size_t suggestionCount = 0;
+    if (calculator_unit_converter_get_suggestion_count(unitConverter, &suggestionCount) != CALCULATOR_STATUS_OK || suggestionCount == 0)
+    {
+        std::cerr << "portable unit ABI dropped converter suggestions\n";
+        calculator_unit_converter_destroy(unitConverter);
+        return 1;
+    }
+    int32_t suggestionUnitId = -1;
+    const auto suggestion = ReadString([&](char* buffer, size_t size, size_t* required) {
+        return calculator_unit_converter_get_suggestion(unitConverter, 0, &suggestionUnitId, buffer, size, required);
+    });
+    if (suggestion.empty() || suggestionUnitId < 0)
+    {
+        std::cerr << "portable unit ABI suggestion payload is empty\n";
+        calculator_unit_converter_destroy(unitConverter);
+        return 1;
+    }
+
+    if (calculator_unit_converter_send_command(unitConverter, CALCULATOR_UNIT_COMMAND_CLEAR) != CALCULATOR_STATUS_OK)
+    {
+        calculator_unit_converter_destroy(unitConverter);
+        return 1;
+    }
+    for (int index = 0; index < 20; ++index)
+    {
+        calculator_unit_converter_send_command(unitConverter, CALCULATOR_UNIT_COMMAND_NINE);
+    }
+    uint64_t maxDigitsCount = 0;
+    if (calculator_unit_converter_get_max_digits_reached_count(unitConverter, &maxDigitsCount) != CALCULATOR_STATUS_OK || maxDigitsCount == 0)
+    {
+        std::cerr << "portable unit ABI dropped max-digit events\n";
+        calculator_unit_converter_destroy(unitConverter);
+        return 1;
+    }
+    calculator_unit_converter_destroy(unitConverter);
     return 0;
 }

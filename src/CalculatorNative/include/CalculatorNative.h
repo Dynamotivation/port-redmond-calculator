@@ -19,6 +19,7 @@ extern "C"
 #endif
 
     typedef struct calculator_handle calculator_handle;
+    typedef struct calculator_unit_converter_handle calculator_unit_converter_handle;
 
     typedef enum calculator_status
     {
@@ -130,6 +131,119 @@ extern "C"
         size_t* required_size);
     CALCULATOR_API calculator_status calculator_history_remove(calculator_handle* handle, size_t index);
     CALCULATOR_API calculator_status calculator_history_clear(calculator_handle* handle);
+
+    typedef enum calculator_unit_command
+    {
+        CALCULATOR_UNIT_COMMAND_ZERO = 0,
+        CALCULATOR_UNIT_COMMAND_ONE = 1,
+        CALCULATOR_UNIT_COMMAND_TWO = 2,
+        CALCULATOR_UNIT_COMMAND_THREE = 3,
+        CALCULATOR_UNIT_COMMAND_FOUR = 4,
+        CALCULATOR_UNIT_COMMAND_FIVE = 5,
+        CALCULATOR_UNIT_COMMAND_SIX = 6,
+        CALCULATOR_UNIT_COMMAND_SEVEN = 7,
+        CALCULATOR_UNIT_COMMAND_EIGHT = 8,
+        CALCULATOR_UNIT_COMMAND_NINE = 9,
+        CALCULATOR_UNIT_COMMAND_DECIMAL = 10,
+        CALCULATOR_UNIT_COMMAND_NEGATE = 11,
+        CALCULATOR_UNIT_COMMAND_BACKSPACE = 12,
+        CALCULATOR_UNIT_COMMAND_CLEAR = 13,
+        CALCULATOR_UNIT_COMMAND_RESET = 14,
+        CALCULATOR_UNIT_COMMAND_NONE = 15
+    } calculator_unit_command;
+
+    typedef struct calculator_unit_category_info
+    {
+        int32_t id;
+        int32_t supports_negative;
+    } calculator_unit_category_info;
+
+    typedef struct calculator_unit_info
+    {
+        int32_t id;
+        int32_t is_conversion_source;
+        int32_t is_conversion_target;
+        int32_t is_whimsical;
+    } calculator_unit_info;
+
+    CALCULATOR_API calculator_status calculator_unit_converter_create(
+        const calculator_resource_entry* resources,
+        size_t resource_count,
+        const char* region_code_utf8,
+        calculator_unit_converter_handle** result);
+    CALCULATOR_API void calculator_unit_converter_destroy(calculator_unit_converter_handle* handle);
+    CALCULATOR_API calculator_status calculator_unit_converter_get_category_count(
+        const calculator_unit_converter_handle* handle,
+        size_t* count);
+    CALCULATOR_API calculator_status calculator_unit_converter_get_category_info(
+        const calculator_unit_converter_handle* handle,
+        size_t index,
+        calculator_unit_category_info* result);
+    CALCULATOR_API calculator_status calculator_unit_converter_get_category_name(
+        const calculator_unit_converter_handle* handle,
+        size_t index,
+        char* buffer,
+        size_t buffer_size,
+        size_t* required_size);
+    CALCULATOR_API calculator_status calculator_unit_converter_select_category(
+        calculator_unit_converter_handle* handle,
+        int32_t category_id);
+    CALCULATOR_API calculator_status calculator_unit_converter_get_unit_count(
+        const calculator_unit_converter_handle* handle,
+        size_t* count);
+    CALCULATOR_API calculator_status calculator_unit_converter_get_unit_info(
+        const calculator_unit_converter_handle* handle,
+        size_t index,
+        calculator_unit_info* result);
+    CALCULATOR_API calculator_status calculator_unit_converter_get_unit_name(
+        const calculator_unit_converter_handle* handle,
+        size_t index,
+        char* buffer,
+        size_t buffer_size,
+        size_t* required_size);
+    CALCULATOR_API calculator_status calculator_unit_converter_get_unit_abbreviation(
+        const calculator_unit_converter_handle* handle,
+        size_t index,
+        char* buffer,
+        size_t buffer_size,
+        size_t* required_size);
+    CALCULATOR_API calculator_status calculator_unit_converter_get_selected_units(
+        const calculator_unit_converter_handle* handle,
+        int32_t* from_unit_id,
+        int32_t* to_unit_id);
+    CALCULATOR_API calculator_status calculator_unit_converter_set_units(
+        calculator_unit_converter_handle* handle,
+        int32_t from_unit_id,
+        int32_t to_unit_id);
+    CALCULATOR_API calculator_status calculator_unit_converter_send_command(
+        calculator_unit_converter_handle* handle,
+        calculator_unit_command command);
+    CALCULATOR_API calculator_status calculator_unit_converter_switch_active(
+        calculator_unit_converter_handle* handle,
+        const char* current_value_utf8);
+    CALCULATOR_API calculator_status calculator_unit_converter_get_from_display(
+        const calculator_unit_converter_handle* handle,
+        char* buffer,
+        size_t buffer_size,
+        size_t* required_size);
+    CALCULATOR_API calculator_status calculator_unit_converter_get_to_display(
+        const calculator_unit_converter_handle* handle,
+        char* buffer,
+        size_t buffer_size,
+        size_t* required_size);
+    CALCULATOR_API calculator_status calculator_unit_converter_get_suggestion_count(
+        const calculator_unit_converter_handle* handle,
+        size_t* count);
+    CALCULATOR_API calculator_status calculator_unit_converter_get_suggestion(
+        const calculator_unit_converter_handle* handle,
+        size_t index,
+        int32_t* unit_id,
+        char* buffer,
+        size_t buffer_size,
+        size_t* required_size);
+    CALCULATOR_API calculator_status calculator_unit_converter_get_max_digits_reached_count(
+        const calculator_unit_converter_handle* handle,
+        uint64_t* count);
 
     CALCULATOR_API const char* calculator_get_last_error(void);
 

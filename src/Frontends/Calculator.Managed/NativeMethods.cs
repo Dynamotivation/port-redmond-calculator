@@ -32,6 +32,22 @@ public struct CalculatorEventState
     public uint LastMemoryItemIndex;
 }
 
+[StructLayout(LayoutKind.Sequential)]
+internal struct NativeUnitCategoryInfo
+{
+    public int Id;
+    public int SupportsNegative;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+internal struct NativeUnitInfo
+{
+    public int Id;
+    public int IsConversionSource;
+    public int IsConversionTarget;
+    public int IsWhimsical;
+}
+
 internal static unsafe partial class NativeMethods
 {
     private const string LibraryName = "calculator_engine";
@@ -127,6 +143,92 @@ internal static unsafe partial class NativeMethods
     [LibraryImport(LibraryName, EntryPoint = "calculator_history_clear")]
     [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
     internal static partial NativeStatus HistoryClear(nint handle);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_create", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterCreate(
+        NativeResourceEntry* resources,
+        nuint resourceCount,
+        string regionCode,
+        out nint result);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_destroy")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial void UnitConverterDestroy(nint handle);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_get_category_count")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterGetCategoryCount(nint handle, out nuint count);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_get_category_info")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterGetCategoryInfo(nint handle, nuint index, out NativeUnitCategoryInfo result);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_get_category_name")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterGetCategoryName(nint handle, nuint index, byte* buffer, nuint bufferSize, out nuint requiredSize);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_select_category")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterSelectCategory(nint handle, int categoryId);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_get_unit_count")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterGetUnitCount(nint handle, out nuint count);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_get_unit_info")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterGetUnitInfo(nint handle, nuint index, out NativeUnitInfo result);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_get_unit_name")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterGetUnitName(nint handle, nuint index, byte* buffer, nuint bufferSize, out nuint requiredSize);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_get_unit_abbreviation")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterGetUnitAbbreviation(nint handle, nuint index, byte* buffer, nuint bufferSize, out nuint requiredSize);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_get_selected_units")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterGetSelectedUnits(nint handle, out int fromUnitId, out int toUnitId);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_set_units")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterSetUnits(nint handle, int fromUnitId, int toUnitId);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_send_command")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterSendCommand(nint handle, int command);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_switch_active", StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterSwitchActive(nint handle, string currentValue);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_get_from_display")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterGetFromDisplay(nint handle, byte* buffer, nuint bufferSize, out nuint requiredSize);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_get_to_display")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterGetToDisplay(nint handle, byte* buffer, nuint bufferSize, out nuint requiredSize);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_get_suggestion_count")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterGetSuggestionCount(nint handle, out nuint count);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_get_suggestion")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterGetSuggestion(
+        nint handle,
+        nuint index,
+        out int unitId,
+        byte* buffer,
+        nuint bufferSize,
+        out nuint requiredSize);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_unit_converter_get_max_digits_reached_count")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus UnitConverterGetMaxDigitsReachedCount(nint handle, out ulong count);
 
     [LibraryImport(LibraryName, EntryPoint = "calculator_get_last_error")]
     [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]

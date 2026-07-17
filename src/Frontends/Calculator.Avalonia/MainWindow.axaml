@@ -140,6 +140,22 @@
     <Style Selector="Button.calcButton.equalsButton:pressed">
       <Setter Property="Background" Value="{StaticResource AccentButtonPressedBrush}" />
     </Style>
+    <Style Selector="ComboBox.unitSelector">
+      <Setter Property="MinHeight" Value="36" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="Background" Value="#303139" />
+      <Setter Property="BorderBrush" Value="#505158" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="FontSize" Value="15" />
+    </Style>
+    <Style Selector="TextBlock.unitDisplay">
+      <Setter Property="HorizontalAlignment" Value="Right" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="TextAlignment" Value="Right" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+      <Setter Property="FontSize" Value="34" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
   </Window.Styles>
 
   <Grid>
@@ -173,7 +189,8 @@
 
       <!-- Hamburger/category/history row from MainPage + Calculator. -->
       <Grid Grid.Row="1" ColumnDefinitions="56,Auto,62,*,56">
-        <Button Classes="chromeButton" Margin="5,3" AutomationProperties.Name="Open navigation">
+        <Button Classes="chromeButton" Margin="5,3" AutomationProperties.Name="Switch calculator mode"
+                Command="{Binding ToggleModeCommand}">
           <Canvas Width="24" Height="24">
             <Path Stroke="#F5F5F5" StrokeThickness="1.5" Data="M 3,6 L 21,6 M 3,12 L 21,12 M 3,18 L 21,18" />
           </Canvas>
@@ -194,7 +211,7 @@
       </Grid>
 
       <!-- The original uses proportional Expression and Result rows. -->
-      <Grid Grid.Row="2" Margin="8,0,14,0">
+      <Grid Grid.Row="2" Margin="8,0,14,0" IsVisible="{Binding IsStandardMode}">
         <TextBlock HorizontalAlignment="Right" VerticalAlignment="Top"
                    Margin="0,8,0,0" Opacity="0.64" FontSize="14" Text="{Binding ExpressionDisplay}" />
         <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,0,24"
@@ -202,7 +219,7 @@
       </Grid>
 
       <!-- MemoryPanel: MC, MR, M+, M−, MS, memory flyout. -->
-      <Grid Grid.Row="3" Margin="3,0" ColumnDefinitions="*,*,*,*,*,*">
+      <Grid Grid.Row="3" Margin="3,0" ColumnDefinitions="*,*,*,*,*,*" IsVisible="{Binding IsStandardMode}">
         <Button Classes="memoryButton" Content="MC" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryClearAllCommand}" />
         <Button Grid.Column="1" Classes="memoryButton" Content="MR" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryRecallCommand}" />
         <Button Grid.Column="2" Classes="memoryButton" Content="M+" Command="{Binding MemoryAddCommand}" />
@@ -213,7 +230,8 @@
 
       <!-- CalculatorStandardOperators + NumberPad, flattened without changing geometry. -->
       <Grid Grid.Row="4" Margin="3,0,3,3"
-            RowDefinitions="*,*,*,*,*,*" ColumnDefinitions="*,*,*,*">
+            RowDefinitions="*,*,*,*,*,*" ColumnDefinitions="*,*,*,*"
+            IsVisible="{Binding IsStandardMode}">
         <Button Classes="calcButton operator" Content="%" Command="{Binding SendCommandCommand}" CommandParameter="Percent" />
         <Button Grid.Column="1" Classes="calcButton operator" Content="CE" FontSize="16" Command="{Binding SendCommandCommand}" CommandParameter="ClearEntry" />
         <Button Grid.Column="2" Classes="calcButton operator" Content="C" FontSize="16" Command="{Binding SendCommandCommand}" CommandParameter="Clear" />
@@ -243,6 +261,95 @@
         <Button Grid.Row="5" Grid.Column="1" Classes="calcButton numeric" Content="0" Command="{Binding SendCommandCommand}" CommandParameter="Zero" />
         <Button Grid.Row="5" Grid.Column="2" Classes="calcButton numeric" Content="." Command="{Binding SendCommandCommand}" CommandParameter="Decimal" />
         <Button Grid.Row="5" Grid.Column="3" Classes="calcButton equalsButton" Content="=" Command="{Binding SendCommandCommand}" CommandParameter="Equals" />
+      </Grid>
+
+      <!-- Unit converter: the controls are backed by CalcViewModel's native
+           UnitConverter and the original Microsoft conversion catalog. -->
+      <Grid Grid.Row="2" Grid.RowSpan="3" Margin="12,2,12,12"
+            RowDefinitions="Auto,1.12*,Auto,1.12*,Auto,1.65*"
+            IsVisible="{Binding IsUnitConverterMode}">
+        <ComboBox Grid.Row="0" Classes="unitSelector" Margin="0,0,0,7"
+                  ItemsSource="{Binding UnitCategories}"
+                  SelectedItem="{Binding SelectedUnitCategory}">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="managed:UnitConverterCategory">
+              <TextBlock Text="{Binding Name}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <Grid Grid.Row="1" RowDefinitions="*,Auto" Margin="6,0">
+          <TextBlock Classes="unitDisplay" Text="{Binding UnitFromDisplay}" />
+          <ComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4"
+                    ItemsSource="{Binding UnitDefinitions}"
+                    SelectedItem="{Binding SelectedFromUnit}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="managed:UnitConverterUnit">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Text="{Binding Name}" />
+                  <TextBlock Grid.Column="1" Margin="16,0,0,0" Opacity="0.65" Text="{Binding Abbreviation}" />
+                </Grid>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </Grid>
+
+        <Button Grid.Row="2" Width="42" Height="34" Padding="0" HorizontalAlignment="Right"
+                Margin="0,-1,6,-1" Background="Transparent" BorderThickness="0"
+                FontSize="19" Content="⇅" AutomationProperties.Name="Swap units"
+                Command="{Binding SwapUnitsCommand}" />
+
+        <Grid Grid.Row="3" RowDefinitions="*,Auto" Margin="6,0">
+          <TextBlock Classes="unitDisplay" Text="{Binding UnitToDisplay}" />
+          <ComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4"
+                    ItemsSource="{Binding UnitDefinitions}"
+                    SelectedItem="{Binding SelectedToUnit}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="managed:UnitConverterUnit">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Text="{Binding Name}" />
+                  <TextBlock Grid.Column="1" Margin="16,0,0,0" Opacity="0.65" Text="{Binding Abbreviation}" />
+                </Grid>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </Grid>
+
+        <ItemsControl Grid.Row="4" Margin="6,5,6,8" ItemsSource="{Binding UnitSuggestions}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Margin="0,0,6,4" Padding="8,3" CornerRadius="4" Background="#303139">
+                <TextBlock FontSize="13" Opacity="0.8" Text="{Binding}" />
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid Grid.Row="5" Margin="-9,0,-9,-9" RowDefinitions="*,*,*,*" ColumnDefinitions="*,*,*">
+          <Button Classes="calcButton numeric" Content="7" Command="{Binding SendUnitCommandCommand}" CommandParameter="Seven" />
+          <Button Grid.Column="1" Classes="calcButton numeric" Content="8" Command="{Binding SendUnitCommandCommand}" CommandParameter="Eight" />
+          <Button Grid.Column="2" Classes="calcButton numeric" Content="9" Command="{Binding SendUnitCommandCommand}" CommandParameter="Nine" />
+
+          <Button Grid.Row="1" Classes="calcButton numeric" Content="4" Command="{Binding SendUnitCommandCommand}" CommandParameter="Four" />
+          <Button Grid.Row="1" Grid.Column="1" Classes="calcButton numeric" Content="5" Command="{Binding SendUnitCommandCommand}" CommandParameter="Five" />
+          <Button Grid.Row="1" Grid.Column="2" Classes="calcButton numeric" Content="6" Command="{Binding SendUnitCommandCommand}" CommandParameter="Six" />
+
+          <Button Grid.Row="2" Classes="calcButton numeric" Content="1" Command="{Binding SendUnitCommandCommand}" CommandParameter="One" />
+          <Button Grid.Row="2" Grid.Column="1" Classes="calcButton numeric" Content="2" Command="{Binding SendUnitCommandCommand}" CommandParameter="Two" />
+          <Button Grid.Row="2" Grid.Column="2" Classes="calcButton numeric" Content="3" Command="{Binding SendUnitCommandCommand}" CommandParameter="Three" />
+
+          <Button Grid.Row="3" Classes="calcButton operator" Content="⁺/₋" FontSize="21" Command="{Binding SendUnitCommandCommand}" CommandParameter="Negate" />
+          <Button Grid.Row="3" Grid.Column="1" Classes="calcButton numeric" Content="0" Command="{Binding SendUnitCommandCommand}" CommandParameter="Zero" />
+          <Grid Grid.Row="3" Grid.Column="2" ColumnDefinitions="*,*">
+            <Button Classes="calcButton operator" Content="." FontSize="22" Command="{Binding SendUnitCommandCommand}" CommandParameter="Decimal" />
+            <Button Grid.Column="1" Classes="calcButton operator" Content="⌫" FontSize="18" Command="{Binding SendUnitCommandCommand}" CommandParameter="Backspace" />
+          </Grid>
+        </Grid>
       </Grid>
     </Grid>
     </Border>

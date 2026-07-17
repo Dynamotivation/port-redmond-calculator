@@ -4,6 +4,8 @@
 #include "CalcManager/CalculatorManager.h"
 #include "CalcManager/CalculatorResource.h"
 #include "CalcManager/Command.h"
+#include "CalcManager/UnitConverter.h"
+#include "CalcViewModel/DataLoaders/UnitConverterDataLoader.h"
 
 #include <algorithm>
 #include <cstring>
@@ -18,6 +20,12 @@
 using CalculationManager::CalculatorManager;
 using CalculationManager::Command;
 using CalculationManager::IResourceProvider;
+namespace UCM = UnitConversionManager;
+using CalculatorApp::ViewModel::Common::UnitConverterDataLoader;
+
+static_assert(static_cast<int>(UCM::Command::Zero) == CALCULATOR_UNIT_COMMAND_ZERO);
+static_assert(static_cast<int>(UCM::Command::Decimal) == CALCULATOR_UNIT_COMMAND_DECIMAL);
+static_assert(static_cast<int>(UCM::Command::None) == CALCULATOR_UNIT_COMMAND_NONE);
 
 namespace
 {
@@ -42,12 +50,59 @@ namespace
 
         std::wstring GetCEngineString(std::wstring_view id) override
         {
+            return GetString(id);
+        }
+
+        std::wstring GetString(std::wstring_view id) const
+        {
             const auto value = m_resources.find(std::wstring{ id });
             return value == m_resources.end() ? std::wstring{} : value->second;
         }
 
     private:
         std::unordered_map<std::wstring, std::wstring> m_resources;
+    };
+
+    struct UnitSuggestion
+    {
+        std::string value;
+        UCM::Unit unit;
+    };
+
+    class UnitConverterDisplayAdapter final : public UCM::IUnitConverterVMCallback
+    {
+    public:
+        void DisplayCallback(const std::wstring& from, const std::wstring& to) override
+        {
+            m_from = CalculatorNative::Utf8::FromWide(from);
+            m_to = CalculatorNative::Utf8::FromWide(to);
+        }
+
+        void SuggestedValueCallback(const std::vector<std::tuple<std::wstring, UCM::Unit>>& suggestions) override
+        {
+            m_suggestions.clear();
+            m_suggestions.reserve(suggestions.size());
+            for (const auto& [value, unit] : suggestions)
+            {
+                m_suggestions.push_back({ CalculatorNative::Utf8::FromWide(value), unit });
+            }
+        }
+
+        void MaxDigitsReached() override
+        {
+            ++m_maxDigitsReachedCount;
+        }
+
+        const std::string& From() const { return m_from; }
+        const std::string& To() const { return m_to; }
+        const std::vector<UnitSuggestion>& Suggestions() const { return m_suggestions; }
+        uint64_t MaxDigitsReachedCount() const { return m_maxDigitsReachedCount; }
+
+    private:
+        std::string m_from = "0";
+        std::string m_to = "0";
+        std::vector<UnitSuggestion> m_suggestions;
+        uint64_t m_maxDigitsReachedCount = 0;
     };
 
     class DisplayAdapter final : public ICalcDisplay
@@ -209,6 +264,45 @@ struct calculator_handle
     std::unique_ptr<DisplayAdapter> display;
     std::unique_ptr<CalculatorManager> manager;
 };
+
+struct calculator_unit_converter_handle
+{
+    std::unique_ptr<ResourceProvider> resources;
+    std::shared_ptr<UnitConverterDataLoader> loader;
+    std::shared_ptr<UnitConverterDisplayAdapter> display;
+    std::unique_ptr<UCM::UnitConverter> converter;
+    std::vector<UCM::Category> categories;
+    std::vector<UCM::Unit> units;
+    UCM::Unit fromUnit = UCM::EMPTY_UNIT;
+    UCM::Unit toUnit = UCM::EMPTY_UNIT;
+};
+
+namespace
+{
+    bool SelectUnitCategory(calculator_unit_converter_handle& handle, int32_t categoryId)
+    {
+        const auto category = std::find_if(handle.categories.begin(), handle.categories.end(), [categoryId](const UCM::Category& value) {
+            return value.id == categoryId;
+        });
+        if (category == handle.categories.end())
+        {
+            return false;
+        }
+
+        auto selection = handle.converter->SetCurrentCategory(*category);
+        handle.units = std::get<0>(selection);
+        handle.fromUnit = std::get<1>(selection);
+        handle.toUnit = std::get<2>(selection);
+        handle.converter->SetCurrentUnitTypes(handle.fromUnit, handle.toUnit);
+        return true;
+    }
+
+    const UCM::Unit* FindUnit(const calculator_unit_converter_handle& handle, int32_t unitId)
+    {
+        const auto unit = std::find_if(handle.units.begin(), handle.units.end(), [unitId](const UCM::Unit& value) { return value.id == unitId; });
+        return unit == handle.units.end() ? nullptr : &*unit;
+    }
+}
 
 uint32_t calculator_native_abi_version(void)
 {
@@ -462,6 +556,264 @@ calculator_status calculator_history_clear(calculator_handle* handle)
         return CALCULATOR_STATUS_INVALID_ARGUMENT;
     }
     return Protect([&]() { handle->manager->ClearHistory(); });
+}
+
+calculator_status calculator_unit_converter_create(
+    const calculator_resource_entry* resources,
+    size_t resourceCount,
+    const char* regionCodeUtf8,
+    calculator_unit_converter_handle** result)
+{
+    if (result == nullptr || regionCodeUtf8 == nullptr || regionCodeUtf8[0] == '\0' || (resourceCount != 0 && resources == nullptr))
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    *result = nullptr;
+
+    return Protect([&]() {
+        auto handle = std::make_unique<calculator_unit_converter_handle>();
+        handle->resources = std::make_unique<ResourceProvider>(resources, resourceCount);
+        auto* resourceProvider = handle->resources.get();
+        handle->loader = std::make_shared<UnitConverterDataLoader>(
+            CalculatorNative::Utf8::ToWide(regionCodeUtf8),
+            [resourceProvider](std::wstring_view key) { return resourceProvider->GetString(key); });
+        handle->display = std::make_shared<UnitConverterDisplayAdapter>();
+        handle->converter = std::make_unique<UCM::UnitConverter>(handle->loader);
+        handle->converter->Initialize();
+        handle->converter->SetViewModelCallback(handle->display);
+
+        const auto dataLoader = std::static_pointer_cast<UCM::IConverterDataLoader>(handle->loader);
+        for (const auto& category : handle->converter->GetCategories())
+        {
+            if (dataLoader->SupportsCategory(category))
+            {
+                handle->categories.push_back(category);
+            }
+        }
+        if (handle->categories.empty() || !SelectUnitCategory(*handle, handle->categories.front().id))
+        {
+            throw std::runtime_error("unit converter catalog has no supported categories");
+        }
+        *result = handle.release();
+    });
+}
+
+void calculator_unit_converter_destroy(calculator_unit_converter_handle* handle)
+{
+    delete handle;
+}
+
+calculator_status calculator_unit_converter_get_category_count(const calculator_unit_converter_handle* handle, size_t* count)
+{
+    if (handle == nullptr || count == nullptr)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    *count = handle->categories.size();
+    return CALCULATOR_STATUS_OK;
+}
+
+calculator_status calculator_unit_converter_get_category_info(
+    const calculator_unit_converter_handle* handle,
+    size_t index,
+    calculator_unit_category_info* result)
+{
+    if (handle == nullptr || result == nullptr || index >= handle->categories.size())
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    const auto& category = handle->categories[index];
+    *result = { category.id, category.supportsNegative ? 1 : 0 };
+    return CALCULATOR_STATUS_OK;
+}
+
+calculator_status calculator_unit_converter_get_category_name(
+    const calculator_unit_converter_handle* handle,
+    size_t index,
+    char* buffer,
+    size_t bufferSize,
+    size_t* requiredSize)
+{
+    if (handle == nullptr || index >= handle->categories.size())
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    return CopyString(CalculatorNative::Utf8::FromWide(handle->categories[index].name), buffer, bufferSize, requiredSize);
+}
+
+calculator_status calculator_unit_converter_select_category(calculator_unit_converter_handle* handle, int32_t categoryId)
+{
+    if (handle == nullptr)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    return SelectUnitCategory(*handle, categoryId) ? CALCULATOR_STATUS_OK : CALCULATOR_STATUS_INVALID_ARGUMENT;
+}
+
+calculator_status calculator_unit_converter_get_unit_count(const calculator_unit_converter_handle* handle, size_t* count)
+{
+    if (handle == nullptr || count == nullptr)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    *count = handle->units.size();
+    return CALCULATOR_STATUS_OK;
+}
+
+calculator_status calculator_unit_converter_get_unit_info(
+    const calculator_unit_converter_handle* handle,
+    size_t index,
+    calculator_unit_info* result)
+{
+    if (handle == nullptr || result == nullptr || index >= handle->units.size())
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    const auto& unit = handle->units[index];
+    *result = { unit.id, unit.isConversionSource ? 1 : 0, unit.isConversionTarget ? 1 : 0, unit.isWhimsical ? 1 : 0 };
+    return CALCULATOR_STATUS_OK;
+}
+
+calculator_status calculator_unit_converter_get_unit_name(
+    const calculator_unit_converter_handle* handle,
+    size_t index,
+    char* buffer,
+    size_t bufferSize,
+    size_t* requiredSize)
+{
+    if (handle == nullptr || index >= handle->units.size())
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    return CopyString(CalculatorNative::Utf8::FromWide(handle->units[index].name), buffer, bufferSize, requiredSize);
+}
+
+calculator_status calculator_unit_converter_get_unit_abbreviation(
+    const calculator_unit_converter_handle* handle,
+    size_t index,
+    char* buffer,
+    size_t bufferSize,
+    size_t* requiredSize)
+{
+    if (handle == nullptr || index >= handle->units.size())
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    return CopyString(CalculatorNative::Utf8::FromWide(handle->units[index].abbreviation), buffer, bufferSize, requiredSize);
+}
+
+calculator_status calculator_unit_converter_get_selected_units(
+    const calculator_unit_converter_handle* handle,
+    int32_t* fromUnitId,
+    int32_t* toUnitId)
+{
+    if (handle == nullptr || fromUnitId == nullptr || toUnitId == nullptr)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    *fromUnitId = handle->fromUnit.id;
+    *toUnitId = handle->toUnit.id;
+    return CALCULATOR_STATUS_OK;
+}
+
+calculator_status calculator_unit_converter_set_units(
+    calculator_unit_converter_handle* handle,
+    int32_t fromUnitId,
+    int32_t toUnitId)
+{
+    if (handle == nullptr)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    const auto* from = FindUnit(*handle, fromUnitId);
+    const auto* to = FindUnit(*handle, toUnitId);
+    if (from == nullptr || to == nullptr)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    handle->fromUnit = *from;
+    handle->toUnit = *to;
+    return Protect([&]() { handle->converter->SetCurrentUnitTypes(handle->fromUnit, handle->toUnit); });
+}
+
+calculator_status calculator_unit_converter_send_command(
+    calculator_unit_converter_handle* handle,
+    calculator_unit_command command)
+{
+    if (handle == nullptr || command < CALCULATOR_UNIT_COMMAND_ZERO || command > CALCULATOR_UNIT_COMMAND_NONE)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    return Protect([&]() { handle->converter->SendCommand(static_cast<UCM::Command>(command)); });
+}
+
+calculator_status calculator_unit_converter_switch_active(calculator_unit_converter_handle* handle, const char* currentValueUtf8)
+{
+    if (handle == nullptr || currentValueUtf8 == nullptr)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    return Protect([&]() {
+        handle->converter->SwitchActive(CalculatorNative::Utf8::ToWide(currentValueUtf8));
+        std::swap(handle->fromUnit, handle->toUnit);
+    });
+}
+
+calculator_status calculator_unit_converter_get_from_display(
+    const calculator_unit_converter_handle* handle,
+    char* buffer,
+    size_t bufferSize,
+    size_t* requiredSize)
+{
+    return handle == nullptr ? CALCULATOR_STATUS_INVALID_ARGUMENT : CopyString(handle->display->From(), buffer, bufferSize, requiredSize);
+}
+
+calculator_status calculator_unit_converter_get_to_display(
+    const calculator_unit_converter_handle* handle,
+    char* buffer,
+    size_t bufferSize,
+    size_t* requiredSize)
+{
+    return handle == nullptr ? CALCULATOR_STATUS_INVALID_ARGUMENT : CopyString(handle->display->To(), buffer, bufferSize, requiredSize);
+}
+
+calculator_status calculator_unit_converter_get_suggestion_count(const calculator_unit_converter_handle* handle, size_t* count)
+{
+    if (handle == nullptr || count == nullptr)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    *count = handle->display->Suggestions().size();
+    return CALCULATOR_STATUS_OK;
+}
+
+calculator_status calculator_unit_converter_get_suggestion(
+    const calculator_unit_converter_handle* handle,
+    size_t index,
+    int32_t* unitId,
+    char* buffer,
+    size_t bufferSize,
+    size_t* requiredSize)
+{
+    if (handle == nullptr || unitId == nullptr || index >= handle->display->Suggestions().size())
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    const auto& suggestion = handle->display->Suggestions()[index];
+    *unitId = suggestion.unit.id;
+    return CopyString(suggestion.value, buffer, bufferSize, requiredSize);
+}
+
+calculator_status calculator_unit_converter_get_max_digits_reached_count(
+    const calculator_unit_converter_handle* handle,
+    uint64_t* count)
+{
+    if (handle == nullptr || count == nullptr)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    *count = handle->display->MaxDigitsReachedCount();
+    return CALCULATOR_STATUS_OK;
 }
 
 const char* calculator_get_last_error(void)

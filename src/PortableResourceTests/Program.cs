@@ -1,4 +1,5 @@
 using System.Globalization;
+using Calculator.Managed;
 using Windows.ApplicationModel.Resources;
 
 var resourceRoot = args.Length == 1
@@ -59,4 +60,28 @@ foreach (var cultureDirectory in Directory.EnumerateDirectories(resourceRoot))
         $"CEngineStrings.resw failed to load for {cultureName}.");
 }
 
-Console.WriteLine("ResourceLoader portable compatibility tests passed.");
+ResourceLoader.Configure(new ResourceLoaderConfiguration(resourceRoot)
+{
+    UICultureProvider = static () => CultureInfo.GetCultureInfo("en-US"),
+});
+using (var converter = new NativeUnitConverter(ResourceLoader.GetForViewIndependentUse(), "US"))
+{
+    Require(converter.Categories.Count == 12, "Managed unit converter did not expose all non-currency categories.");
+    var temperature = converter.Categories.Single(category => category.Id == 7);
+    Require(temperature.Name == "Temperature" && temperature.SupportsNegative, "Managed category metadata is incorrect.");
+
+    converter.SelectCategory(temperature.Id);
+    var units = converter.Units;
+    var selected = converter.SelectedUnits;
+    Require(units.Count == 3 && selected.FromUnitId == 46 && selected.ToUnitId == 47,
+        "Managed US temperature defaults are incorrect.");
+    Require(units.Single(unit => unit.Id == 46).Abbreviation == "°C", "Managed UTF-8 unit metadata is incorrect.");
+
+    converter.SendCommand(UnitConverterCommand.One);
+    converter.SendCommand(UnitConverterCommand.Zero);
+    converter.SendCommand(UnitConverterCommand.Zero);
+    Require(converter.FromDisplay == "100" && converter.ToDisplay == "212", "Managed conversion did not produce 100 °C = 212 °F.");
+    Require(converter.Suggestions.Count != 0, "Managed conversion suggestions were dropped.");
+}
+
+Console.WriteLine("ResourceLoader and managed native-unit-converter compatibility tests passed.");
