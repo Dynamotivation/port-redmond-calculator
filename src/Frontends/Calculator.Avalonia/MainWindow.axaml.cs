@@ -79,6 +79,12 @@ public partial class MainWindow : Window
 
     private void Minimize_OnClick(object? sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
+    private void AlwaysOnTop_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _viewModel.IsAlwaysOnTop = !_viewModel.IsAlwaysOnTop;
+        Topmost = _viewModel.IsAlwaysOnTop;
+    }
+
     private void Maximize_OnClick(object? sender, RoutedEventArgs e) =>
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
