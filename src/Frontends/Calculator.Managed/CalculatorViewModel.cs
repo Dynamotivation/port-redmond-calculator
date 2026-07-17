@@ -59,6 +59,53 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public bool IsSystemThemeSelected => SelectedThemePreference == AppThemePreference.System;
     public event Action<AppThemePreference>? ThemePreferenceChanged;
 
+    public bool SupportsPlatformAppearanceSettings { get; }
+    public string PlatformAppearanceName { get; } = "macOS appearance";
+    public string MicaEffectName { get; } = "Translucent background";
+    public string MicaEffectDescription { get; } = "Blur the desktop behind the calculator window";
+    public string WindowCornersName { get; } = "Window corners";
+    public string WindowCornersDescription { get; } = "Choose the outer window shape";
+    public string Windows10CornersName { get; } = "Windows 10 — square";
+    public string Windows11CornersName { get; } = "Windows 11 — rounded";
+    public string MacOSCornersName { get; } = "macOS — rounded";
+    public string WindowControlsName { get; } = "Title bar controls";
+    public string WindowControlsDescription { get; } = "Choose the window button style";
+    public string WindowsWindowControlsName { get; } = "Windows";
+    public string MacOSWindowControlsName { get; } = "macOS";
+
+    [ObservableProperty]
+    public partial bool UseMicaEffect { get; set; } = true;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(WindowCornerRadius))]
+    [NotifyPropertyChangedFor(nameof(UsesCustomResizeHandles))]
+    [NotifyPropertyChangedFor(nameof(UsesNativeWindowGeometry))]
+    [NotifyPropertyChangedFor(nameof(UsesSquareWindowCorners))]
+    [NotifyPropertyChangedFor(nameof(IsWindows10CornerStyleSelected))]
+    [NotifyPropertyChangedFor(nameof(IsWindows11CornerStyleSelected))]
+    [NotifyPropertyChangedFor(nameof(IsMacOSCornerStyleSelected))]
+    public partial WindowCornerStyle SelectedWindowCornerStyle { get; private set; } = WindowCornerStyle.Windows11;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UsesWindowsWindowControls))]
+    [NotifyPropertyChangedFor(nameof(UsesMacOSWindowControls))]
+    [NotifyPropertyChangedFor(nameof(IsWindowsWindowControlStyleSelected))]
+    [NotifyPropertyChangedFor(nameof(IsMacOSWindowControlStyleSelected))]
+    public partial WindowControlStyle SelectedWindowControlStyle { get; private set; } = WindowControlStyle.Windows;
+
+    public bool IsWindows10CornerStyleSelected => SelectedWindowCornerStyle == WindowCornerStyle.Windows10;
+    public bool IsWindows11CornerStyleSelected => SelectedWindowCornerStyle == WindowCornerStyle.Windows11;
+    public bool IsMacOSCornerStyleSelected => SelectedWindowCornerStyle == WindowCornerStyle.MacOS;
+    public bool IsWindowsWindowControlStyleSelected => SelectedWindowControlStyle == WindowControlStyle.Windows;
+    public bool IsMacOSWindowControlStyleSelected => SelectedWindowControlStyle == WindowControlStyle.MacOS;
+    public bool UsesNativeWindowGeometry => SelectedWindowCornerStyle == WindowCornerStyle.MacOS;
+    public bool UsesSquareWindowCorners => SelectedWindowCornerStyle == WindowCornerStyle.Windows10;
+    public bool UsesWindowsWindowControls => SelectedWindowControlStyle == WindowControlStyle.Windows;
+    public bool UsesMacOSWindowControls => SelectedWindowControlStyle == WindowControlStyle.MacOS;
+    public double WindowCornerRadius => SelectedWindowCornerStyle == WindowCornerStyle.Windows11 ? 8 : 0;
+    public bool UsesCustomResizeHandles => !UsesNativeWindowGeometry;
+    public event Action<PlatformAppearancePreferences>? PlatformAppearancePreferencesChanged;
+
     public bool IsStandardMode => CurrentViewMode == CalculatorViewMode.Standard;
     public bool IsUnitConverterMode => CurrentViewMode is >= CalculatorViewMode.Volume and <= CalculatorViewMode.Angle;
 
@@ -100,9 +147,17 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public string AboutVersionText { get; } = "Redmond Calculator 0.1.0";
     public string HistoryAutomationName { get; }
 
-    public CalculatorViewModel(AppThemePreference initialThemePreference = AppThemePreference.Dark)
+    public CalculatorViewModel(
+        AppThemePreference initialThemePreference = AppThemePreference.Dark,
+        PlatformAppearancePreferences? initialPlatformAppearance = null,
+        bool supportsPlatformAppearanceSettings = false)
     {
+        var platformAppearance = initialPlatformAppearance ?? new PlatformAppearancePreferences();
         SelectedThemePreference = initialThemePreference;
+        UseMicaEffect = platformAppearance.UseMicaEffect;
+        SelectedWindowCornerStyle = platformAppearance.WindowCornerStyle;
+        SelectedWindowControlStyle = platformAppearance.WindowControlStyle;
+        SupportsPlatformAppearanceSettings = supportsPlatformAppearanceSettings;
         var appResources = ResourceLoader.GetForViewIndependentUse();
         ModeDisplayName = appResources.GetString("StandardModeText");
         CalculatorGroupName = appResources.GetString("CalculatorModeTextCaps");
@@ -193,6 +248,14 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     {
         SelectedThemePreference = Enum.Parse<AppThemePreference>(preference, ignoreCase: false);
     }
+
+    [RelayCommand]
+    private void SelectWindowCornerStyle(string style) =>
+        SelectedWindowCornerStyle = Enum.Parse<WindowCornerStyle>(style, ignoreCase: false);
+
+    [RelayCommand]
+    private void SelectWindowControlStyle(string style) =>
+        SelectedWindowControlStyle = Enum.Parse<WindowControlStyle>(style, ignoreCase: false);
 
     [RelayCommand]
     private async Task SelectNavigationItem(CalculatorNavigationItem? item)
@@ -288,6 +351,16 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
     partial void OnSelectedFromUnitChanged(UnitConverterUnit? value) => ApplySelectedUnits();
     partial void OnSelectedToUnitChanged(UnitConverterUnit? value) => ApplySelectedUnits();
+
+    partial void OnUseMicaEffectChanged(bool value) => NotifyPlatformAppearanceChanged();
+    partial void OnSelectedWindowCornerStyleChanged(WindowCornerStyle value) => NotifyPlatformAppearanceChanged();
+    partial void OnSelectedWindowControlStyleChanged(WindowControlStyle value) => NotifyPlatformAppearanceChanged();
+
+    private void NotifyPlatformAppearanceChanged() => PlatformAppearancePreferencesChanged?.Invoke(
+        new PlatformAppearancePreferences(
+            UseMicaEffect,
+            SelectedWindowCornerStyle,
+            SelectedWindowControlStyle));
 
     private void ApplySelectedUnits()
     {

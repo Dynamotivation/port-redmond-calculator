@@ -10,24 +10,41 @@ namespace Calculator.Avalonia;
 public partial class MainWindow : Window
 {
     private MacOSMicaBackdrop? _micaBackdrop;
+    private MacOSWindowControls? _macOSWindowControls;
     private readonly CalculatorViewModel _viewModel;
+    private AppSettings _settings;
+    private bool _isOpened;
 
     public MainWindow()
-        : this(AppThemePreference.Dark)
+        : this(new AppSettings())
     {
     }
 
-    public MainWindow(AppThemePreference initialThemePreference)
+    internal MainWindow(AppSettings settings)
     {
         InitializeComponent();
-        _viewModel = new CalculatorViewModel(initialThemePreference);
+        _settings = settings;
+        _viewModel = new CalculatorViewModel(
+            settings.ThemePreference,
+            settings.ToPlatformAppearance(),
+            OperatingSystem.IsMacOS());
         _viewModel.ThemePreferenceChanged += OnThemePreferenceChanged;
+        _viewModel.PlatformAppearancePreferencesChanged += OnPlatformAppearancePreferencesChanged;
         DataContext = _viewModel;
-        Opened += (_, _) => _micaBackdrop = MacOSMicaBackdrop.Attach(this, 8);
+        ApplyWindowDecorations(settings.ToPlatformAppearance());
+        Opened += (_, _) =>
+        {
+            _isOpened = true;
+            RefreshBackdrop(settings.ToPlatformAppearance());
+            RefreshWindowControls(settings.ToPlatformAppearance());
+        };
         Closed += (_, _) =>
         {
+            _isOpened = false;
             _micaBackdrop?.Dispose();
+            _macOSWindowControls?.Dispose();
             _viewModel.ThemePreferenceChanged -= OnThemePreferenceChanged;
+            _viewModel.PlatformAppearancePreferencesChanged -= OnPlatformAppearancePreferencesChanged;
             _viewModel.Dispose();
         };
     }
@@ -64,10 +81,59 @@ public partial class MainWindow : Window
 
     private void Close_OnClick(object? sender, RoutedEventArgs e) => Close();
 
-    private static void OnThemePreferenceChanged(AppThemePreference preference)
+    private void OnThemePreferenceChanged(AppThemePreference preference)
     {
         App.ApplyThemePreference(preference);
-        AppSettingsStore.SaveThemePreference(preference);
+        _settings = _settings with { ThemePreference = preference };
+        AppSettingsStore.Save(_settings);
+    }
+
+    private void OnPlatformAppearancePreferencesChanged(PlatformAppearancePreferences preferences)
+    {
+        _settings = _settings with
+        {
+            UseMicaEffect = preferences.UseMicaEffect,
+            WindowCornerStyle = preferences.WindowCornerStyle,
+            WindowControlStyle = preferences.WindowControlStyle,
+        };
+        AppSettingsStore.Save(_settings);
+        ApplyWindowDecorations(preferences);
+        RefreshBackdrop(preferences);
+        RefreshWindowControls(preferences);
+    }
+
+    private void ApplyWindowDecorations(PlatformAppearancePreferences preferences)
+    {
+        var usesNativeGeometry = preferences.WindowCornerStyle == WindowCornerStyle.MacOS;
+        ExtendClientAreaToDecorationsHint = usesNativeGeometry;
+        ExtendClientAreaTitleBarHeightHint = 42;
+        WindowDecorations = usesNativeGeometry
+            ? global::Avalonia.Controls.WindowDecorations.BorderOnly
+            : global::Avalonia.Controls.WindowDecorations.None;
+    }
+
+    private void RefreshBackdrop(PlatformAppearancePreferences preferences)
+    {
+        _micaBackdrop?.Dispose();
+        _micaBackdrop = null;
+
+        if (_isOpened && preferences.UseMicaEffect)
+        {
+            _micaBackdrop = MacOSMicaBackdrop.Attach(this, _viewModel.WindowCornerRadius);
+        }
+
+        MacOSMicaBackdrop.InvalidateWindowShadow(this);
+    }
+
+    private void RefreshWindowControls(PlatformAppearancePreferences preferences)
+    {
+        _macOSWindowControls?.Dispose();
+        _macOSWindowControls = null;
+
+        if (_isOpened && preferences.WindowControlStyle == WindowControlStyle.MacOS)
+        {
+            _macOSWindowControls = MacOSWindowControls.Attach(this);
+        }
     }
 
     private async void License_OnClick(object? sender, RoutedEventArgs e) =>

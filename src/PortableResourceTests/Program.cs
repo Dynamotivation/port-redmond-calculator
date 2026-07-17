@@ -84,7 +84,9 @@ using (var converter = new NativeUnitConverter(ResourceLoader.GetForViewIndepend
     Require(converter.Suggestions.Count != 0, "Managed conversion suggestions were dropped.");
 }
 
-using (var viewModel = new CalculatorViewModel())
+using (var viewModel = new CalculatorViewModel(
+    initialPlatformAppearance: new PlatformAppearancePreferences(),
+    supportsPlatformAppearanceSettings: true))
 {
     Require(viewModel.CalculatorNavigationItems.Count == 5, "Calculator navigation manifest is incomplete.");
     Require(viewModel.ConverterNavigationItems.Count == 13, "Converter navigation manifest is incomplete.");
@@ -110,6 +112,28 @@ using (var viewModel = new CalculatorViewModel())
     viewModel.SelectThemeCommand.Execute(nameof(AppThemePreference.Light));
     Require(viewModel.IsLightThemeSelected && changedTheme == AppThemePreference.Light,
         "Settings theme selection did not update state or notify the frontend host.");
+    PlatformAppearancePreferences? changedAppearance = null;
+    viewModel.PlatformAppearancePreferencesChanged += value => changedAppearance = value;
+    viewModel.UseMicaEffect = false;
+    viewModel.SelectWindowCornerStyleCommand.Execute(nameof(WindowCornerStyle.MacOS));
+    viewModel.SelectWindowControlStyleCommand.Execute(nameof(WindowControlStyle.MacOS));
+    Require(viewModel.SupportsPlatformAppearanceSettings
+        && changedAppearance == new PlatformAppearancePreferences(
+            false,
+            WindowCornerStyle.MacOS,
+            WindowControlStyle.MacOS)
+        && viewModel.UsesNativeWindowGeometry
+        && viewModel.UsesMacOSWindowControls,
+        "Platform appearance settings did not update state or notify the frontend host.");
+    viewModel.SelectWindowCornerStyleCommand.Execute(nameof(WindowCornerStyle.Windows10));
+    Require(viewModel.UsesSquareWindowCorners && viewModel.UsesMacOSWindowControls
+        && viewModel.WindowCornerRadius == 0,
+        "macOS controls could not be combined with the Windows 10 square shape.");
+    viewModel.SelectWindowCornerStyleCommand.Execute(nameof(WindowCornerStyle.Windows11));
+    viewModel.SelectWindowControlStyleCommand.Execute(nameof(WindowControlStyle.Windows));
+    Require(viewModel.IsWindows11CornerStyleSelected && viewModel.UsesWindowsWindowControls
+        && viewModel.WindowCornerRadius == 8,
+        "Windows 11 shape and Windows controls did not restore independently.");
     viewModel.CloseSettingsCommand.Execute(null);
     Require(!viewModel.IsSettingsOpen, "Settings back command did not restore calculator content.");
 }

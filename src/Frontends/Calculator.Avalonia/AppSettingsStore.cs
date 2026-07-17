@@ -12,39 +12,55 @@ internal static class AppSettingsStore
         "RedmondCalculator");
     private static readonly string SettingsPath = Path.Combine(SettingsDirectory, "settings.json");
 
-    public static AppThemePreference LoadThemePreference()
+    public static AppSettings Load()
     {
         try
         {
             if (!File.Exists(SettingsPath))
             {
-                return AppThemePreference.Dark;
+                return new AppSettings();
             }
 
-            var settings = JsonSerializer.Deserialize<PersistedSettings>(File.ReadAllText(SettingsPath));
-            return settings?.ThemePreference ?? AppThemePreference.Dark;
+            var persisted = JsonSerializer.Deserialize<PersistedSettings>(File.ReadAllText(SettingsPath));
+            var cornerStyle = persisted?.WindowCornerStyle
+                ?? (persisted?.UseNativeWindowGeometry ?? persisted?.UsePlatformCornerRadius ?? false
+                    ? WindowCornerStyle.MacOS
+                    : persisted?.UseSquareWindowCorners ?? false
+                        ? WindowCornerStyle.Windows10
+                        : WindowCornerStyle.Windows11);
+            var controlStyle = persisted?.WindowControlStyle
+                ?? (persisted?.UseNativeTitleBar ?? persisted?.UseNativeWindowFrame ?? false
+                    ? WindowControlStyle.MacOS
+                    : WindowControlStyle.Windows);
+            return persisted is null
+                ? new AppSettings()
+                : new AppSettings(
+                    persisted.ThemePreference ?? AppThemePreference.Dark,
+                    persisted.UseMicaEffect ?? true,
+                    cornerStyle,
+                    controlStyle);
         }
         catch (IOException)
         {
-            return AppThemePreference.Dark;
+            return new AppSettings();
         }
         catch (JsonException)
         {
-            return AppThemePreference.Dark;
+            return new AppSettings();
         }
         catch (UnauthorizedAccessException)
         {
-            return AppThemePreference.Dark;
+            return new AppSettings();
         }
     }
 
-    public static void SaveThemePreference(AppThemePreference preference)
+    public static void Save(AppSettings settings)
     {
         try
         {
             Directory.CreateDirectory(SettingsDirectory);
             var temporaryPath = SettingsPath + ".tmp";
-            File.WriteAllText(temporaryPath, JsonSerializer.Serialize(new PersistedSettings(preference)));
+            File.WriteAllText(temporaryPath, JsonSerializer.Serialize(settings));
             File.Move(temporaryPath, SettingsPath, overwrite: true);
         }
         catch (IOException)
@@ -57,5 +73,27 @@ internal static class AppSettingsStore
         }
     }
 
-    private sealed record PersistedSettings(AppThemePreference ThemePreference);
+    private sealed record PersistedSettings(
+        AppThemePreference? ThemePreference,
+        bool? UseMicaEffect,
+        WindowCornerStyle? WindowCornerStyle,
+        WindowControlStyle? WindowControlStyle,
+        bool? UseNativeWindowGeometry,
+        bool? UseNativeTitleBar,
+        bool? UseSquareWindowCorners,
+        bool? UsePlatformCornerRadius,
+        bool? UseNativeWindowFrame);
+
+}
+
+internal sealed record AppSettings(
+    AppThemePreference ThemePreference = AppThemePreference.Dark,
+    bool UseMicaEffect = true,
+    WindowCornerStyle WindowCornerStyle = WindowCornerStyle.Windows11,
+    WindowControlStyle WindowControlStyle = WindowControlStyle.Windows)
+{
+    public PlatformAppearancePreferences ToPlatformAppearance() => new(
+        UseMicaEffect,
+        WindowCornerStyle,
+        WindowControlStyle);
 }

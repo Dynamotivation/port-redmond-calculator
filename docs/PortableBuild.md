@@ -42,7 +42,16 @@ dotnet run --project src/Frontends/Calculator.Avalonia/Calculator.Avalonia.cspro
 
 The macOS frontend uses an `NSVisualEffectView` behind Avalonia content for a
 native translucent material. Its borderless window retains drag, resize,
-minimize, maximize, and close behavior through explicit custom chrome.
+minimize, maximize, and close behavior through explicit custom chrome. The
+Settings page can switch the material off and exposes two independent radio
+choices. Window shape can be Windows 10 square, Windows 11 rounded, or native
+macOS rounded; title-bar controls can be Windows caption buttons or genuine
+AppKit traffic lights. Native geometry uses Avalonia's `BorderOnly`
+extended-client mode so AppKit owns corners, shadow, and resizing. The traffic
+lights are standard AppKit window buttons inserted into the Calculator's custom
+title region, so selecting them does not force a title bar or a particular
+corner style. These host preferences are persisted alongside the app theme and
+are hidden on unsupported platforms.
 
 The observed WinUI/UWP versus Avalonia Fluent defaults, Calculator-specific
 overrides, reusable porting patterns, and visual QA rules are maintained in the

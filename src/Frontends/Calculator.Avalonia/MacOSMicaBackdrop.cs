@@ -81,6 +81,20 @@ internal sealed class MacOSMicaBackdrop : IDisposable
         _effectView = IntPtr.Zero;
     }
 
+    public static void InvalidateWindowShadow(Window window)
+    {
+        if (!OperatingSystem.IsMacOS())
+        {
+            return;
+        }
+
+        var platformHandle = window.TryGetPlatformHandle();
+        if (platformHandle is not null && platformHandle.Handle != IntPtr.Zero)
+        {
+            SendVoid(platformHandle.Handle, Selector("invalidateShadow"));
+        }
+    }
+
     private static IntPtr Selector(string name) => sel_registerName(name);
 
     [StructLayout(LayoutKind.Sequential)]

@@ -19,9 +19,9 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var themePreference = AppSettingsStore.LoadThemePreference();
-            ApplyThemePreference(themePreference);
-            desktop.MainWindow = new MainWindow(themePreference);
+            var settings = AppSettingsStore.Load();
+            ApplyThemePreference(settings.ThemePreference);
+            desktop.MainWindow = new MainWindow(settings);
         }
 
         base.OnFrameworkInitializationCompleted();
