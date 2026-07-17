@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="using:Calculator.Avalonia"
         xmlns:managed="using:Calculator.Managed"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
         x:Class="Calculator.Avalonia.MainWindow"
         x:DataType="managed:CalculatorViewModel"
         Width="524" Height="773"
@@ -566,7 +567,8 @@
     <Style Selector="TextBlock.pageHeading">
       <Setter Property="FontSize" Value="25.2" />
       <Setter Property="FontWeight" Value="Medium" />
-      <Setter Property="RenderTransform" Value="translate(0px, -3.5px)" />
+      <!-- TODO: Resolve non-default font baseline differences at runtime from
+           the selected typeface's metrics; never offset the default font here. -->
     </Style>
     <Style Selector="TextBlock.sectionHeading">
       <Setter Property="FontSize" Value="14.7" />
@@ -781,30 +783,34 @@
       <Grid Grid.Row="1" Grid.RowSpan="3" Margin="12,2,12,12"
             RowDefinitions="Auto,1.12*,Auto,1.12*,Auto,1.65*"
             IsVisible="{Binding IsUnitConverterMode}">
-        <ComboBox Grid.Row="0" Classes="unitSelector" Margin="0,0,0,7"
-                  ItemsSource="{Binding UnitCategories}"
-                  SelectedItem="{Binding SelectedUnitCategory}">
-          <ComboBox.ItemTemplate>
+        <ui:FAComboBox Grid.Row="0" Classes="unitSelector" Margin="0,0,0,7"
+                       Padding="12,0,0,0"
+                       VerticalContentAlignment="Center"
+                       ItemsSource="{Binding UnitCategories}"
+                       SelectedItem="{Binding SelectedUnitCategory}">
+          <ui:FAComboBox.ItemTemplate>
             <DataTemplate x:DataType="managed:UnitConverterCategory">
               <TextBlock Text="{Binding Name}" />
             </DataTemplate>
-          </ComboBox.ItemTemplate>
-        </ComboBox>
+          </ui:FAComboBox.ItemTemplate>
+        </ui:FAComboBox>
 
         <Grid Grid.Row="1" RowDefinitions="*,Auto" Margin="6,0">
           <TextBlock Classes="unitDisplay" Text="{Binding UnitFromDisplay}" />
-          <ComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4"
-                    ItemsSource="{Binding UnitDefinitions}"
-                    SelectedItem="{Binding SelectedFromUnit}">
-            <ComboBox.ItemTemplate>
+          <ui:FAComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4"
+                         Padding="12,0,0,0"
+                         VerticalContentAlignment="Center"
+                         ItemsSource="{Binding UnitDefinitions}"
+                         SelectedItem="{Binding SelectedFromUnit}">
+            <ui:FAComboBox.ItemTemplate>
               <DataTemplate x:DataType="managed:UnitConverterUnit">
                 <Grid ColumnDefinitions="*,Auto">
                   <TextBlock Text="{Binding Name}" />
                   <TextBlock Grid.Column="1" Margin="16,0,0,0" Opacity="0.65" Text="{Binding Abbreviation}" />
                 </Grid>
               </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
+            </ui:FAComboBox.ItemTemplate>
+          </ui:FAComboBox>
         </Grid>
 
         <Button Grid.Row="2" Width="42" Height="34" Padding="0" HorizontalAlignment="Right"
@@ -814,18 +820,20 @@
 
         <Grid Grid.Row="3" RowDefinitions="*,Auto" Margin="6,0">
           <TextBlock Classes="unitDisplay" Text="{Binding UnitToDisplay}" />
-          <ComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4"
-                    ItemsSource="{Binding UnitDefinitions}"
-                    SelectedItem="{Binding SelectedToUnit}">
-            <ComboBox.ItemTemplate>
+          <ui:FAComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4"
+                         Padding="12,0,0,0"
+                         VerticalContentAlignment="Center"
+                         ItemsSource="{Binding UnitDefinitions}"
+                         SelectedItem="{Binding SelectedToUnit}">
+            <ui:FAComboBox.ItemTemplate>
               <DataTemplate x:DataType="managed:UnitConverterUnit">
                 <Grid ColumnDefinitions="*,Auto">
                   <TextBlock Text="{Binding Name}" />
                   <TextBlock Grid.Column="1" Margin="16,0,0,0" Opacity="0.65" Text="{Binding Abbreviation}" />
                 </Grid>
               </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
+            </ui:FAComboBox.ItemTemplate>
+          </ui:FAComboBox>
         </Grid>
 
         <ItemsControl Grid.Row="4" Margin="6,5,6,8" ItemsSource="{Binding UnitSuggestions}">
@@ -1062,18 +1070,23 @@
                             IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" />
                   </Grid>
                 </Expander.Header>
-                <ComboBox Margin="68,14,16,14"
-                          HorizontalAlignment="Stretch"
-                          IsTextSearchEnabled="True"
-                          MaxDropDownHeight="360"
-                          ItemsSource="{Binding AvailableFontFamilies}"
-                          SelectedItem="{Binding SelectedFontFamily}">
-                  <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                      <TextBlock FontFamily="{Binding}" Text="{Binding}" />
+                <ui:FAComboBox Margin="68,14,16,14"
+                               HorizontalAlignment="Stretch"
+                               Padding="12,0,0,0"
+                               VerticalContentAlignment="Center"
+                               MaxDropDownHeight="360"
+                               ItemsSource="{Binding AvailableFontFamilies}"
+                               SelectedItem="{Binding SelectedFontFamily, Mode=TwoWay}">
+                  <ui:FAComboBox.ItemTemplate>
+                    <DataTemplate x:CompileBindings="False">
+                      <!-- TODO: If a selected device font has unusual ascent or
+                           descent metrics, calculate a runtime per-font baseline
+                           adjustment instead of shifting every font globally. -->
+                      <TextBlock VerticalAlignment="Center"
+                                 FontFamily="{Binding}" Text="{Binding}" />
                     </DataTemplate>
-                  </ComboBox.ItemTemplate>
-                </ComboBox>
+                  </ui:FAComboBox.ItemTemplate>
+                </ui:FAComboBox>
               </local:AnimatedSettingsExpander>
             </Border>
 

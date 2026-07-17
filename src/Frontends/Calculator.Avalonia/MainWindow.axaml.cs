@@ -116,7 +116,13 @@ public partial class MainWindow : Window
         AppSettingsStore.Save(_settings);
     }
 
-    private void ApplyFontFamily(string fontFamily) => FontFamily = new FontFamily(fontFamily);
+    private void ApplyFontFamily(string fontFamily)
+    {
+        FontFamily = new FontFamily(fontFamily);
+        // TODO: Derive optional baseline compensation from the resolved
+        // typeface's runtime metrics for fonts that Avalonia positions
+        // unusually. The default font must remain unadjusted.
+    }
 
     private static IEnumerable<string> GetInstalledFontFamilyNames()
     {
