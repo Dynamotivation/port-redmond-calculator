@@ -35,6 +35,9 @@
           <SolidColorBrush x:Key="OperatorButtonBrush" Color="#80323232" />
           <SolidColorBrush x:Key="OperatorButtonHoverBrush" Color="#803C3C3C" />
           <SolidColorBrush x:Key="OperatorButtonPressedBrush" Color="#80323232" />
+          <SolidColorBrush x:Key="OperatorButtonOpaqueBrush" Color="#323232" />
+          <SolidColorBrush x:Key="OperatorButtonOpaqueHoverBrush" Color="#3C3C3C" />
+          <SolidColorBrush x:Key="OperatorButtonOpaquePressedBrush" Color="#323232" />
           <LinearGradientBrush x:Key="OperatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
             <GradientStop Color="#0CFFFFFF" Offset="0" />
             <GradientStop Color="#09FFFFFF" Offset="1" />
@@ -77,9 +80,12 @@
           <BoxShadows x:Key="CalculatorButtonPressedShadow">0 0 0 0 #00000000</BoxShadows>
           <SolidColorBrush x:Key="NumericButtonHoverBrush" Color="#FFFFFF" />
           <SolidColorBrush x:Key="NumericButtonPressedBrush" Color="#F4F4F4" />
-          <SolidColorBrush x:Key="OperatorButtonBrush" Color="#80F9F9F9" />
-          <SolidColorBrush x:Key="OperatorButtonHoverBrush" Color="#80F6F6F6" />
-          <SolidColorBrush x:Key="OperatorButtonPressedBrush" Color="#80EAEAEA" />
+          <SolidColorBrush x:Key="OperatorButtonBrush" Color="#80FFFFFF" />
+          <SolidColorBrush x:Key="OperatorButtonHoverBrush" Color="#80F9F9F9" />
+          <SolidColorBrush x:Key="OperatorButtonPressedBrush" Color="#80E1E1E1" />
+          <SolidColorBrush x:Key="OperatorButtonOpaqueBrush" Color="#F9F9F9" />
+          <SolidColorBrush x:Key="OperatorButtonOpaqueHoverBrush" Color="#F6F6F6" />
+          <SolidColorBrush x:Key="OperatorButtonOpaquePressedBrush" Color="#EAEAEA" />
           <LinearGradientBrush x:Key="OperatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
             <GradientStop Color="#80E5E5E5" Offset="0" />
             <GradientStop Color="#80E5E5E5" Offset="0.94" />
@@ -170,8 +176,8 @@
       <Setter Property="Foreground" Value="White" />
     </Style>
     <Style Selector="Button.chromeButton">
-      <Setter Property="Width" Value="46" />
-      <Setter Property="Height" Value="48" />
+      <Setter Property="Width" Value="41" />
+      <Setter Property="Height" Value="41" />
       <Setter Property="Padding" Value="0" />
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
@@ -179,6 +185,10 @@
     </Style>
     <Style Selector="Button.chromeButton:pointerover">
       <Setter Property="Background" Value="{DynamicResource ChromeHoverBrush}" />
+    </Style>
+    <Style Selector="Button.chromeButton.navigationToggle">
+      <Setter Property="Width" Value="53" />
+      <Setter Property="Height" Value="48" />
     </Style>
     <Style Selector="Button.chromeButton.navigationToggle:pointerover">
       <Setter Property="Background" Value="{DynamicResource NavigationInteractionBrush}" />
@@ -201,6 +211,9 @@
     </Style>
     <Style Selector="Button.navigationToggle:pressed Canvas.hamburgerGlyph">
       <Setter Property="RenderTransform" Value="scale(0.6,1)" />
+    </Style>
+    <Style Selector="ScrollViewer /template/ ScrollBar">
+      <Setter Property="Margin" Value="4" />
     </Style>
     <Style Selector="Grid.navigationOverlay">
       <Setter Property="IsHitTestVisible" Value="False" />
@@ -446,6 +459,23 @@
     </Style>
     <Style Selector="Button.calcButton.operator:pressed /template/ Border#CalcButtonSurface">
       <Setter Property="BoxShadow" Value="{DynamicResource OperatorButtonPressedShadow}" />
+    </Style>
+    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator">
+      <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaqueBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonBorderBrush}" />
+    </Style>
+    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator:pointerover">
+      <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaqueHoverBrush}" />
+    </Style>
+    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator:pressed">
+      <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaquePressedBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonPressedBorderBrush}" />
+    </Style>
+    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator /template/ Border#CalcButtonSurface">
+      <Setter Property="BoxShadow" Value="{DynamicResource CalculatorButtonShadow}" />
+    </Style>
+    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator:pressed /template/ Border#CalcButtonSurface">
+      <Setter Property="BoxShadow" Value="{DynamicResource CalculatorButtonPressedShadow}" />
     </Style>
     <Style Selector="Button.calcButton.equalsButton">
       <Setter Property="Background" Value="{DynamicResource AccentButtonBrush}" />
