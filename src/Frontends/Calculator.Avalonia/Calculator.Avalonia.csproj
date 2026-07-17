@@ -19,6 +19,8 @@
   <ItemGroup>
     <ProjectReference Include="../Calculator.Managed/Calculator.Managed.csproj" />
     <ProjectReference Include="../../Calculator.ResourceLoader/Calculator.ResourceLoader.csproj" />
+    <AvaloniaResource Include="../../Calculator/Assets/CalculatorIcons.ttf"
+                      Link="Assets/CalculatorIcons.ttf" />
     <Content Include="../../Calculator/Resources/**/*.resw"
              Link="Resources/%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />

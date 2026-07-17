@@ -84,4 +84,22 @@ using (var converter = new NativeUnitConverter(ResourceLoader.GetForViewIndepend
     Require(converter.Suggestions.Count != 0, "Managed conversion suggestions were dropped.");
 }
 
+using (var viewModel = new CalculatorViewModel())
+{
+    Require(viewModel.CalculatorNavigationItems.Count == 5, "Calculator navigation manifest is incomplete.");
+    Require(viewModel.ConverterNavigationItems.Count == 13, "Converter navigation manifest is incomplete.");
+    Require(viewModel.IsStandardMode
+        && viewModel.CalculatorNavigationItems.Single(item => item.Mode == CalculatorViewMode.Standard).IsSelected,
+        "Navigation did not initialize in Standard mode.");
+
+    viewModel.ToggleNavigationPaneCommand.Execute(null);
+    Require(viewModel.IsNavigationPaneOpen, "Hamburger command did not open the navigation pane.");
+    var temperatureItem = viewModel.ConverterNavigationItems.Single(item => item.Mode == CalculatorViewMode.Temperature);
+    viewModel.SelectNavigationItemCommand.Execute(temperatureItem);
+    Require(viewModel.IsUnitConverterMode && viewModel.CurrentViewMode == CalculatorViewMode.Temperature
+        && viewModel.SelectedUnitCategory?.Id == (int)CalculatorViewMode.Temperature
+        && !viewModel.IsNavigationPaneOpen && temperatureItem.IsSelected,
+        "Navigation did not route to the selected converter category.");
+}
+
 Console.WriteLine("ResourceLoader and managed native-unit-converter compatibility tests passed.");

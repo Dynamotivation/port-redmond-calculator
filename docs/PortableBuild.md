@@ -48,10 +48,18 @@ The frontend packages all original Calculator `.resw` files and selects the
 current UI culture at runtime. It is not restricted to the former copied
 `en-US/CEngineStrings.resw` file.
 
-The hamburger button currently switches between the completed Standard and
-Unit Converter vertical slices. The converter exposes the 12 static categories;
-Currency remains absent until its Windows HTTP/cache implementation is replaced
-with a real cross-platform loader.
+The hamburger button opens an Avalonia replacement for the original
+`NavigationView` in `LeftMinimal` mode. Its manifest preserves the source order,
+serialization IDs, localized labels, category groups, and glyphs from
+`CalcViewModel/Common/NavCategory.cpp`; the glyphs come from the repository's
+`CalculatorIcons.ttf` rather than approximate platform symbols. The pane uses
+overlay/light-dismiss behavior and retains the selected mode.
+
+Standard and all 12 static converter categories route to working native-backed
+surfaces. Scientific, Graphing, Programmer, Date, Currency, and Settings are
+present but disabled until their corresponding frontend or platform layer is
+ported. Currency remains unavailable until its Windows HTTP/cache implementation
+is replaced with a real cross-platform loader.
 
 ## Cross-platform UWP resources
 

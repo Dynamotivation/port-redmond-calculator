@@ -24,6 +24,25 @@
     <SolidColorBrush x:Key="AccentButtonBrush" Color="#4CC2FF" />
     <SolidColorBrush x:Key="AccentButtonHoverBrush" Color="#65CAFA" />
     <SolidColorBrush x:Key="AccentButtonPressedBrush" Color="#36A9E2" />
+    <FontFamily x:Key="CalculatorIconFont">avares://Calculator.Avalonia/Assets/CalculatorIcons.ttf#Calculator Fluent Icons</FontFamily>
+    <DataTemplate x:Key="NavigationItemTemplate" x:DataType="managed:CalculatorNavigationItem" x:CompileBindings="False">
+      <Button Classes="navigationItem"
+              Classes.selected="{Binding IsSelected}"
+              IsEnabled="{Binding IsEnabled}"
+              AutomationProperties.Name="{Binding Name}"
+              Command="{Binding $parent[Window].DataContext.SelectNavigationItemCommand}"
+              CommandParameter="{Binding}">
+        <Grid ColumnDefinitions="4,38,*">
+          <Border Width="3" Height="18" CornerRadius="2" VerticalAlignment="Center"
+                  Background="{StaticResource AccentButtonBrush}"
+                  IsVisible="{Binding IsSelected}" />
+          <TextBlock Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                     FontFamily="{StaticResource CalculatorIconFont}" FontSize="18" Text="{Binding Glyph}" />
+          <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="8,0,0,0"
+                     FontSize="14" Text="{Binding Name}" />
+        </Grid>
+      </Button>
+    </DataTemplate>
   </Window.Resources>
 
   <Window.Styles>
@@ -55,6 +74,25 @@
     </Style>
     <Style Selector="Button.chromeButton:pointerover">
       <Setter Property="Background" Value="#34343B" />
+    </Style>
+    <Style Selector="Button.navigationItem">
+      <Setter Property="Height" Value="40" />
+      <Setter Property="Margin" Value="4,1,8,1" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+    <Style Selector="Button.navigationItem:pointerover">
+      <Setter Property="Background" Value="#34343B" />
+    </Style>
+    <Style Selector="Button.navigationItem.selected">
+      <Setter Property="Background" Value="#303139" />
+    </Style>
+    <Style Selector="Button.navigationItem:disabled">
+      <Setter Property="Opacity" Value="0.38" />
     </Style>
     <Style Selector="Button.memoryButton">
       <Setter Property="MinWidth" Value="0" />
@@ -190,7 +228,7 @@
       <!-- Hamburger/category/history row from MainPage + Calculator. -->
       <Grid Grid.Row="1" ColumnDefinitions="56,Auto,62,*,56">
         <Button Classes="chromeButton" Margin="5,3" AutomationProperties.Name="Switch calculator mode"
-                Command="{Binding ToggleModeCommand}">
+                Command="{Binding ToggleNavigationPaneCommand}">
           <Canvas Width="24" Height="24">
             <Path Stroke="#F5F5F5" StrokeThickness="1.5" Data="M 3,6 L 21,6 M 3,12 L 21,12 M 3,18 L 21,18" />
           </Canvas>
@@ -350,6 +388,54 @@
             <Button Grid.Column="1" Classes="calcButton operator" Content="⌫" FontSize="18" Command="{Binding SendUnitCommandCommand}" CommandParameter="Backspace" />
           </Grid>
         </Grid>
+      </Grid>
+
+      <!-- Source NavigationView replacement. The pane overlays content in the
+           original LeftMinimal mode and keeps the title bar unobstructed. -->
+      <Grid Grid.Row="1" Grid.RowSpan="4" ColumnDefinitions="320,*"
+            IsVisible="{Binding IsNavigationPaneOpen}">
+        <Button Grid.ColumnSpan="2" Padding="0" Background="#66000000" BorderThickness="0"
+                HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                Command="{Binding CloseNavigationPaneCommand}" />
+        <Border Grid.Column="0" Background="#F0202027" BorderBrush="#505158" BorderThickness="0,0,1,0"
+                BoxShadow="8 0 18 0 #50000000">
+          <Grid RowDefinitions="54,*,48">
+            <Grid Grid.Row="0" ColumnDefinitions="56,*">
+              <Button Classes="chromeButton" Margin="5,3" AutomationProperties.Name="Close navigation"
+                      Command="{Binding CloseNavigationPaneCommand}">
+                <Canvas Width="24" Height="24">
+                  <Path Stroke="#F5F5F5" StrokeThickness="1.5"
+                        Data="M 3,6 L 21,6 M 3,12 L 21,12 M 3,18 L 21,18" />
+                </Canvas>
+              </Button>
+              <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="20" FontWeight="SemiBold"
+                         Text="{Binding ApplicationName}" />
+            </Grid>
+
+            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+              <StackPanel Margin="0,4,0,12">
+                <TextBlock Margin="16,8,8,5" FontSize="12" FontWeight="SemiBold" Opacity="0.62"
+                           Text="{Binding CalculatorGroupName}" />
+                <ItemsControl ItemsSource="{Binding CalculatorNavigationItems}"
+                              ItemTemplate="{StaticResource NavigationItemTemplate}" />
+
+                <TextBlock Margin="16,18,8,5" FontSize="12" FontWeight="SemiBold" Opacity="0.62"
+                           Text="{Binding ConverterGroupName}" />
+                <ItemsControl ItemsSource="{Binding ConverterNavigationItems}"
+                              ItemTemplate="{StaticResource NavigationItemTemplate}" />
+              </StackPanel>
+            </ScrollViewer>
+
+            <Button Grid.Row="2" Classes="navigationItem" Margin="4,3,8,5" IsEnabled="False">
+              <Grid ColumnDefinitions="4,38,*">
+                <TextBlock Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                           FontFamily="{StaticResource CalculatorIconFont}" FontSize="18" Text="&#xE713;" />
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="8,0,0,0"
+                           FontSize="14" Text="{Binding SettingsName}" />
+              </Grid>
+            </Button>
+          </Grid>
+        </Border>
       </Grid>
     </Grid>
     </Border>

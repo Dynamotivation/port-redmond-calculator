@@ -31,10 +31,15 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public partial string ModeDisplayName { get; private set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsStandardMode))]
     [NotifyPropertyChangedFor(nameof(IsUnitConverterMode))]
-    public partial bool IsStandardMode { get; private set; } = true;
+    public partial CalculatorViewMode CurrentViewMode { get; private set; } = CalculatorViewMode.Standard;
 
-    public bool IsUnitConverterMode => !IsStandardMode;
+    [ObservableProperty]
+    public partial bool IsNavigationPaneOpen { get; private set; }
+
+    public bool IsStandardMode => CurrentViewMode == CalculatorViewMode.Standard;
+    public bool IsUnitConverterMode => CurrentViewMode is >= CalculatorViewMode.Volume and <= CalculatorViewMode.Angle;
 
     [ObservableProperty]
     public partial string UnitFromDisplay { get; private set; } = "0";
@@ -54,12 +59,20 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public ObservableCollection<UnitConverterCategory> UnitCategories { get; } = [];
     public ObservableCollection<UnitConverterUnit> UnitDefinitions { get; } = [];
     public ObservableCollection<string> UnitSuggestions { get; } = [];
+    public ObservableCollection<CalculatorNavigationItem> CalculatorNavigationItems { get; } = [];
+    public ObservableCollection<CalculatorNavigationItem> ConverterNavigationItems { get; } = [];
+    public string CalculatorGroupName { get; }
+    public string ConverterGroupName { get; }
+    public string SettingsName { get; }
     public string HistoryAutomationName { get; }
 
     public CalculatorViewModel()
     {
         var appResources = ResourceLoader.GetForViewIndependentUse();
         ModeDisplayName = appResources.GetString("StandardModeText");
+        CalculatorGroupName = appResources.GetString("CalculatorModeTextCaps");
+        ConverterGroupName = appResources.GetString("ConverterModeTextCaps");
+        SettingsName = appResources.GetString("SettingsHeader.Text");
         HistoryAutomationName = appResources.GetString("HistoryLabel/Text");
         _calculator = new NativeCalculator(ResourceLoader.GetForViewIndependentUse("CEngineStrings"));
         var regionCode = GetCurrentRegionCode();
@@ -73,6 +86,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             _unitConverter.SelectCategory(SelectedUnitCategory.Id);
         }
         SynchronizeUnitConverter();
+        BuildNavigationItems(appResources);
+        SetSelectedNavigationItem(CalculatorViewMode.Standard);
         PrimaryDisplay = _calculator.PrimaryDisplay;
         ExpressionDisplay = _calculator.ExpressionDisplay;
     }
@@ -111,12 +126,41 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     private void MemoryClearAll() { _calculator.MemoryClearAll(); Synchronize(); }
 
     [RelayCommand]
-    private void ToggleMode()
+    private void ToggleNavigationPane()
     {
-        IsStandardMode = !IsStandardMode;
-        ModeDisplayName = IsStandardMode
-            ? ResourceLoader.GetForViewIndependentUse().GetString("StandardModeText")
-            : SelectedUnitCategory?.Name ?? UnitCategories.First().Name;
+        IsNavigationPaneOpen = !IsNavigationPaneOpen;
+    }
+
+    [RelayCommand]
+    private void CloseNavigationPane() => IsNavigationPaneOpen = false;
+
+    [RelayCommand]
+    private void SelectNavigationItem(CalculatorNavigationItem? item)
+    {
+        if (item is null || !item.IsEnabled)
+        {
+            return;
+        }
+
+        CurrentViewMode = item.Mode;
+        ModeDisplayName = item.Name;
+        SetSelectedNavigationItem(item.Mode);
+
+        if (item.Group == CalculatorNavigationGroup.Converter)
+        {
+            var category = UnitCategories.FirstOrDefault(value => value.Id == (int)item.Mode);
+            if (category is not null)
+            {
+                SelectedUnitCategory = category;
+                if (_unitConverter.SelectedUnits.FromUnitId < 0)
+                {
+                    _unitConverter.SelectCategory(category.Id);
+                    SynchronizeUnitConverter();
+                }
+            }
+        }
+
+        IsNavigationPaneOpen = false;
     }
 
     [RelayCommand]
@@ -177,6 +221,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         }
         _unitConverter.SelectCategory(value.Id);
         ModeDisplayName = value.Name;
+        CurrentViewMode = (CalculatorViewMode)value.Id;
+        SetSelectedNavigationItem(CurrentViewMode);
         SynchronizeUnitConverter();
     }
 
@@ -231,6 +277,53 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         catch (ArgumentException)
         {
             return "US";
+        }
+    }
+
+    private void BuildNavigationItems(ResourceLoader resources)
+    {
+        CalculatorNavigationItems.Add(new(CalculatorViewMode.Standard, CalculatorNavigationGroup.Calculator,
+            resources.GetString("StandardModeText"), "\uE8EF", true));
+        CalculatorNavigationItems.Add(new(CalculatorViewMode.Scientific, CalculatorNavigationGroup.Calculator,
+            resources.GetString("ScientificModeText"), "\uF196", false));
+        CalculatorNavigationItems.Add(new(CalculatorViewMode.Graphing, CalculatorNavigationGroup.Calculator,
+            resources.GetString("GraphingCalculatorModeText"), "\uF770", false));
+        CalculatorNavigationItems.Add(new(CalculatorViewMode.Programmer, CalculatorNavigationGroup.Calculator,
+            resources.GetString("ProgrammerModeText"), "\uECCE", false));
+        CalculatorNavigationItems.Add(new(CalculatorViewMode.Date, CalculatorNavigationGroup.Calculator,
+            resources.GetString("DateCalculationModeText"), "\uE787", false));
+
+        // Currency remains disabled until its HTTP/cache loader is made portable.
+        AddConverterNavigationItem(resources, CalculatorViewMode.Currency, "CategoryName_CurrencyText", "\uEB0D", false);
+        AddConverterNavigationItem(resources, CalculatorViewMode.Volume, "CategoryName_VolumeText", "\uF1AA");
+        AddConverterNavigationItem(resources, CalculatorViewMode.Length, "CategoryName_LengthText", "\uECC6");
+        AddConverterNavigationItem(resources, CalculatorViewMode.Weight, "CategoryName_WeightText", "\uF4C1");
+        AddConverterNavigationItem(resources, CalculatorViewMode.Temperature, "CategoryName_TemperatureText", "\uE7A3");
+        AddConverterNavigationItem(resources, CalculatorViewMode.Energy, "CategoryName_EnergyText", "\uECAD");
+        AddConverterNavigationItem(resources, CalculatorViewMode.Area, "CategoryName_AreaText", "\uE809");
+        AddConverterNavigationItem(resources, CalculatorViewMode.Speed, "CategoryName_SpeedText", "\uEADA");
+        AddConverterNavigationItem(resources, CalculatorViewMode.Time, "CategoryName_TimeText", "\uE917");
+        AddConverterNavigationItem(resources, CalculatorViewMode.Power, "CategoryName_PowerText", "\uE945");
+        AddConverterNavigationItem(resources, CalculatorViewMode.Data, "CategoryName_DataText", "\uF20F");
+        AddConverterNavigationItem(resources, CalculatorViewMode.Pressure, "CategoryName_PressureText", "\uEC4A");
+        AddConverterNavigationItem(resources, CalculatorViewMode.Angle, "CategoryName_AngleText", "\uF515");
+    }
+
+    private void AddConverterNavigationItem(
+        ResourceLoader resources,
+        CalculatorViewMode mode,
+        string resourceKey,
+        string glyph,
+        bool isEnabled = true)
+    {
+        ConverterNavigationItems.Add(new(mode, CalculatorNavigationGroup.Converter, resources.GetString(resourceKey), glyph, isEnabled));
+    }
+
+    private void SetSelectedNavigationItem(CalculatorViewMode mode)
+    {
+        foreach (var item in CalculatorNavigationItems.Concat(ConverterNavigationItems))
+        {
+            item.IsSelected = item.Mode == mode;
         }
     }
 }

@@ -7,6 +7,7 @@
     <NativeCalculatorLibrary Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(MSBuildProjectDirectory)/../../build/portable/src/CalculatorNative/libcalculator_engine.dylib</NativeCalculatorLibrary>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <ProjectReference Include="../Calculator.ResourceLoader/Calculator.ResourceLoader.csproj" />
     <ProjectReference Include="../Frontends/Calculator.Managed/Calculator.Managed.csproj" />
     <Content Include="$(NativeCalculatorLibrary)"
