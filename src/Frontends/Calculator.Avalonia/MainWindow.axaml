@@ -103,6 +103,26 @@
       <Setter Property="FontSize" Value="14" />
       <Setter Property="HorizontalContentAlignment" Value="Center" />
       <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}">
+            <ContentPresenter Content="{TemplateBinding Content}"
+                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="Button.titleButton.captionButton">
+      <Setter Property="Width" Value="60" />
+      <!-- The window's one-pixel frame sits outside the title-bar content
+           bounds. Extend caption backplates into that frame so full-bleed
+           hover colors do not leave the top edge exposed. -->
+      <Setter Property="Height" Value="43" />
+      <Setter Property="Margin" Value="0,-1,0,0" />
+    </Style>
+    <Style Selector="Button.titleButton.captionButton.close">
+      <Setter Property="Margin" Value="0,-1,-1,0" />
     </Style>
     <Style Selector="Button.titleButton:pointerover">
       <Setter Property="Background" Value="{DynamicResource ChromeHoverBrush}" />
@@ -422,28 +442,42 @@
       <!-- Source-faithful replacement for CalculatorApp.TitleBar. -->
       <Grid Grid.Row="0" Height="42" ColumnDefinitions="Auto,*,Auto,Auto,Auto" Background="Transparent"
             PointerPressed="TitleBar_OnPointerPressed">
-        <Grid Width="22" Height="22" Margin="18,10,12,10"
-              IsVisible="{Binding UsesWindowsWindowControls}">
-          <Border CornerRadius="2" Background="#6EC7E8" />
-          <Grid Margin="5" RowDefinitions="5,*" ColumnDefinitions="*,*" ColumnSpacing="2" RowSpacing="2">
-            <Border Grid.ColumnSpan="2" Background="#E9F7FC" />
-            <Border Grid.Row="1" Background="#315368" />
-            <Border Grid.Row="1" Grid.Column="1" Background="#315368" />
+        <StackPanel Orientation="Horizontal" IsVisible="{Binding UsesWindowsWindowControls}">
+          <Button Classes="titleButton" IsVisible="{Binding ShowsSettingsBackInTitleBar}"
+                  AutomationProperties.Name="{Binding BackAutomationName}"
+                  Command="{Binding CloseSettingsCommand}">
+            <Path Width="18" Height="18" Stretch="Uniform"
+                  Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.25"
+                  Data="M 12.5,5.5 L 6,12 L 12.5,18.5 M 6,12 L 20,12" />
+          </Button>
+          <Grid Width="22" Height="22" Margin="18,10,12,10">
+            <Border CornerRadius="2" Background="#6EC7E8" />
+            <Grid Margin="5" RowDefinitions="5,*" ColumnDefinitions="*,*" ColumnSpacing="2" RowSpacing="2">
+              <Border Grid.ColumnSpan="2" Background="#E9F7FC" />
+              <Border Grid.Row="1" Background="#315368" />
+              <Border Grid.Row="1" Grid.Column="1" Background="#315368" />
+            </Grid>
           </Grid>
-        </Grid>
-        <Button Grid.Column="2" Classes="titleButton" IsVisible="{Binding UsesWindowsWindowControls}"
+        </StackPanel>
+        <Button Grid.Column="2" Classes="titleButton captionButton" IsVisible="{Binding UsesWindowsWindowControls}"
                 AutomationProperties.Name="Minimize" Click="Minimize_OnClick">
-          <Border Width="10" Height="1" Background="{DynamicResource ChromeForegroundBrush}" />
+          <Path Width="12.9" Height="12.9" Stretch="None"
+                Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.25"
+                StrokeLineCap="Round" Data="M 0.75,6.45 L 12.15,6.45" />
         </Button>
-        <Button Grid.Column="3" Classes="titleButton" IsVisible="{Binding UsesWindowsWindowControls}"
+        <Button Grid.Column="3" Classes="titleButton captionButton" IsVisible="{Binding UsesWindowsWindowControls}"
                 AutomationProperties.Name="Maximize" Click="Maximize_OnClick">
-          <Path Width="12" Height="12" Stretch="Uniform" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                StrokeThickness="1" Data="M 1.5,1.5 L 10.5,1.5 L 10.5,10.5 L 1.5,10.5 Z" />
+          <Path Width="12.9" Height="12.9" Stretch="Uniform"
+                Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                StrokeThickness="1.25" StrokeLineCap="Round" StrokeJoin="Round"
+                Data="M 3,1.75 L 9.5,1.75 Q 10.75,1.75 10.75,3 L 10.75,9.5 Q 10.75,10.75 9.5,10.75 L 3,10.75 Q 1.75,10.75 1.75,9.5 L 1.75,3 Q 1.75,1.75 3,1.75 Z" />
         </Button>
-        <Button Grid.Column="4" Classes="titleButton close" IsVisible="{Binding UsesWindowsWindowControls}"
+        <Button Grid.Column="4" Classes="titleButton captionButton close" IsVisible="{Binding UsesWindowsWindowControls}"
                 AutomationProperties.Name="Close" Click="Close_OnClick">
-          <Path Width="12" Height="12" Stretch="Uniform" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                StrokeThickness="1" Data="M 1.5,1.5 L 10.5,10.5 M 10.5,1.5 L 1.5,10.5" />
+          <Path Width="12.9" Height="12.9" Stretch="Uniform"
+                Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                StrokeThickness="1.25" StrokeLineCap="Round"
+                Data="M 2.25,2.25 L 10.25,10.25 M 10.25,2.25 L 2.25,10.25" />
         </Button>
       </Grid>
 
@@ -724,12 +758,16 @@
           <SolidColorBrush x:Key="ExpanderChevronForegroundPressed" Color="Transparent" />
           <SolidColorBrush x:Key="ExpanderChevronForegroundDisabled" Color="Transparent" />
         </Grid.Resources>
-        <Grid Grid.Row="0" ColumnDefinitions="56,*">
+        <Grid Grid.Row="0" IsVisible="{Binding UsesWindowsWindowControls}">
+          <TextBlock Margin="24,0,0,0" VerticalAlignment="Center" FontSize="24" FontWeight="SemiBold"
+                     Text="{Binding SettingsName}" />
+        </Grid>
+        <Grid Grid.Row="0" ColumnDefinitions="56,*" IsVisible="{Binding UsesMacOSWindowControls}">
           <Button Classes="chromeButton" Margin="5,3" FontSize="18"
                   AutomationProperties.Name="{Binding BackAutomationName}"
                   Command="{Binding CloseSettingsCommand}">
-            <Path Width="20" Height="20" Stretch="Uniform" Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
-                  Data="M 18,4 L 8,12 L 18,20 M 8,12 L 22,12" />
+            <Path Width="18" Height="18" Stretch="Uniform" Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.25"
+                  Data="M 12.5,5.5 L 6,12 L 12.5,18.5 M 6,12 L 20,12" />
           </Button>
           <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="24" FontWeight="SemiBold"
                      Text="{Binding SettingsName}" />

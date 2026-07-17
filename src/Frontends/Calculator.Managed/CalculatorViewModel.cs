@@ -40,6 +40,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public partial bool IsNavigationPaneOpen { get; private set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowsSettingsBackInTitleBar))]
     public partial bool IsSettingsOpen { get; private set; }
 
     [ObservableProperty]
@@ -89,6 +90,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(UsesWindowsWindowControls))]
     [NotifyPropertyChangedFor(nameof(UsesMacOSWindowControls))]
+    [NotifyPropertyChangedFor(nameof(ShowsSettingsBackInTitleBar))]
     [NotifyPropertyChangedFor(nameof(IsWindowsWindowControlStyleSelected))]
     [NotifyPropertyChangedFor(nameof(IsMacOSWindowControlStyleSelected))]
     public partial WindowControlStyle SelectedWindowControlStyle { get; private set; } = WindowControlStyle.Windows;
@@ -102,6 +104,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public bool UsesSquareWindowCorners => SelectedWindowCornerStyle == WindowCornerStyle.Windows10;
     public bool UsesWindowsWindowControls => SelectedWindowControlStyle == WindowControlStyle.Windows;
     public bool UsesMacOSWindowControls => SelectedWindowControlStyle == WindowControlStyle.MacOS;
+    public bool ShowsSettingsBackInTitleBar => IsSettingsOpen && UsesWindowsWindowControls;
     public double WindowCornerRadius => SelectedWindowCornerStyle == WindowCornerStyle.Windows11 ? 8 : 0;
     public bool UsesCustomResizeHandles => !UsesNativeWindowGeometry;
     public event Action<PlatformAppearancePreferences>? PlatformAppearancePreferencesChanged;
