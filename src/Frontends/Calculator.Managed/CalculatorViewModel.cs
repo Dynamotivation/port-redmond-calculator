@@ -78,8 +78,9 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public string Windows11CornersName { get; } = "Windows 11 — rounded";
     public string MacOSCornersName { get; } = "macOS — rounded";
     public string WindowControlsName { get; } = "Title bar controls";
-    public string WindowControlsDescription { get; } = "Fully native behavior is used with macOS corners";
-    public string WindowsWindowControlsName { get; } = "Windows";
+    public string WindowControlsDescription { get; } = "Choose title bar geometry independently from window corners";
+    public string Windows10WindowControlsName { get; } = "Windows 10";
+    public string Windows11WindowControlsName { get; } = "Windows 11";
     public string MacOSWindowControlsName { get; } = "macOS";
 
     [ObservableProperty]
@@ -99,18 +100,20 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(UsesWindowsWindowControls))]
     [NotifyPropertyChangedFor(nameof(UsesMacOSWindowControls))]
     [NotifyPropertyChangedFor(nameof(ShowsSettingsBackInTitleBar))]
-    [NotifyPropertyChangedFor(nameof(IsWindowsWindowControlStyleSelected))]
+    [NotifyPropertyChangedFor(nameof(IsWindows10WindowControlStyleSelected))]
+    [NotifyPropertyChangedFor(nameof(IsWindows11WindowControlStyleSelected))]
     [NotifyPropertyChangedFor(nameof(IsMacOSWindowControlStyleSelected))]
-    public partial WindowControlStyle SelectedWindowControlStyle { get; private set; } = WindowControlStyle.Windows;
+    public partial WindowControlStyle SelectedWindowControlStyle { get; private set; } = WindowControlStyle.Windows11;
 
     public bool IsWindows10CornerStyleSelected => SelectedWindowCornerStyle == WindowCornerStyle.Windows10;
     public bool IsWindows11CornerStyleSelected => SelectedWindowCornerStyle == WindowCornerStyle.Windows11;
     public bool IsMacOSCornerStyleSelected => SelectedWindowCornerStyle == WindowCornerStyle.MacOS;
-    public bool IsWindowsWindowControlStyleSelected => SelectedWindowControlStyle == WindowControlStyle.Windows;
+    public bool IsWindows10WindowControlStyleSelected => SelectedWindowControlStyle == WindowControlStyle.Windows10;
+    public bool IsWindows11WindowControlStyleSelected => SelectedWindowControlStyle == WindowControlStyle.Windows11;
     public bool IsMacOSWindowControlStyleSelected => SelectedWindowControlStyle == WindowControlStyle.MacOS;
     public bool UsesNativeWindowGeometry => SelectedWindowCornerStyle == WindowCornerStyle.MacOS;
     public bool UsesSquareWindowCorners => SelectedWindowCornerStyle == WindowCornerStyle.Windows10;
-    public bool UsesWindowsWindowControls => SelectedWindowControlStyle == WindowControlStyle.Windows;
+    public bool UsesWindowsWindowControls => SelectedWindowControlStyle != WindowControlStyle.MacOS;
     public bool UsesMacOSWindowControls => SelectedWindowControlStyle == WindowControlStyle.MacOS;
     public bool ShowsSettingsBackInTitleBar => IsSettingsOpen && UsesWindowsWindowControls;
     public double WindowCornerRadius => SelectedWindowCornerStyle == WindowCornerStyle.Windows11 ? 8 : 0;

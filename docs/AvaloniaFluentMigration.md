@@ -191,6 +191,14 @@ Caption controls require:
 - source-accurate button aspect ratio rather than guessed square hitboxes; and
 - an owned template when theme internals override state colors.
 
+Do not treat “Windows-style controls” as one timeless visual preset. When an
+application exposes multiple Windows generations, keep each generation's
+caption geometry and hitbox contract together: older chrome can use sharper,
+lighter glyphs and a narrower aspect ratio, while newer chrome uses rounded,
+heavier glyphs and wider targets. Bind the visual variant to the selected
+title-control style—not the independently selected corner style—instead of
+replacing the older assets globally.
+
 The close hover color in current Windows guidance is `#C42B1C`.
 
 Do not stretch a zero-height minimize path with `Stretch="Uniform"`; its empty

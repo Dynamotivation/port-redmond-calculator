@@ -173,14 +173,22 @@ using (var viewModel = new CalculatorViewModel(
     viewModel.SelectWindowCornerStyleCommand.Execute(nameof(WindowCornerStyle.MacOS));
     Require(viewModel.IsMacOSCornerStyleSelected && viewModel.UsesMacOSWindowControls,
         "The fully native macOS combination could not be selected.");
-    viewModel.SelectWindowControlStyleCommand.Execute(nameof(WindowControlStyle.Windows));
-    Require(viewModel.IsMacOSCornerStyleSelected && viewModel.UsesWindowsWindowControls
+    viewModel.SelectWindowControlStyleCommand.Execute(nameof(WindowControlStyle.Windows10));
+    Require(viewModel.IsMacOSCornerStyleSelected
+        && viewModel.IsWindows10WindowControlStyleSelected
+        && viewModel.UsesWindowsWindowControls
         && viewModel.UsesNativeWindowGeometry,
-        "macOS corners could not be combined with Windows controls.");
+        "macOS corners could not be combined with Windows 10 controls.");
     viewModel.SelectWindowCornerStyleCommand.Execute(nameof(WindowCornerStyle.Windows11));
-    Require(viewModel.IsWindows11CornerStyleSelected && viewModel.UsesWindowsWindowControls
+    Require(viewModel.IsWindows11CornerStyleSelected
+        && viewModel.IsWindows10WindowControlStyleSelected
         && viewModel.WindowCornerRadius == 8,
-        "Windows 11 shape and Windows controls did not restore.");
+        "Changing corner geometry also changed the Windows title-bar generation.");
+    viewModel.SelectWindowControlStyleCommand.Execute(nameof(WindowControlStyle.Windows11));
+    Require(viewModel.IsWindows11CornerStyleSelected
+        && viewModel.IsWindows11WindowControlStyleSelected
+        && viewModel.UsesWindowsWindowControls,
+        "Windows 11 title-bar controls could not be selected independently.");
     viewModel.CloseSettingsCommand.Execute(null);
     Require(!viewModel.IsSettingsOpen, "Settings back command did not restore calculator content.");
 }

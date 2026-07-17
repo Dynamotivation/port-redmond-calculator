@@ -31,7 +31,7 @@ internal static class AppSettingsStore
             var controlStyle = persisted?.WindowControlStyle
                 ?? (persisted?.UseNativeTitleBar ?? persisted?.UseNativeWindowFrame ?? false
                     ? WindowControlStyle.MacOS
-                    : WindowControlStyle.Windows);
+                    : WindowControlStyle.Windows11);
             return persisted is null
                 ? new AppSettings()
                 : new AppSettings(
@@ -90,7 +90,7 @@ internal sealed record AppSettings(
     AppThemePreference ThemePreference = AppThemePreference.Dark,
     bool UseMicaEffect = true,
     WindowCornerStyle WindowCornerStyle = WindowCornerStyle.Windows11,
-    WindowControlStyle WindowControlStyle = WindowControlStyle.Windows)
+    WindowControlStyle WindowControlStyle = WindowControlStyle.Windows11)
 {
     public PlatformAppearancePreferences ToPlatformAppearance() => new(
         UseMicaEffect,

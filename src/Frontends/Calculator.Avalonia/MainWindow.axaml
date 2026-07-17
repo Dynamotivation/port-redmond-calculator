@@ -166,6 +166,11 @@
       <Setter Property="Height" Value="43" />
       <Setter Property="Margin" Value="0,-1,0,0" />
     </Style>
+    <Style Selector="Button.titleButton.captionButton.windows10">
+      <!-- Preserve the source Windows 10 caption aspect ratio (46:42).
+           Height still extends one pixel into the outer frame. -->
+      <Setter Property="Width" Value="46" />
+    </Style>
     <Style Selector="Button.titleButton.captionButton.close">
       <Setter Property="Margin" Value="0,-1,-1,0" />
     </Style>
@@ -633,25 +638,53 @@
                      TextTrimming="CharacterEllipsis"
                      Text="{Binding TitleBarApplicationName}" />
         </StackPanel>
-        <Button Grid.Column="2" Classes="titleButton captionButton" IsVisible="{Binding UsesWindowsWindowControls}"
+        <Button Grid.Column="2" Classes="titleButton captionButton"
+                Classes.windows10="{Binding IsWindows10WindowControlStyleSelected}"
+                IsVisible="{Binding UsesWindowsWindowControls}"
                 AutomationProperties.Name="Minimize" Click="Minimize_OnClick">
-          <Path Width="12.9" Height="12.9" Stretch="None"
-                Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.25"
-                StrokeLineCap="Round" Data="M 0.75,6.45 L 12.15,6.45" />
+          <Grid Width="12.9" Height="12.9">
+            <Border Width="10" Height="1"
+                    Background="{DynamicResource ChromeForegroundBrush}"
+                    IsVisible="{Binding IsWindows10WindowControlStyleSelected}" />
+            <Path Width="12.9" Height="12.9" Stretch="None"
+                  Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.25"
+                  StrokeLineCap="Round" Data="M 0.75,6.45 L 12.15,6.45"
+                  IsVisible="{Binding !IsWindows10WindowControlStyleSelected}" />
+          </Grid>
         </Button>
-        <Button Grid.Column="3" Classes="titleButton captionButton" IsVisible="{Binding UsesWindowsWindowControls}"
+        <Button Grid.Column="3" Classes="titleButton captionButton"
+                Classes.windows10="{Binding IsWindows10WindowControlStyleSelected}"
+                IsVisible="{Binding UsesWindowsWindowControls}"
                 AutomationProperties.Name="Maximize" Click="Maximize_OnClick">
-          <Path Width="12.9" Height="12.9" Stretch="Uniform"
-                Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                StrokeThickness="1.25" StrokeLineCap="Round" StrokeJoin="Round"
-                Data="M 3,1.75 L 9.5,1.75 Q 10.75,1.75 10.75,3 L 10.75,9.5 Q 10.75,10.75 9.5,10.75 L 3,10.75 Q 1.75,10.75 1.75,9.5 L 1.75,3 Q 1.75,1.75 3,1.75 Z" />
+          <Grid Width="12.9" Height="12.9">
+            <Path Width="12" Height="12" Stretch="Uniform"
+                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                  StrokeThickness="1"
+                  Data="M 1.5,1.5 L 10.5,1.5 L 10.5,10.5 L 1.5,10.5 Z"
+                  IsVisible="{Binding IsWindows10WindowControlStyleSelected}" />
+            <Path Width="12.9" Height="12.9" Stretch="Uniform"
+                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                  StrokeThickness="1.25" StrokeLineCap="Round" StrokeJoin="Round"
+                  Data="M 3,1.75 L 9.5,1.75 Q 10.75,1.75 10.75,3 L 10.75,9.5 Q 10.75,10.75 9.5,10.75 L 3,10.75 Q 1.75,10.75 1.75,9.5 L 1.75,3 Q 1.75,1.75 3,1.75 Z"
+                  IsVisible="{Binding !IsWindows10WindowControlStyleSelected}" />
+          </Grid>
         </Button>
-        <Button Grid.Column="4" Classes="titleButton captionButton close" IsVisible="{Binding UsesWindowsWindowControls}"
+        <Button Grid.Column="4" Classes="titleButton captionButton close"
+                Classes.windows10="{Binding IsWindows10WindowControlStyleSelected}"
+                IsVisible="{Binding UsesWindowsWindowControls}"
                 AutomationProperties.Name="Close" Click="Close_OnClick">
-          <Path Width="12.9" Height="12.9" Stretch="Uniform"
-                Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
-                StrokeThickness="1.25" StrokeLineCap="Round"
-                Data="M 2.25,2.25 L 10.25,10.25 M 10.25,2.25 L 2.25,10.25" />
+          <Grid Width="12.9" Height="12.9">
+            <Path Width="12" Height="12" Stretch="Uniform"
+                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                  StrokeThickness="1"
+                  Data="M 1.5,1.5 L 10.5,10.5 M 10.5,1.5 L 1.5,10.5"
+                  IsVisible="{Binding IsWindows10WindowControlStyleSelected}" />
+            <Path Width="12.9" Height="12.9" Stretch="Uniform"
+                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                  StrokeThickness="1.25" StrokeLineCap="Round"
+                  Data="M 2.25,2.25 L 10.25,10.25 M 10.25,2.25 L 2.25,10.25"
+                  IsVisible="{Binding !IsWindows10WindowControlStyleSelected}" />
+          </Grid>
         </Button>
       </Grid>
 
@@ -1084,9 +1117,12 @@
                     </Grid>
                   </Expander.Header>
                   <StackPanel Margin="68,14,16,14" Spacing="7">
-                    <RadioButton GroupName="WindowControls" Content="{Binding WindowsWindowControlsName}"
-                                 IsChecked="{Binding IsWindowsWindowControlStyleSelected, Mode=OneWay}"
-                                 Command="{Binding SelectWindowControlStyleCommand}" CommandParameter="Windows" />
+                    <RadioButton GroupName="WindowControls" Content="{Binding Windows10WindowControlsName}"
+                                 IsChecked="{Binding IsWindows10WindowControlStyleSelected, Mode=OneWay}"
+                                 Command="{Binding SelectWindowControlStyleCommand}" CommandParameter="Windows10" />
+                    <RadioButton GroupName="WindowControls" Content="{Binding Windows11WindowControlsName}"
+                                 IsChecked="{Binding IsWindows11WindowControlStyleSelected, Mode=OneWay}"
+                                 Command="{Binding SelectWindowControlStyleCommand}" CommandParameter="Windows11" />
                     <RadioButton GroupName="WindowControls" Content="{Binding MacOSWindowControlsName}"
                                  IsChecked="{Binding IsMacOSWindowControlStyleSelected, Mode=OneWay}"
                                  Command="{Binding SelectWindowControlStyleCommand}" CommandParameter="MacOS" />

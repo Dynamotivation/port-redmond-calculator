@@ -123,7 +123,7 @@ public partial class MainWindow : Window
             var teardownPreferences = preferences with
             {
                 WindowCornerStyle = WindowCornerStyle.MacOS,
-                WindowControlStyle = WindowControlStyle.Windows,
+                WindowControlStyle = WindowControlStyle.Windows11,
             };
             ApplyWindowDecorations(teardownPreferences);
             RefreshBackdrop(teardownPreferences);
