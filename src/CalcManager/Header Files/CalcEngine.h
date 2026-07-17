@@ -97,11 +97,12 @@ public:
     // returns the ptr to string representing the operator. Mostly same as the button, but few special cases for x^y etc.
     static std::wstring_view GetString(int ids)
     {
-        return s_engineStrings[std::to_wstring(ids)];
+        return GetString(std::to_wstring(ids));
     }
     static std::wstring_view GetString(std::wstring_view ids)
     {
-        return s_engineStrings[ids];
+        const auto value = s_engineStrings.find(std::wstring{ ids });
+        return value == s_engineStrings.end() ? std::wstring_view{} : std::wstring_view{ value->second };
     }
     static std::wstring_view OpCodeToString(int nOpCode)
     {
@@ -162,7 +163,7 @@ private:
 
     std::array<CalcEngine::Rational, NUM_WIDTH_LENGTH> m_chopNumbers;           // word size enforcement
     std::array<std::wstring, NUM_WIDTH_LENGTH> m_maxDecimalValueStrings;        // maximum values represented by a given word width based off m_chopNumbers
-    static std::unordered_map<std::wstring_view, std::wstring> s_engineStrings; // the string table shared across all instances
+    static std::unordered_map<std::wstring, std::wstring> s_engineStrings; // the string table shared across all instances
     wchar_t m_decimalSeparator;
     wchar_t m_groupSeparator;
 

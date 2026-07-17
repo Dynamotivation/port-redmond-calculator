@@ -42,6 +42,12 @@ Prerequisites:
   [Windows Application Driver (WinAppDriver)](https://github.com/microsoft/WinAppDriver/releases/latest)
   is installed.
 
+### Portable native engine
+
+RatPack, CalcEngine, and CalculatorManager can also be built as a native C++20
+library on macOS and other non-UWP platforms. See the
+[portable build documentation](docs/PortableBuild.md).
+
 ## Contributing
 Want to contribute? The team encourages community feedback and contributions. Please follow our [contributing guidelines](CONTRIBUTING.md).
 

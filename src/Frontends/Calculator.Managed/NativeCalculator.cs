@@ -1,0 +1,117 @@
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Xml.Linq;
+
+namespace Calculator.Managed;
+
+public sealed unsafe class NativeCalculator : IDisposable
+{
+    private nint _handle;
+
+    public NativeCalculator(string resourcePath)
+    {
+        if (NativeMethods.AbiVersion() != 1)
+        {
+            throw new NotSupportedException("Unsupported native Calculator ABI version.");
+        }
+
+        var resources = LoadResources(resourcePath);
+        var nativeEntries = new NativeResourceEntry[resources.Count];
+        var allocations = new List<nint>(resources.Count * 2);
+
+        try
+        {
+            for (var index = 0; index < resources.Count; index++)
+            {
+                var (key, value) = resources[index];
+                var nativeKey = Marshal.StringToCoTaskMemUTF8(key);
+                var nativeValue = Marshal.StringToCoTaskMemUTF8(value);
+                allocations.Add(nativeKey);
+                allocations.Add(nativeValue);
+                nativeEntries[index] = new NativeResourceEntry { Key = nativeKey, Value = nativeValue };
+            }
+
+            unsafe
+            {
+                fixed (NativeResourceEntry* entries = nativeEntries)
+                {
+                    ThrowIfFailed(NativeMethods.Create(entries, (nuint)nativeEntries.Length, 0, out _handle));
+                }
+            }
+        }
+        finally
+        {
+            foreach (var allocation in allocations)
+            {
+                Marshal.FreeCoTaskMem(allocation);
+            }
+        }
+    }
+
+    public string PrimaryDisplay => ReadUtf8(NativeMethods.GetPrimaryDisplay);
+    public string ExpressionDisplay => ReadUtf8(NativeMethods.GetExpressionDisplay);
+    public bool IsError => NativeMethods.IsError(Handle) != 0;
+
+    public void SendCommand(CalculatorCommand command)
+    {
+        ThrowIfFailed(NativeMethods.SendCommand(Handle, (int)command));
+    }
+
+    public void Reset(bool clearMemory = true)
+    {
+        ThrowIfFailed(NativeMethods.Reset(Handle, clearMemory ? 1 : 0));
+    }
+
+    public void Dispose()
+    {
+        if (_handle != 0)
+        {
+            NativeMethods.Destroy(_handle);
+            _handle = 0;
+        }
+        GC.SuppressFinalize(this);
+    }
+
+    private nint Handle => _handle != 0 ? _handle : throw new ObjectDisposedException(nameof(NativeCalculator));
+
+    private unsafe string ReadUtf8(GetString getString)
+    {
+        ThrowIfFailed(getString(Handle, null, 0, out var requiredSize));
+        if (requiredSize <= 1)
+        {
+            return string.Empty;
+        }
+
+        var buffer = new byte[checked((int)requiredSize)];
+        fixed (byte* pointer = buffer)
+        {
+            ThrowIfFailed(getString(Handle, pointer, requiredSize, out _));
+        }
+        return Encoding.UTF8.GetString(buffer, 0, buffer.Length - 1);
+    }
+
+    private static List<(string Key, string Value)> LoadResources(string resourcePath)
+    {
+        var document = XDocument.Load(resourcePath, LoadOptions.PreserveWhitespace);
+        return document.Root!
+            .Elements("data")
+            .Select(element => (
+                Key: (string?)element.Attribute("name") ?? string.Empty,
+                Value: (string?)element.Element("value") ?? string.Empty))
+            .Where(entry => entry.Key.Length != 0)
+            .ToList();
+    }
+
+    private static void ThrowIfFailed(NativeStatus status)
+    {
+        if (status == NativeStatus.Ok)
+        {
+            return;
+        }
+
+        var error = Marshal.PtrToStringUTF8(NativeMethods.GetLastError());
+        throw new InvalidOperationException($"Native Calculator failed with {status}: {error}");
+    }
+
+    private unsafe delegate NativeStatus GetString(nint handle, byte* buffer, nuint bufferSize, out nuint requiredSize);
+}

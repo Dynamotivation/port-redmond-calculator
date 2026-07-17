@@ -1,0 +1,35 @@
+namespace Calculator.Managed;
+
+// Values intentionally match CalculationManager::Command in CalcManager/Command.h.
+public enum CalculatorCommand
+{
+    Sign = 80,
+    Clear = 81,
+    ClearEntry = 82,
+    Backspace = 83,
+    Decimal = 84,
+    Divide = 91,
+    Multiply = 92,
+    Add = 93,
+    Subtract = 94,
+    SquareRoot = 110,
+    Square = 111,
+    Reciprocal = 114,
+    Percent = 118,
+    Equals = 121,
+    MemoryClear = 122,
+    MemoryRecall = 123,
+    MemoryStore = 124,
+    MemoryAdd = 125,
+    MemorySubtract = 126,
+    Zero = 130,
+    One = 131,
+    Two = 132,
+    Three = 133,
+    Four = 134,
+    Five = 135,
+    Six = 136,
+    Seven = 137,
+    Eight = 138,
+    Nine = 139,
+}
