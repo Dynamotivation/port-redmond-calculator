@@ -18,8 +18,9 @@
 
   <ItemGroup>
     <ProjectReference Include="../Calculator.Managed/Calculator.Managed.csproj" />
-    <Content Include="../../Calculator/Resources/en-US/CEngineStrings.resw"
-             Link="CEngineStrings.resw"
+    <ProjectReference Include="../../Calculator.ResourceLoader/Calculator.ResourceLoader.csproj" />
+    <Content Include="../../Calculator/Resources/**/*.resw"
+             Link="Resources/%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(NativeCalculatorLibrary)"
              Condition="'$(NativeCalculatorLibrary)' != '' and Exists('$(NativeCalculatorLibrary)')"

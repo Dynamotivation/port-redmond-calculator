@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Xml.Linq;
+using Windows.ApplicationModel.Resources;
 
 namespace Calculator.Managed;
 
@@ -8,20 +8,21 @@ public sealed unsafe class NativeCalculator : IDisposable
 {
     private nint _handle;
 
-    public NativeCalculator(string resourcePath)
+    public NativeCalculator(ResourceLoader resourceLoader)
     {
+        ArgumentNullException.ThrowIfNull(resourceLoader);
         if (NativeMethods.AbiVersion() != 1)
         {
             throw new NotSupportedException("Unsupported native Calculator ABI version.");
         }
 
-        var resources = LoadResources(resourcePath);
-        var nativeEntries = new NativeResourceEntry[resources.Count];
-        var allocations = new List<nint>(resources.Count * 2);
+        var resources = resourceLoader.GetAllStrings().ToArray();
+        var nativeEntries = new NativeResourceEntry[resources.Length];
+        var allocations = new List<nint>(resources.Length * 2);
 
         try
         {
-            for (var index = 0; index < resources.Count; index++)
+            for (var index = 0; index < resources.Length; index++)
             {
                 var (key, value) = resources[index];
                 var nativeKey = Marshal.StringToCoTaskMemUTF8(key);
@@ -138,18 +139,6 @@ public sealed unsafe class NativeCalculator : IDisposable
             ThrowIfFailed(getString(Handle, pointer, requiredSize, out _));
         }
         return Encoding.UTF8.GetString(buffer, 0, buffer.Length - 1);
-    }
-
-    private static List<(string Key, string Value)> LoadResources(string resourcePath)
-    {
-        var document = XDocument.Load(resourcePath, LoadOptions.PreserveWhitespace);
-        return document.Root!
-            .Elements("data")
-            .Select(element => (
-                Key: (string?)element.Attribute("name") ?? string.Empty,
-                Value: (string?)element.Element("value") ?? string.Empty))
-            .Where(entry => entry.Key.Length != 0)
-            .ToList();
     }
 
     private static void ThrowIfFailed(NativeStatus status)

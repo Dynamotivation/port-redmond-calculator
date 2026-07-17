@@ -4,7 +4,7 @@ set -eu
 project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 publish_dir=${1:-"$project_dir/bin/Release/net10.0/osx-arm64/publish"}
 publish_dir=$(CDPATH= cd -- "$publish_dir" && pwd)
-bundle="$publish_dir/Calculator Avalonia Slice.app"
+bundle="$publish_dir/Redmond Calculator.app"
 contents="$bundle/Contents"
 
 if [ -e "$bundle" ]; then
@@ -15,5 +15,8 @@ mkdir -p "$contents/MacOS"
 cp "$project_dir/Packaging/macos/Info.plist" "$contents/Info.plist"
 
 find "$publish_dir" -maxdepth 1 -type f -exec cp {} "$contents/MacOS/" \;
+if [ -d "$publish_dir/Resources" ]; then
+    cp -R "$publish_dir/Resources" "$contents/MacOS/Resources"
+fi
 
 echo "$bundle"

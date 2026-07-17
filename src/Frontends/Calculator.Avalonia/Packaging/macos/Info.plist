@@ -5,15 +5,15 @@
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleDisplayName</key>
-  <string>Calculator Avalonia Slice</string>
+  <string>Redmond Calculator</string>
   <key>CFBundleExecutable</key>
   <string>Calculator.Avalonia</string>
   <key>CFBundleIdentifier</key>
-  <string>com.redmondproject.calculator.avalonia-slice</string>
+  <string>com.dynamotivation.redmondcalculator</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>
-  <string>Calculator Avalonia Slice</string>
+  <string>Redmond Calculator</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>

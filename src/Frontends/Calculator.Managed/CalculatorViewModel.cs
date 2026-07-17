@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Windows.ApplicationModel.Resources;
 
 namespace Calculator.Managed;
 
@@ -22,11 +23,16 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<string> History { get; } = [];
     public ObservableCollection<string> Memory { get; } = [];
+    public string ApplicationName { get; } = "Redmond Calculator";
+    public string ModeDisplayName { get; }
+    public string HistoryAutomationName { get; }
 
     public CalculatorViewModel()
     {
-        var resourcePath = Path.Combine(AppContext.BaseDirectory, "CEngineStrings.resw");
-        _calculator = new NativeCalculator(resourcePath);
+        var appResources = ResourceLoader.GetForViewIndependentUse();
+        ModeDisplayName = appResources.GetString("StandardModeText");
+        HistoryAutomationName = appResources.GetString("HistoryLabel/Text");
+        _calculator = new NativeCalculator(ResourceLoader.GetForViewIndependentUse("CEngineStrings"));
         PrimaryDisplay = _calculator.PrimaryDisplay;
         ExpressionDisplay = _calculator.ExpressionDisplay;
     }
