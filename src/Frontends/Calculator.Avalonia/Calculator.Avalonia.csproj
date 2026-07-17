@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <NativeCalculatorLibrary Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(MSBuildProjectDirectory)/../../../build/portable/src/CalculatorNative/libcalculator_engine.dylib</NativeCalculatorLibrary>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.0" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.0" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Calculator.Managed/Calculator.Managed.csproj" />
+    <Content Include="../../Calculator/Resources/en-US/CEngineStrings.resw"
+             Link="CEngineStrings.resw"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(NativeCalculatorLibrary)"
+             Condition="'$(NativeCalculatorLibrary)' != '' and Exists('$(NativeCalculatorLibrary)')"
+             Link="libcalculator_engine.dylib"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Target Name="RequireNativeCalculatorLibrary"
+          BeforeTargets="Build"
+          Condition="'$(NativeCalculatorLibrary)' != '' and !Exists('$(NativeCalculatorLibrary)')">
+    <Error Text="Native calculator library not found. Configure and build the repository CMake project first." />
+  </Target>
+</Project>
