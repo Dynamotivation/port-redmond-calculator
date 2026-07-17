@@ -6,6 +6,7 @@ without the UWP user interface. It currently includes:
 - RatPack infinite-precision arithmetic
 - CalcEngine parsing and command processing
 - CalculatorManager, history, expression commands, and number formatting
+- UnitConverter input, conversion, suggestion, and preference behavior
 - A versioned C ABI suitable for .NET P/Invoke or other foreign-function interfaces
 
 The native library does not reimplement or stub Calculator behavior. It links the
@@ -49,11 +50,19 @@ calculator instance is created.
 The ABI is intentionally independent of a UI framework. A Uno Platform,
 Avalonia, Flutter, Qt, or command-line frontend can call the same native library.
 
+## Asynchronous compatibility boundary
+
+The original currency interfaces use Microsoft's PPL `concurrency::task`. The
+portable source keeps that exact type on Windows, preserving compatibility with
+the existing UWP currency loaders. On non-Windows platforms the same interface
+is represented by the standard C++ `std::future`, and currency refresh
+continuations run with `std::async`. This is a real asynchronous implementation;
+the conversion engine is not compiled with currency methods removed or stubbed.
+
 ## Remaining portability boundary
 
-`UnitConverter` is not yet part of the portable target. Its conversion math is
-standard C++, but its public currency-refresh interfaces use Microsoft's
-`concurrency::task` from `ppltasks.h`. The old cross-platform PPL implementation
-from C++ REST SDK is no longer maintained, so the portable build does not take a
-dependency on it. Currency networking and asynchronous orchestration need a
-maintained platform service boundary before this source is added.
+The Windows `UnitConverterDataLoader` and `CurrencyDataLoader` remain in the
+C++/CX view-model project because they read UWP resources and use Windows HTTP,
+globalization, and storage APIs. Their framework-neutral interfaces and the full
+conversion engine are portable; each frontend still needs platform-native data
+loading and currency-network service implementations.

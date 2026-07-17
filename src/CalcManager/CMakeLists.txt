@@ -3,6 +3,7 @@ set(CALCULATOR_CORE_SOURCES
     CalculatorManager.cpp
     ExpressionCommand.cpp
     NumberFormattingUtils.cpp
+    UnitConverter.cpp
     CEngine/calc.cpp
     CEngine/CalcInput.cpp
     CEngine/CalcUtils.cpp

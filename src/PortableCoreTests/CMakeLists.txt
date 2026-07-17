@@ -3,6 +3,11 @@ target_link_libraries(CalculatorCoreSmokeTests PRIVATE Calculator::Core)
 
 add_test(NAME CalculatorCoreSmokeTests COMMAND CalculatorCoreSmokeTests)
 
+add_executable(UnitConverterPortableTests UnitConverterPortableTests.cpp)
+target_link_libraries(UnitConverterPortableTests PRIVATE Calculator::Core)
+
+add_test(NAME UnitConverterPortableTests COMMAND UnitConverterPortableTests)
+
 add_executable(CalculatorNativeSmokeTests CalculatorNativeSmokeTests.cpp)
 target_link_libraries(CalculatorNativeSmokeTests PRIVATE Calculator::Native Calculator::Core)
 target_compile_definitions(
