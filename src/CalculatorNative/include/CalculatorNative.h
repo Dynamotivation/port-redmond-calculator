@@ -54,6 +54,19 @@ extern "C"
         calculator_event_callback input_changed;
     } calculator_callbacks;
 
+    typedef struct calculator_event_state
+    {
+        uint64_t no_right_parenthesis_count;
+        uint64_t max_digits_reached_count;
+        uint64_t binary_operator_received_count;
+        uint64_t history_item_added_count;
+        uint64_t memory_item_changed_count;
+        uint64_t input_changed_count;
+        uint32_t parenthesis_count;
+        uint32_t last_history_item_index;
+        uint32_t last_memory_item_index;
+    } calculator_event_state;
+
     CALCULATOR_API uint32_t calculator_native_abi_version(void);
 
     CALCULATOR_API calculator_status calculator_create(
@@ -83,6 +96,41 @@ extern "C"
         size_t* required_size);
 
     CALCULATOR_API int32_t calculator_get_is_error(const calculator_handle* handle);
+
+    CALCULATOR_API calculator_status calculator_get_event_state(
+        const calculator_handle* handle,
+        calculator_event_state* result);
+
+    CALCULATOR_API calculator_status calculator_get_memory_count(const calculator_handle* handle, size_t* count);
+    CALCULATOR_API calculator_status calculator_get_memory_value(
+        const calculator_handle* handle,
+        size_t index,
+        char* buffer,
+        size_t buffer_size,
+        size_t* required_size);
+    CALCULATOR_API calculator_status calculator_memory_store(calculator_handle* handle);
+    CALCULATOR_API calculator_status calculator_memory_recall(calculator_handle* handle, size_t index);
+    CALCULATOR_API calculator_status calculator_memory_add(calculator_handle* handle, size_t index);
+    CALCULATOR_API calculator_status calculator_memory_subtract(calculator_handle* handle, size_t index);
+    CALCULATOR_API calculator_status calculator_memory_clear(calculator_handle* handle, size_t index);
+    CALCULATOR_API calculator_status calculator_memory_clear_all(calculator_handle* handle);
+
+    CALCULATOR_API calculator_status calculator_get_history_count(const calculator_handle* handle, size_t* count);
+    CALCULATOR_API calculator_status calculator_get_history_expression(
+        const calculator_handle* handle,
+        size_t index,
+        char* buffer,
+        size_t buffer_size,
+        size_t* required_size);
+    CALCULATOR_API calculator_status calculator_get_history_result(
+        const calculator_handle* handle,
+        size_t index,
+        char* buffer,
+        size_t buffer_size,
+        size_t* required_size);
+    CALCULATOR_API calculator_status calculator_history_remove(calculator_handle* handle, size_t index);
+    CALCULATOR_API calculator_status calculator_history_clear(calculator_handle* handle);
+
     CALCULATOR_API const char* calculator_get_last_error(void);
 
 #ifdef __cplusplus

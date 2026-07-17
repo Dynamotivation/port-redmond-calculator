@@ -9,6 +9,7 @@
 #include <cstring>
 #include <exception>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -90,28 +91,67 @@ namespace
 
         void InputChanged() override
         {
+            ++m_events.input_changed_count;
             if (m_callbacks.input_changed != nullptr)
             {
                 m_callbacks.input_changed(m_callbacks.context);
             }
         }
 
-        void SetParenthesisNumber(unsigned int) override {}
-        void OnNoRightParenAdded() override {}
-        void MaxDigitsReached() override {}
-        void BinaryOperatorReceived() override {}
-        void OnHistoryItemAdded(unsigned int) override {}
-        void SetMemorizedNumbers(const std::vector<std::wstring>&) override {}
-        void MemoryItemChanged(unsigned int) override {}
+        void SetParenthesisNumber(unsigned int count) override
+        {
+            m_events.parenthesis_count = count;
+        }
+
+        void OnNoRightParenAdded() override
+        {
+            ++m_events.no_right_parenthesis_count;
+        }
+
+        void MaxDigitsReached() override
+        {
+            ++m_events.max_digits_reached_count;
+        }
+
+        void BinaryOperatorReceived() override
+        {
+            ++m_events.binary_operator_received_count;
+        }
+
+        void OnHistoryItemAdded(unsigned int index) override
+        {
+            ++m_events.history_item_added_count;
+            m_events.last_history_item_index = index;
+        }
+
+        void SetMemorizedNumbers(const std::vector<std::wstring>& values) override
+        {
+            m_memoryValues.clear();
+            m_memoryValues.reserve(values.size());
+            for (const auto& value : values)
+            {
+                m_memoryValues.push_back(CalculatorNative::Utf8::FromWide(value));
+            }
+        }
+
+        void MemoryItemChanged(unsigned int index) override
+        {
+            ++m_events.memory_item_changed_count;
+            m_events.last_memory_item_index = index;
+        }
 
         const std::string& PrimaryDisplay() const { return m_primaryDisplay; }
         const std::string& ExpressionDisplay() const { return m_expressionDisplay; }
+        const std::vector<std::string>& MemoryValues() const { return m_memoryValues; }
+        const calculator_event_state& Events() const { return m_events; }
         bool IsError() const { return m_isError; }
 
     private:
         calculator_callbacks m_callbacks{};
         std::string m_primaryDisplay;
         std::string m_expressionDisplay;
+        std::vector<std::string> m_memoryValues;
+        calculator_event_state m_events{};
         bool m_isError = false;
     };
 
@@ -265,6 +305,163 @@ calculator_status calculator_get_expression_display(
 int32_t calculator_get_is_error(const calculator_handle* handle)
 {
     return handle != nullptr && handle->display->IsError() ? 1 : 0;
+}
+
+calculator_status calculator_get_event_state(const calculator_handle* handle, calculator_event_state* result)
+{
+    if (handle == nullptr || result == nullptr)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    *result = handle->display->Events();
+    return CALCULATOR_STATUS_OK;
+}
+
+calculator_status calculator_get_memory_count(const calculator_handle* handle, size_t* count)
+{
+    if (handle == nullptr || count == nullptr)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    *count = handle->display->MemoryValues().size();
+    return CALCULATOR_STATUS_OK;
+}
+
+calculator_status calculator_get_memory_value(
+    const calculator_handle* handle,
+    size_t index,
+    char* buffer,
+    size_t bufferSize,
+    size_t* requiredSize)
+{
+    if (handle == nullptr || index >= handle->display->MemoryValues().size())
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    return CopyString(handle->display->MemoryValues()[index], buffer, bufferSize, requiredSize);
+}
+
+calculator_status calculator_memory_store(calculator_handle* handle)
+{
+    if (handle == nullptr)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    return Protect([&]() { handle->manager->MemorizeNumber(); });
+}
+
+calculator_status calculator_memory_recall(calculator_handle* handle, size_t index)
+{
+    if (handle == nullptr || index >= handle->display->MemoryValues().size())
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    return Protect([&]() { handle->manager->MemorizedNumberLoad(static_cast<unsigned int>(index)); });
+}
+
+calculator_status calculator_memory_add(calculator_handle* handle, size_t index)
+{
+    if (handle == nullptr || (!handle->display->MemoryValues().empty() && index >= handle->display->MemoryValues().size())
+        || (handle->display->MemoryValues().empty() && index != 0))
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    return Protect([&]() { handle->manager->MemorizedNumberAdd(static_cast<unsigned int>(index)); });
+}
+
+calculator_status calculator_memory_subtract(calculator_handle* handle, size_t index)
+{
+    if (handle == nullptr || (!handle->display->MemoryValues().empty() && index >= handle->display->MemoryValues().size())
+        || (handle->display->MemoryValues().empty() && index != 0))
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    return Protect([&]() { handle->manager->MemorizedNumberSubtract(static_cast<unsigned int>(index)); });
+}
+
+calculator_status calculator_memory_clear(calculator_handle* handle, size_t index)
+{
+    if (handle == nullptr || index >= handle->display->MemoryValues().size())
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    return Protect([&]() {
+        handle->manager->MemorizedNumberClear(static_cast<unsigned int>(index));
+        handle->manager->SetMemorizedNumbersString();
+        handle->manager->MemoryItemChanged(static_cast<unsigned int>(index));
+    });
+}
+
+calculator_status calculator_memory_clear_all(calculator_handle* handle)
+{
+    if (handle == nullptr)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    return Protect([&]() { handle->manager->MemorizedNumberClearAll(); });
+}
+
+calculator_status calculator_get_history_count(const calculator_handle* handle, size_t* count)
+{
+    if (handle == nullptr || count == nullptr)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    *count = handle->manager->GetHistoryItems().size();
+    return CALCULATOR_STATUS_OK;
+}
+
+calculator_status calculator_get_history_expression(
+    const calculator_handle* handle,
+    size_t index,
+    char* buffer,
+    size_t bufferSize,
+    size_t* requiredSize)
+{
+    if (handle == nullptr || index >= handle->manager->GetHistoryItems().size())
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    const auto value = CalculatorNative::Utf8::FromWide(handle->manager->GetHistoryItems()[index]->historyItemVector.expression);
+    return CopyString(value, buffer, bufferSize, requiredSize);
+}
+
+calculator_status calculator_get_history_result(
+    const calculator_handle* handle,
+    size_t index,
+    char* buffer,
+    size_t bufferSize,
+    size_t* requiredSize)
+{
+    if (handle == nullptr || index >= handle->manager->GetHistoryItems().size())
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    const auto value = CalculatorNative::Utf8::FromWide(handle->manager->GetHistoryItems()[index]->historyItemVector.result);
+    return CopyString(value, buffer, bufferSize, requiredSize);
+}
+
+calculator_status calculator_history_remove(calculator_handle* handle, size_t index)
+{
+    if (handle == nullptr || index >= handle->manager->GetHistoryItems().size())
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    return Protect([&]() {
+        if (!handle->manager->RemoveHistoryItem(static_cast<unsigned int>(index)))
+        {
+            throw std::runtime_error("failed to remove calculator history item");
+        }
+    });
+}
+
+calculator_status calculator_history_clear(calculator_handle* handle)
+{
+    if (handle == nullptr)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+    return Protect([&]() { handle->manager->ClearHistory(); });
 }
 
 const char* calculator_get_last_error(void)

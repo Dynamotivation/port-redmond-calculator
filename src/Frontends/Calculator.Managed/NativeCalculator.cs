@@ -51,6 +51,47 @@ public sealed unsafe class NativeCalculator : IDisposable
     public string PrimaryDisplay => ReadUtf8(NativeMethods.GetPrimaryDisplay);
     public string ExpressionDisplay => ReadUtf8(NativeMethods.GetExpressionDisplay);
     public bool IsError => NativeMethods.IsError(Handle) != 0;
+    public CalculatorEventState EventState
+    {
+        get
+        {
+            ThrowIfFailed(NativeMethods.GetEventState(Handle, out var state));
+            return state;
+        }
+    }
+
+    public IReadOnlyList<string> MemoryValues
+    {
+        get
+        {
+            ThrowIfFailed(NativeMethods.GetMemoryCount(Handle, out var count));
+            var values = new string[checked((int)count)];
+            for (nuint index = 0; index < count; index++)
+            {
+                values[checked((int)index)] = ReadUtf8((nint handle, byte* buffer, nuint size, out nuint required) =>
+                    NativeMethods.GetMemoryValue(handle, index, buffer, size, out required));
+            }
+            return values;
+        }
+    }
+
+    public IReadOnlyList<CalculatorHistoryEntry> History
+    {
+        get
+        {
+            ThrowIfFailed(NativeMethods.GetHistoryCount(Handle, out var count));
+            var values = new CalculatorHistoryEntry[checked((int)count)];
+            for (nuint index = 0; index < count; index++)
+            {
+                var expression = ReadUtf8((nint handle, byte* buffer, nuint size, out nuint required) =>
+                    NativeMethods.GetHistoryExpression(handle, index, buffer, size, out required));
+                var result = ReadUtf8((nint handle, byte* buffer, nuint size, out nuint required) =>
+                    NativeMethods.GetHistoryResult(handle, index, buffer, size, out required));
+                values[checked((int)index)] = new CalculatorHistoryEntry(expression, result);
+            }
+            return values;
+        }
+    }
 
     public void SendCommand(CalculatorCommand command)
     {
@@ -61,6 +102,15 @@ public sealed unsafe class NativeCalculator : IDisposable
     {
         ThrowIfFailed(NativeMethods.Reset(Handle, clearMemory ? 1 : 0));
     }
+
+    public void MemoryStore() => ThrowIfFailed(NativeMethods.MemoryStore(Handle));
+    public void MemoryRecall(nuint index = 0) => ThrowIfFailed(NativeMethods.MemoryRecall(Handle, index));
+    public void MemoryAdd(nuint index = 0) => ThrowIfFailed(NativeMethods.MemoryAdd(Handle, index));
+    public void MemorySubtract(nuint index = 0) => ThrowIfFailed(NativeMethods.MemorySubtract(Handle, index));
+    public void MemoryClear(nuint index = 0) => ThrowIfFailed(NativeMethods.MemoryClear(Handle, index));
+    public void MemoryClearAll() => ThrowIfFailed(NativeMethods.MemoryClearAll(Handle));
+    public void HistoryRemove(nuint index) => ThrowIfFailed(NativeMethods.HistoryRemove(Handle, index));
+    public void HistoryClear() => ThrowIfFailed(NativeMethods.HistoryClear(Handle));
 
     public void Dispose()
     {
@@ -115,3 +165,5 @@ public sealed unsafe class NativeCalculator : IDisposable
 
     private unsafe delegate NativeStatus GetString(nint handle, byte* buffer, nuint bufferSize, out nuint requiredSize);
 }
+
+public sealed record CalculatorHistoryEntry(string Expression, string Result);

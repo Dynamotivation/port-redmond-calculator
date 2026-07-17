@@ -203,11 +203,11 @@
 
       <!-- MemoryPanel: MC, MR, M+, M−, MS, memory flyout. -->
       <Grid Grid.Row="3" Margin="3,0" ColumnDefinitions="*,*,*,*,*,*">
-        <Button Classes="memoryButton" Content="MC" IsEnabled="False" />
-        <Button Grid.Column="1" Classes="memoryButton" Content="MR" IsEnabled="False" />
-        <Button Grid.Column="2" Classes="memoryButton" Content="M+" Command="{Binding SendCommandCommand}" CommandParameter="MemoryAdd" />
-        <Button Grid.Column="3" Classes="memoryButton" Content="M−" Command="{Binding SendCommandCommand}" CommandParameter="MemorySubtract" />
-        <Button Grid.Column="4" Classes="memoryButton" Content="MS" Command="{Binding SendCommandCommand}" CommandParameter="MemoryStore" />
+        <Button Classes="memoryButton" Content="MC" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryClearAllCommand}" />
+        <Button Grid.Column="1" Classes="memoryButton" Content="MR" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryRecallCommand}" />
+        <Button Grid.Column="2" Classes="memoryButton" Content="M+" Command="{Binding MemoryAddCommand}" />
+        <Button Grid.Column="3" Classes="memoryButton" Content="M−" Command="{Binding MemorySubtractCommand}" />
+        <Button Grid.Column="4" Classes="memoryButton" Content="MS" Command="{Binding MemoryStoreCommand}" />
         <Button Grid.Column="5" Classes="memoryButton" Content="M⌄" IsEnabled="False" />
       </Grid>
 

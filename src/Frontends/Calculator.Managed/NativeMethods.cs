@@ -18,6 +18,20 @@ internal struct NativeResourceEntry
     public nint Value;
 }
 
+[StructLayout(LayoutKind.Sequential)]
+public struct CalculatorEventState
+{
+    public ulong NoRightParenthesisCount;
+    public ulong MaxDigitsReachedCount;
+    public ulong BinaryOperatorReceivedCount;
+    public ulong HistoryItemAddedCount;
+    public ulong MemoryItemChangedCount;
+    public ulong InputChangedCount;
+    public uint ParenthesisCount;
+    public uint LastHistoryItemIndex;
+    public uint LastMemoryItemIndex;
+}
+
 internal static unsafe partial class NativeMethods
 {
     private const string LibraryName = "calculator_engine";
@@ -57,6 +71,62 @@ internal static unsafe partial class NativeMethods
     [LibraryImport(LibraryName, EntryPoint = "calculator_get_is_error")]
     [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
     internal static partial int IsError(nint handle);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_get_event_state")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus GetEventState(nint handle, out CalculatorEventState result);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_get_memory_count")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus GetMemoryCount(nint handle, out nuint count);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_get_memory_value")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus GetMemoryValue(nint handle, nuint index, byte* buffer, nuint bufferSize, out nuint requiredSize);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_memory_store")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus MemoryStore(nint handle);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_memory_recall")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus MemoryRecall(nint handle, nuint index);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_memory_add")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus MemoryAdd(nint handle, nuint index);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_memory_subtract")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus MemorySubtract(nint handle, nuint index);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_memory_clear")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus MemoryClear(nint handle, nuint index);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_memory_clear_all")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus MemoryClearAll(nint handle);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_get_history_count")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus GetHistoryCount(nint handle, out nuint count);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_get_history_expression")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus GetHistoryExpression(nint handle, nuint index, byte* buffer, nuint bufferSize, out nuint requiredSize);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_get_history_result")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus GetHistoryResult(nint handle, nuint index, byte* buffer, nuint bufferSize, out nuint requiredSize);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_history_remove")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus HistoryRemove(nint handle, nuint index);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_history_clear")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus HistoryClear(nint handle);
 
     [LibraryImport(LibraryName, EntryPoint = "calculator_get_last_error")]
     [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]

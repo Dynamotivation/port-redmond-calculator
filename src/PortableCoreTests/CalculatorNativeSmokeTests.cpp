@@ -2,7 +2,9 @@
 
 #include "CalcManager/Command.h"
 
+#include <algorithm>
 #include <fstream>
+#include <cctype>
 #include <iostream>
 #include <regex>
 #include <string>
@@ -69,15 +71,22 @@ namespace
         return values;
     }
 
-    std::string ReadDisplay(calculator_handle* handle)
+    std::string WithoutWhitespace(std::string value)
+    {
+        value.erase(std::remove_if(value.begin(), value.end(), [](unsigned char character) { return std::isspace(character) != 0; }), value.end());
+        return value;
+    }
+
+    template <typename Getter>
+    std::string ReadString(Getter&& getter)
     {
         std::size_t required = 0;
-        if (calculator_get_primary_display(handle, nullptr, 0, &required) != CALCULATOR_STATUS_OK)
+        if (getter(nullptr, 0, &required) != CALCULATOR_STATUS_OK)
         {
             return {};
         }
         std::string value(required, '\0');
-        if (calculator_get_primary_display(handle, value.data(), value.size(), &required) != CALCULATOR_STATUS_OK)
+        if (getter(value.data(), value.size(), &required) != CALCULATOR_STATUS_OK)
         {
             return {};
         }
@@ -123,17 +132,90 @@ int main()
         }
     }
 
-    const auto display = ReadDisplay(handle);
-    calculator_destroy(handle);
+    const auto display = ReadString([&](char* buffer, size_t size, size_t* required) {
+        return calculator_get_primary_display(handle, buffer, size, required);
+    });
     if (display != "5")
     {
         std::cerr << "expected display 5, got " << display << '\n';
+        calculator_destroy(handle);
         return 1;
     }
     if (callbackState.primaryDisplay != "5" || callbackState.expressionDisplay != "2 + 3=" || callbackState.inputChangeCount == 0)
     {
         std::cerr << "native callbacks did not reflect the completed calculation\n";
+        calculator_destroy(handle);
         return 1;
     }
+
+    std::size_t historyCount = 0;
+    if (calculator_get_history_count(handle, &historyCount) != CALCULATOR_STATUS_OK || historyCount != 1)
+    {
+        std::cerr << "native history did not contain the completed calculation\n";
+        calculator_destroy(handle);
+        return 1;
+    }
+    const auto historyExpression = ReadString([&](char* buffer, size_t size, size_t* required) {
+        return calculator_get_history_expression(handle, 0, buffer, size, required);
+    });
+    const auto historyResult = ReadString([&](char* buffer, size_t size, size_t* required) {
+        return calculator_get_history_result(handle, 0, buffer, size, required);
+    });
+    if (WithoutWhitespace(historyExpression) != "2+3=" || WithoutWhitespace(historyResult) != "5")
+    {
+        std::cerr << "unexpected native history: " << historyExpression << " = " << historyResult << '\n';
+        calculator_destroy(handle);
+        return 1;
+    }
+
+    if (calculator_memory_store(handle) != CALCULATOR_STATUS_OK)
+    {
+        std::cerr << "failed to store memory\n";
+        calculator_destroy(handle);
+        return 1;
+    }
+    std::size_t memoryCount = 0;
+    const auto memoryValue = ReadString([&](char* buffer, size_t size, size_t* required) {
+        return calculator_get_memory_value(handle, 0, buffer, size, required);
+    });
+    if (calculator_get_memory_count(handle, &memoryCount) != CALCULATOR_STATUS_OK || memoryCount != 1 || memoryValue != "5")
+    {
+        std::cerr << "native memory did not contain 5\n";
+        calculator_destroy(handle);
+        return 1;
+    }
+    if (calculator_memory_add(handle, 0) != CALCULATOR_STATUS_OK || calculator_memory_recall(handle, 0) != CALCULATOR_STATUS_OK)
+    {
+        std::cerr << "native memory operations failed\n";
+        calculator_destroy(handle);
+        return 1;
+    }
+    const auto addedMemory = ReadString([&](char* buffer, size_t size, size_t* required) {
+        return calculator_get_memory_value(handle, 0, buffer, size, required);
+    });
+    if (addedMemory != "10" || calculator_memory_clear(handle, 0) != CALCULATOR_STATUS_OK)
+    {
+        std::cerr << "native memory add/clear produced " << addedMemory << '\n';
+        calculator_destroy(handle);
+        return 1;
+    }
+
+    calculator_event_state events{};
+    if (calculator_get_event_state(handle, &events) != CALCULATOR_STATUS_OK || events.binary_operator_received_count == 0
+        || events.history_item_added_count != 1 || events.memory_item_changed_count == 0 || events.input_changed_count == 0)
+    {
+        std::cerr << "native event state did not reflect calculator activity\n";
+        calculator_destroy(handle);
+        return 1;
+    }
+    if (calculator_history_clear(handle) != CALCULATOR_STATUS_OK
+        || calculator_get_history_count(handle, &historyCount) != CALCULATOR_STATUS_OK || historyCount != 0)
+    {
+        std::cerr << "native history clear failed\n";
+        calculator_destroy(handle);
+        return 1;
+    }
+
+    calculator_destroy(handle);
     return 0;
 }

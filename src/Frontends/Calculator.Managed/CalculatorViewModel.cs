@@ -17,7 +17,11 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     public partial bool IsError { get; private set; }
 
+    [ObservableProperty]
+    public partial bool HasMemory { get; private set; }
+
     public ObservableCollection<string> History { get; } = [];
+    public ObservableCollection<string> Memory { get; } = [];
 
     public CalculatorViewModel()
     {
@@ -32,25 +36,33 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     {
         var command = Enum.Parse<CalculatorCommand>(commandName, ignoreCase: false);
         _calculator.SendCommand(command);
-        UpdateDisplay();
-
-        if (command == CalculatorCommand.Equals && !IsError)
-        {
-            History.Insert(0, string.IsNullOrWhiteSpace(ExpressionDisplay) ? PrimaryDisplay : $"{ExpressionDisplay}  {PrimaryDisplay}");
-            while (History.Count > 100)
-            {
-                History.RemoveAt(History.Count - 1);
-            }
-        }
+        Synchronize();
     }
 
     [RelayCommand]
     private void Reset()
     {
         _calculator.Reset();
-        UpdateDisplay();
-        History.Clear();
+        Synchronize();
     }
+
+    [RelayCommand]
+    private void MemoryStore() { _calculator.MemoryStore(); Synchronize(); }
+
+    [RelayCommand]
+    private void MemoryRecall() { _calculator.MemoryRecall(); Synchronize(); }
+
+    [RelayCommand]
+    private void MemoryAdd() { _calculator.MemoryAdd(); Synchronize(); }
+
+    [RelayCommand]
+    private void MemorySubtract() { _calculator.MemorySubtract(); Synchronize(); }
+
+    [RelayCommand]
+    private void MemoryClear() { _calculator.MemoryClear(); Synchronize(); }
+
+    [RelayCommand]
+    private void MemoryClearAll() { _calculator.MemoryClearAll(); Synchronize(); }
 
     public void Dispose()
     {
@@ -58,10 +70,23 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private void UpdateDisplay()
+    private void Synchronize()
     {
         PrimaryDisplay = _calculator.PrimaryDisplay;
         ExpressionDisplay = _calculator.ExpressionDisplay;
         IsError = _calculator.IsError;
+
+        Replace(History, _calculator.History.Select(entry => $"{entry.Expression}  {entry.Result}"));
+        Replace(Memory, _calculator.MemoryValues);
+        HasMemory = Memory.Count != 0;
+    }
+
+    private static void Replace(ObservableCollection<string> target, IEnumerable<string> values)
+    {
+        target.Clear();
+        foreach (var value in values)
+        {
+            target.Add(value);
+        }
     }
 }
