@@ -8,15 +8,20 @@ public sealed unsafe class NativeCalculator : IDisposable
 {
     private nint _handle;
 
-    public NativeCalculator(ResourceLoader resourceLoader)
+    public NativeCalculator(ResourceLoader resourceLoader, CalculatorNumberFormat numberFormat)
     {
         ArgumentNullException.ThrowIfNull(resourceLoader);
+        ArgumentNullException.ThrowIfNull(numberFormat);
         if (NativeMethods.AbiVersion() != 1)
         {
             throw new NotSupportedException("Unsupported native Calculator ABI version.");
         }
 
-        var resources = resourceLoader.GetAllStrings().ToArray();
+        var localizedResources = resourceLoader.GetAllStrings().ToDictionary(entry => entry.Key, entry => entry.Value);
+        localizedResources["sDecimal"] = numberFormat.DecimalSeparator;
+        localizedResources["sThousand"] = numberFormat.NumberGroupSeparator;
+        localizedResources["sGrouping"] = numberFormat.NumberGrouping;
+        var resources = localizedResources.ToArray();
         var nativeEntries = new NativeResourceEntry[resources.Length];
         var allocations = new List<nint>(resources.Length * 2);
 

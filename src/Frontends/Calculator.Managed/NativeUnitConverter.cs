@@ -39,11 +39,14 @@ public sealed record UnitConverterSuggestion(int UnitId, string Value);
 public sealed unsafe class NativeUnitConverter : IDisposable
 {
     private nint handle;
+    private readonly CalculatorNumberFormat numberFormat;
 
-    public NativeUnitConverter(ResourceLoader resourceLoader, string regionCode)
+    public NativeUnitConverter(ResourceLoader resourceLoader, string regionCode, CalculatorNumberFormat numberFormat)
     {
         ArgumentNullException.ThrowIfNull(resourceLoader);
         ArgumentException.ThrowIfNullOrWhiteSpace(regionCode);
+        ArgumentNullException.ThrowIfNull(numberFormat);
+        this.numberFormat = numberFormat;
 
         var resources = resourceLoader.GetAllStrings().ToArray();
         var nativeEntries = new NativeResourceEntry[resources.Length];
@@ -74,8 +77,8 @@ public sealed unsafe class NativeUnitConverter : IDisposable
         }
     }
 
-    public string FromDisplay => ReadUtf8(NativeMethods.UnitConverterGetFromDisplay);
-    public string ToDisplay => ReadUtf8(NativeMethods.UnitConverterGetToDisplay);
+    public string FromDisplay => numberFormat.LocalizeCanonicalNumber(ReadUtf8(NativeMethods.UnitConverterGetFromDisplay));
+    public string ToDisplay => numberFormat.LocalizeCanonicalNumber(ReadUtf8(NativeMethods.UnitConverterGetToDisplay));
 
     public IReadOnlyList<UnitConverterCategory> Categories
     {
@@ -132,8 +135,8 @@ public sealed unsafe class NativeUnitConverter : IDisposable
             for (nuint index = 0; index < count; index++)
             {
                 var unitId = -1;
-                var value = ReadUtf8((nint nativeHandle, byte* buffer, nuint size, out nuint required) =>
-                    NativeMethods.UnitConverterGetSuggestion(nativeHandle, index, out unitId, buffer, size, out required));
+                var value = numberFormat.LocalizeCanonicalNumber(ReadUtf8((nint nativeHandle, byte* buffer, nuint size, out nuint required) =>
+                    NativeMethods.UnitConverterGetSuggestion(nativeHandle, index, out unitId, buffer, size, out required)));
                 result[checked((int)index)] = new UnitConverterSuggestion(unitId, value);
             }
             return result;
@@ -152,7 +155,8 @@ public sealed unsafe class NativeUnitConverter : IDisposable
     public void SelectCategory(int categoryId) => ThrowIfFailed(NativeMethods.UnitConverterSelectCategory(Handle, categoryId));
     public void SetUnits(int fromUnitId, int toUnitId) => ThrowIfFailed(NativeMethods.UnitConverterSetUnits(Handle, fromUnitId, toUnitId));
     public void SendCommand(UnitConverterCommand command) => ThrowIfFailed(NativeMethods.UnitConverterSendCommand(Handle, (int)command));
-    public void SwitchActive(string currentValue) => ThrowIfFailed(NativeMethods.UnitConverterSwitchActive(Handle, currentValue));
+    public void SwitchActive(string currentValue) =>
+        ThrowIfFailed(NativeMethods.UnitConverterSwitchActive(Handle, numberFormat.DelocalizeNumber(currentValue)));
 
     public void Dispose()
     {

@@ -132,13 +132,11 @@ public sealed class ResourceLoader
                 }
             }
 
-            // UWP permits property lookup as Uid/Property while .resw stores
-            // the same entry as Uid.Property.
-            var propertySeparator = normalized.LastIndexOf('/');
-            if (propertySeparator > 0)
-            {
-                normalized = normalized[..propertySeparator] + "." + normalized[(propertySeparator + 1)..];
-            }
+            // UWP resource references use slash-delimited property paths while
+            // .resw stores every path segment with dots. Attached properties
+            // contain more than one separator, for example:
+            // Uid/[using:Namespace]Owner/Property.
+            normalized = normalized.Replace('/', '.');
             return new ResourceReference(NormalizeMapName(selectedMap), normalized);
         }
     }

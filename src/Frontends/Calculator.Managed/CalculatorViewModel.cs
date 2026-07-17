@@ -28,6 +28,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public ObservableCollection<string> History { get; } = [];
     public ObservableCollection<string> Memory { get; } = [];
     public string ApplicationName { get; } = "Redmond Calculator";
+    public string TitleBarApplicationName { get; }
+    public string DecimalSeparator { get; }
     [ObservableProperty]
     public partial string ModeDisplayName { get; private set; }
 
@@ -42,6 +44,12 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowsSettingsBackInTitleBar))]
     public partial bool IsSettingsOpen { get; private set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AlwaysOnTopTooltip))]
+    [NotifyPropertyChangedFor(nameof(AlwaysOnTopAutomationName))]
+    [NotifyPropertyChangedFor(nameof(AlwaysOnTopGlyph))]
+    public partial bool IsAlwaysOnTop { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanInteractWithNavigationToggle))]
@@ -149,19 +157,38 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public string FeedbackName { get; }
     public string AboutVersionText { get; } = "Redmond Calculator 0.1.0";
     public string HistoryAutomationName { get; }
+    public string MemoryTooltip { get; }
+    public string HistoryTooltip { get; }
+    public string SettingsBackTooltip { get; }
+    public string ClearMemoryTooltip { get; }
+    public string MemoryStoreTooltip { get; }
+    public string MemoryRecallTooltip { get; }
+    public string MemoryAddTooltip { get; }
+    public string MemorySubtractTooltip { get; }
+    public string EnterAlwaysOnTopTooltip { get; }
+    public string ExitAlwaysOnTopTooltip { get; }
+    public string EnterAlwaysOnTopAutomationName { get; }
+    public string ExitAlwaysOnTopAutomationName { get; }
+    public string AlwaysOnTopTooltip => IsAlwaysOnTop ? ExitAlwaysOnTopTooltip : EnterAlwaysOnTopTooltip;
+    public string AlwaysOnTopAutomationName => IsAlwaysOnTop ? ExitAlwaysOnTopAutomationName : EnterAlwaysOnTopAutomationName;
+    public string AlwaysOnTopGlyph => IsAlwaysOnTop ? "\uEE47" : "\uEE49";
 
     public CalculatorViewModel(
         AppThemePreference initialThemePreference = AppThemePreference.Dark,
         PlatformAppearancePreferences? initialPlatformAppearance = null,
-        bool supportsPlatformAppearanceSettings = false)
+        bool supportsPlatformAppearanceSettings = false,
+        CultureInfo? numberCulture = null)
     {
         var platformAppearance = initialPlatformAppearance ?? new PlatformAppearancePreferences();
+        var numberFormat = CalculatorNumberFormat.FromCulture(numberCulture);
+        DecimalSeparator = numberFormat.DecimalSeparator;
         SelectedThemePreference = initialThemePreference;
         UseMicaEffect = platformAppearance.UseMicaEffect;
         SelectedWindowCornerStyle = platformAppearance.WindowCornerStyle;
         SelectedWindowControlStyle = platformAppearance.WindowControlStyle;
         SupportsPlatformAppearanceSettings = supportsPlatformAppearanceSettings;
         var appResources = ResourceLoader.GetForViewIndependentUse();
+        TitleBarApplicationName = appResources.GetString("AppName");
         ModeDisplayName = appResources.GetString("StandardModeText");
         CalculatorGroupName = appResources.GetString("CalculatorModeTextCaps");
         ConverterGroupName = appResources.GetString("ConverterModeTextCaps");
@@ -179,9 +206,21 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         AboutPrivacyName = appResources.GetString("AboutControlPrivacyStatement.Text");
         FeedbackName = appResources.GetString("FeedbackButton.Content");
         HistoryAutomationName = appResources.GetString("HistoryLabel/Text");
-        _calculator = new NativeCalculator(ResourceLoader.GetForViewIndependentUse("CEngineStrings"));
+        MemoryTooltip = appResources.GetString("MemoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
+        HistoryTooltip = appResources.GetString("HistoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
+        SettingsBackTooltip = appResources.GetString("AboutControlBackButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
+        ClearMemoryTooltip = appResources.GetString("ClearMemoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
+        MemoryStoreTooltip = appResources.GetString("memButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
+        MemoryRecallTooltip = appResources.GetString("MemRecall/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
+        MemoryAddTooltip = appResources.GetString("MemPlus/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
+        MemorySubtractTooltip = appResources.GetString("MemMinus/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
+        EnterAlwaysOnTopTooltip = appResources.GetString("EnterAlwaysOnTopButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
+        ExitAlwaysOnTopTooltip = appResources.GetString("ExitAlwaysOnTopButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
+        EnterAlwaysOnTopAutomationName = appResources.GetString("EnterAlwaysOnTopButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
+        ExitAlwaysOnTopAutomationName = appResources.GetString("ExitAlwaysOnTopButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
+        _calculator = new NativeCalculator(ResourceLoader.GetForViewIndependentUse("CEngineStrings"), numberFormat);
         var regionCode = GetCurrentRegionCode();
-        _unitConverter = new NativeUnitConverter(appResources, regionCode);
+        _unitConverter = new NativeUnitConverter(appResources, regionCode, numberFormat);
         Replace(UnitCategories, _unitConverter.Categories);
         synchronizingUnitSelection = true;
         SelectedUnitCategory = UnitCategories.FirstOrDefault();

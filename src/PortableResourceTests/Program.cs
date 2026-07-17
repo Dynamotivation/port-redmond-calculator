@@ -25,6 +25,11 @@ var engineResources = ResourceLoader.GetForViewIndependentUse("CEngineStrings");
 Require(resources.GetString("AppName") == "Rechner", "Exact-culture resource lookup failed.");
 Require(resources.GetString("MemoryLabel/Text") == resources.GetString("MemoryLabel.Text"), "Uid/property key normalization failed.");
 Require(resources.GetUidProperties("MemoryLabel")["Text"] == resources.GetString("MemoryLabel.Text"), "Uid property projection failed.");
+const string memoryTooltipPath = "MemoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip";
+const string memoryTooltipProperty = "[using:Windows.UI.Xaml.Controls]ToolTipService.ToolTip";
+Require(resources.GetString(memoryTooltipPath) == "Speicher", "Attached-property resource path normalization failed.");
+Require(resources.GetUidProperties("MemoryButton")[memoryTooltipProperty] == "Speicher",
+    "Attached-property x:Uid projection failed.");
 Require(engineResources.GetAllStrings().Count > 100, "Named CEngineStrings map was not loaded.");
 Require(resources.GetAllStrings().Count > 500, "Default Resources map was not loaded.");
 Require(resources.GetString("ThisKeyDoesNotExist") == string.Empty, "Missing-resource behavior is not UWP-compatible.");
@@ -64,7 +69,32 @@ ResourceLoader.Configure(new ResourceLoaderConfiguration(resourceRoot)
 {
     UICultureProvider = static () => CultureInfo.GetCultureInfo("en-US"),
 });
-using (var converter = new NativeUnitConverter(ResourceLoader.GetForViewIndependentUse(), "US"))
+var germanNumberFormat = CalculatorNumberFormat.FromCulture(CultureInfo.GetCultureInfo("de-DE"));
+using (var calculator = new NativeCalculator(
+           ResourceLoader.GetForViewIndependentUse("CEngineStrings"),
+           germanNumberFormat))
+{
+    calculator.SendCommand(CalculatorCommand.One);
+    calculator.SendCommand(CalculatorCommand.Decimal);
+    calculator.SendCommand(CalculatorCommand.Two);
+    Require(calculator.PrimaryDisplay == "1,2", "Managed culture did not reach the native calculator engine.");
+}
+
+using (var localizedConverter = new NativeUnitConverter(
+           ResourceLoader.GetForViewIndependentUse(),
+           "DE",
+           germanNumberFormat))
+{
+    localizedConverter.SendCommand(UnitConverterCommand.One);
+    localizedConverter.SendCommand(UnitConverterCommand.Decimal);
+    localizedConverter.SendCommand(UnitConverterCommand.Five);
+    Require(localizedConverter.FromDisplay == "1,5", "Unit-converter input was not localized at its managed boundary.");
+}
+
+using (var converter = new NativeUnitConverter(
+           ResourceLoader.GetForViewIndependentUse(),
+           "US",
+           CalculatorNumberFormat.FromCulture(CultureInfo.InvariantCulture)))
 {
     Require(converter.Categories.Count == 12, "Managed unit converter did not expose all non-currency categories.");
     var temperature = converter.Categories.Single(category => category.Id == 7);
@@ -86,8 +116,20 @@ using (var converter = new NativeUnitConverter(ResourceLoader.GetForViewIndepend
 
 using (var viewModel = new CalculatorViewModel(
     initialPlatformAppearance: new PlatformAppearancePreferences(),
-    supportsPlatformAppearanceSettings: true))
+    supportsPlatformAppearanceSettings: true,
+    numberCulture: CultureInfo.GetCultureInfo("de-DE")))
 {
+    Require(viewModel.DecimalSeparator == ",", "The keypad did not expose the active culture's decimal separator.");
+    Require(viewModel.TitleBarApplicationName == "Calculator",
+        "The localized Windows-style title-bar application name was not loaded.");
+    Require(viewModel.AlwaysOnTopTooltip == "Keep on top (Alt+Up)",
+        "The initial always-on-top tooltip was not localized.");
+    Require(viewModel.AlwaysOnTopGlyph == "\uEE49", "The normal always-on-top source glyph was not selected.");
+    viewModel.IsAlwaysOnTop = true;
+    Require(viewModel.AlwaysOnTopTooltip == "Back to full view (Alt+Down)",
+        "The always-on-top tooltip did not follow its state.");
+    Require(viewModel.AlwaysOnTopGlyph == "\uEE47", "The exit always-on-top source glyph was not selected.");
+    viewModel.IsAlwaysOnTop = false;
     Require(viewModel.CalculatorNavigationItems.Count == 5, "Calculator navigation manifest is incomplete.");
     Require(viewModel.ConverterNavigationItems.Count == 13, "Converter navigation manifest is incomplete.");
     Require(viewModel.IsStandardMode
