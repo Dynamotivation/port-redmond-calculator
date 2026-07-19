@@ -82,9 +82,14 @@ function popups, culture-sensitive decimal input, and the same native history
 and memory collections as Standard mode. Its compact, medium, and large operator
 states are selected from the operator panel's own arranged width and height,
 using the original two-axis UWP thresholds and corresponding caption, numeric,
-operator-row, and popup dimensions. The native boundary exposes mode selection
-and input-empty state directly so the frontend does not infer engine state from
-localized display strings.
+operator-row, and popup dimensions. The composite operator buttons retain the
+source Calculator-font glyph, localized label, and chevron. Scientific paste
+supports native power, modulo, parentheses, unary signs, and exponent notation;
+unsupported named-function syntax is rejected rather than partially executed.
+The native boundary exposes mode selection and input-empty state directly so
+the frontend does not infer engine state from localized display strings. Error
+recovery likewise follows the source command boundary: digits and decimal clear
+and replace an error, while non-recoverable commands only clear it.
 
 History is sourced directly from CalculatorManager rather than duplicated UI
 state. The Avalonia host reproduces all three source layout states rather than

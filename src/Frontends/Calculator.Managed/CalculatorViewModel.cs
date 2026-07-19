@@ -345,13 +345,50 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
     public void ExecuteCalculatorCommand(CalculatorCommand command)
     {
+        if (IsScientificMode && IsError)
+        {
+            // UWP first clears the engine for every command received while in
+            // error, then forwards only operands. This is why digits and the
+            // decimal separator recover immediately while Backspace/Equals
+            // merely clear the error display.
+            _calculator.SendCommand(CalculatorCommand.Clear);
+            if (!IsScientificErrorRecoverable(command))
+            {
+                IsScientificNotation = false;
+                Synchronize();
+                return;
+            }
+        }
+
         _calculator.SendCommand(command);
         if (command is CalculatorCommand.Clear or CalculatorCommand.ClearEntry)
         {
             IsScientificNotation = false;
         }
+        if (IsScientificInverse && command is CalculatorCommand.Cube or CalculatorCommand.CubeRoot
+            or CalculatorCommand.Root or CalculatorCommand.TwoPowerX
+            or CalculatorCommand.LogBaseY or CalculatorCommand.EPowerX)
+        {
+            IsScientificInverse = false;
+        }
+        if (command is CalculatorCommand.Sin or CalculatorCommand.Cos or CalculatorCommand.Tan
+            or CalculatorCommand.Sinh or CalculatorCommand.Cosh or CalculatorCommand.Tanh
+            or CalculatorCommand.InverseSin or CalculatorCommand.InverseCos or CalculatorCommand.InverseTan
+            or CalculatorCommand.InverseSinh or CalculatorCommand.InverseCosh or CalculatorCommand.InverseTanh
+            or CalculatorCommand.Sec or CalculatorCommand.Csc or CalculatorCommand.Cot
+            or CalculatorCommand.Sech or CalculatorCommand.Csch or CalculatorCommand.Coth
+            or CalculatorCommand.InverseSec or CalculatorCommand.InverseCsc or CalculatorCommand.InverseCot
+            or CalculatorCommand.InverseSech or CalculatorCommand.InverseCsch or CalculatorCommand.InverseCoth)
+        {
+            IsTrigInverse = false;
+            IsTrigHyperbolic = false;
+        }
         Synchronize();
     }
+
+    private static bool IsScientificErrorRecoverable(CalculatorCommand command) =>
+        command is >= CalculatorCommand.Zero and <= CalculatorCommand.Nine
+            or CalculatorCommand.Decimal;
 
     [RelayCommand]
     private void CycleScientificAngle()
@@ -404,12 +441,33 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             .Replace('×', '*')
             .Replace('÷', '/')
             .Replace('−', '-');
+        var isScientific = IsScientificMode;
         if (normalized.Any(character =>
                 !char.IsWhiteSpace(character)
                 && !char.IsDigit(character)
-                && character is not '+' and not '-' and not '*' and not '/' and not '=' and not '.' and not ','))
+                && character is not '+' and not '-' and not '*' and not '/' and not '=' and not '.' and not ','
+                && (!isScientific || character is not '^' and not '%' and not '(' and not ')' and not 'e' and not 'E')))
         {
             return false;
+        }
+        if (isScientific)
+        {
+            var parenthesisDepth = 0;
+            foreach (var character in normalized)
+            {
+                if (character == '(')
+                {
+                    parenthesisDepth++;
+                }
+                else if (character == ')' && --parenthesisDepth < 0)
+                {
+                    return false;
+                }
+            }
+            if (parenthesisDepth != 0)
+            {
+                return false;
+            }
         }
 
         // A history selection intentionally changes only the presentation in
@@ -417,13 +475,30 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         // so the pasted expression cannot inherit an earlier completed binary
         // operation; memory and history remain intact.
         _calculator.Reset(clearMemory: false);
+        if (isScientific)
+        {
+            _calculator.SetMode(CalculatorMode.Scientific);
+            _calculator.SendCommand(SelectedScientificAngle switch
+            {
+                CalculatorAngleMode.Degrees => CalculatorCommand.Degree,
+                CalculatorAngleMode.Radians => CalculatorCommand.Radian,
+                _ => CalculatorCommand.Grads,
+            });
+            if (IsScientificNotation)
+            {
+                _calculator.SendCommand(CalculatorCommand.ScientificNotation);
+            }
+        }
+
         var isFirstLegalCharacter = true;
         var isPreviousOperator = false;
         var sendNegate = false;
         var sentCommand = false;
+        var negateStack = new Stack<bool>();
 
-        foreach (var character in normalized)
+        for (var index = 0; index < normalized.Length; index++)
         {
+            var character = normalized[index];
             if (char.IsWhiteSpace(character))
             {
                 continue;
@@ -447,6 +522,11 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
                 '*' => CalculatorCommand.Multiply,
                 '/' => CalculatorCommand.Divide,
                 '=' => CalculatorCommand.Equals,
+                '^' when isScientific => CalculatorCommand.Power,
+                '%' when isScientific => CalculatorCommand.Modulo,
+                '(' when isScientific => CalculatorCommand.OpenParenthesis,
+                ')' when isScientific => CalculatorCommand.CloseParenthesis,
+                'e' or 'E' when isScientific => CalculatorCommand.Exp,
                 _ => null,
             };
 
@@ -456,7 +536,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             }
 
             var isOperator = command is CalculatorCommand.Add or CalculatorCommand.Subtract
-                or CalculatorCommand.Multiply or CalculatorCommand.Divide;
+                or CalculatorCommand.Multiply or CalculatorCommand.Divide
+                or CalculatorCommand.Power or CalculatorCommand.Modulo;
             if (isFirstLegalCharacter || isPreviousOperator)
             {
                 isFirstLegalCharacter = false;
@@ -472,6 +553,32 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
                 }
             }
 
+            if (command == CalculatorCommand.OpenParenthesis)
+            {
+                negateStack.Push(sendNegate);
+                sendNegate = false;
+                _calculator.SendCommand(CalculatorCommand.OpenParenthesis);
+                sentCommand = true;
+                isPreviousOperator = true;
+                continue;
+            }
+            else if (command == CalculatorCommand.CloseParenthesis)
+            {
+                if (negateStack.Count == 0)
+                {
+                    continue;
+                }
+
+                _calculator.SendCommand(CalculatorCommand.CloseParenthesis);
+                sentCommand = true;
+                if (negateStack.Pop())
+                {
+                    _calculator.SendCommand(CalculatorCommand.Sign);
+                }
+                isPreviousOperator = false;
+                continue;
+            }
+
             if (sendNegate && (isOperator || command == CalculatorCommand.Equals))
             {
                 // Apply a unary minus only after the complete operand has been
@@ -485,6 +592,20 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             _calculator.SendCommand(command.Value);
             sentCommand = true;
             isPreviousOperator = isOperator;
+
+            if (command == CalculatorCommand.Exp && index + 1 < normalized.Length)
+            {
+                var exponentSign = normalized[index + 1];
+                if (exponentSign == '-')
+                {
+                    _calculator.SendCommand(CalculatorCommand.Sign);
+                    index++;
+                }
+                else if (exponentSign == '+')
+                {
+                    index++;
+                }
+            }
         }
 
         if (sendNegate && sentCommand)

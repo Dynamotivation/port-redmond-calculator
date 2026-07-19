@@ -30,6 +30,28 @@ public partial class MainWindow : Window
         "calculator",
         "scientific",
     };
+    private static readonly IReadOnlySet<CalculatorCommand> ScientificErrorDisabledCommands = new HashSet<CalculatorCommand>
+    {
+        CalculatorCommand.Divide, CalculatorCommand.Multiply, CalculatorCommand.Subtract,
+        CalculatorCommand.Add, CalculatorCommand.Sign,
+        CalculatorCommand.Square, CalculatorCommand.Cube, CalculatorCommand.SquareRoot,
+        CalculatorCommand.CubeRoot, CalculatorCommand.Power, CalculatorCommand.Root,
+        CalculatorCommand.TenPowerX, CalculatorCommand.TwoPowerX, CalculatorCommand.EPowerX,
+        CalculatorCommand.LogBase10, CalculatorCommand.NaturalLog, CalculatorCommand.LogBaseY,
+        CalculatorCommand.Reciprocal, CalculatorCommand.Absolute, CalculatorCommand.Exp,
+        CalculatorCommand.Modulo, CalculatorCommand.Factorial, CalculatorCommand.OpenParenthesis,
+        CalculatorCommand.CloseParenthesis, CalculatorCommand.Pi, CalculatorCommand.Euler,
+        CalculatorCommand.Sin, CalculatorCommand.Cos, CalculatorCommand.Tan,
+        CalculatorCommand.Sinh, CalculatorCommand.Cosh, CalculatorCommand.Tanh,
+        CalculatorCommand.InverseSin, CalculatorCommand.InverseCos, CalculatorCommand.InverseTan,
+        CalculatorCommand.InverseSinh, CalculatorCommand.InverseCosh, CalculatorCommand.InverseTanh,
+        CalculatorCommand.Sec, CalculatorCommand.Csc, CalculatorCommand.Cot,
+        CalculatorCommand.Sech, CalculatorCommand.Csch, CalculatorCommand.Coth,
+        CalculatorCommand.InverseSec, CalculatorCommand.InverseCsc, CalculatorCommand.InverseCot,
+        CalculatorCommand.InverseSech, CalculatorCommand.InverseCsch, CalculatorCommand.InverseCoth,
+        CalculatorCommand.Floor, CalculatorCommand.Ceiling, CalculatorCommand.Random,
+        CalculatorCommand.Dms, CalculatorCommand.Degrees,
+    };
     private AppSettings _settings;
     private bool _isOpened;
     private int _presentationVersion;
@@ -341,7 +363,7 @@ public partial class MainWindow : Window
                 modifiers &= ~ShortcutModifiers.Shift;
             }
         }
-        else if (TryMapFallbackKey(e.Key, out var fallbackKey))
+        else if (TryMapFallbackKey(e.Key, modifiers, out var fallbackKey))
         {
             shortcutKey = fallbackKey;
             if (fallbackKey.Kind == ShortcutKeyKind.Character)
@@ -359,7 +381,7 @@ public partial class MainWindow : Window
         return true;
     }
 
-    private static bool TryMapFallbackKey(Key key, out ShortcutKey shortcutKey)
+    private static bool TryMapFallbackKey(Key key, ShortcutModifiers modifiers, out ShortcutKey shortcutKey)
     {
         var namedKey = key switch
         {
@@ -368,15 +390,10 @@ public partial class MainWindow : Window
             Key.Delete => "DELETE",
             Key.Back => "BACK",
             Key.Decimal or Key.OemPeriod or Key.OemComma => "DECIMAL",
-            Key.C => "C",
-            Key.D => "D",
-            Key.H => "H",
-            Key.L => "L",
-            Key.M => "M",
-            Key.P => "P",
-            Key.Q => "Q",
-            Key.R => "R",
-            Key.V => "V",
+            Key.F3 => "F3",
+            Key.F4 => "F4",
+            Key.F5 => "F5",
+            >= Key.A and <= Key.Z => key.ToString().ToUpperInvariant(),
             _ => string.Empty,
         };
         if (namedKey.Length != 0)
@@ -385,22 +402,32 @@ public partial class MainWindow : Window
             return true;
         }
 
-        char? character = key switch
+        var isShifted = modifiers.HasFlag(ShortcutModifiers.Shift);
+        char? character = (key, isShifted) switch
         {
-            Key.D0 or Key.NumPad0 => '0',
-            Key.D1 or Key.NumPad1 => '1',
-            Key.D2 or Key.NumPad2 => '2',
-            Key.D3 or Key.NumPad3 => '3',
-            Key.D4 or Key.NumPad4 => '4',
-            Key.D5 or Key.NumPad5 => '5',
-            Key.D6 or Key.NumPad6 => '6',
-            Key.D7 or Key.NumPad7 => '7',
-            Key.D8 or Key.NumPad8 => '8',
-            Key.D9 or Key.NumPad9 => '9',
-            Key.Add or Key.OemPlus => '+',
-            Key.Subtract or Key.OemMinus => '-',
-            Key.Multiply => '*',
-            Key.Divide or Key.OemQuestion or Key.Oem2 => '/',
+            (Key.D1, true) => '!',
+            (Key.D3, true) => '#',
+            (Key.D5, true) => '%',
+            (Key.D6, true) => '^',
+            (Key.D8, true) => '*',
+            (Key.OemPipe, true) => '|',
+            (Key.D0 or Key.NumPad0, _) => '0',
+            (Key.D1 or Key.NumPad1, _) => '1',
+            (Key.D2 or Key.NumPad2, _) => '2',
+            (Key.D3 or Key.NumPad3, _) => '3',
+            (Key.D4 or Key.NumPad4, _) => '4',
+            (Key.D5 or Key.NumPad5, _) => '5',
+            (Key.D6 or Key.NumPad6, _) => '6',
+            (Key.D7 or Key.NumPad7, _) => '7',
+            (Key.D8 or Key.NumPad8, _) => '8',
+            (Key.D9 or Key.NumPad9, _) => '9',
+            (Key.Add, _) or (Key.OemPlus, true) => '+',
+            (Key.OemPlus, false) => '=',
+            (Key.Subtract or Key.OemMinus, _) => '-',
+            (Key.Multiply, _) => '*',
+            (Key.Divide or Key.OemQuestion or Key.Oem2, _) => '/',
+            (Key.OemOpenBrackets, _) => '[',
+            (Key.OemCloseBrackets, _) => ']',
             _ => null,
         };
         shortcutKey = character is null ? default : ShortcutKey.Character(character.Value);
@@ -486,6 +513,11 @@ public partial class MainWindow : Window
 
         if (command is not null)
         {
+            if (_viewModel.IsScientificMode && _viewModel.IsError
+                && ScientificErrorDisabledCommands.Contains(command.Value))
+            {
+                return true;
+            }
             _viewModel.ExecuteCalculatorCommand(command.Value);
             return true;
         }
@@ -498,10 +530,10 @@ public partial class MainWindow : Window
             case "MemRecall": _viewModel.MemoryRecallCommand.Execute(null); return true;
             case "MemPlus": _viewModel.MemoryAddCommand.Execute(null); return true;
             case "MemMinus": _viewModel.MemorySubtractCommand.Execute(null); return true;
-            case "degButton": _viewModel.ExecuteCalculatorCommand(CalculatorCommand.Degree); return true;
-            case "radButton": _viewModel.ExecuteCalculatorCommand(CalculatorCommand.Radian); return true;
-            case "gradButton": _viewModel.ExecuteCalculatorCommand(CalculatorCommand.Grads); return true;
-            case "ftoeButton": _viewModel.ToggleScientificNotationCommand.Execute(null); return true;
+            case "degButton": if (!_viewModel.IsError) _viewModel.ExecuteCalculatorCommand(CalculatorCommand.Degree); return true;
+            case "radButton": if (!_viewModel.IsError) _viewModel.ExecuteCalculatorCommand(CalculatorCommand.Radian); return true;
+            case "gradButton": if (!_viewModel.IsError) _viewModel.ExecuteCalculatorCommand(CalculatorCommand.Grads); return true;
+            case "ftoeButton": if (!_viewModel.IsError) _viewModel.ToggleScientificNotationCommand.Execute(null); return true;
             case "copyButton":
             case "copyButtonAlternate": _ = CopyDisplayToClipboardAsync(); return true;
             case "pasteButton":
@@ -557,6 +589,56 @@ public partial class MainWindow : Window
             "squareRootButton" => _viewModel.IsScientificMode ? ScientificSquareRootButton : SquareRootButton,
             "backSpaceButton" => _viewModel.IsScientificMode ? ScientificBackspaceButton : BackspaceButton,
             "multiplyButton" => _viewModel.IsScientificMode ? ScientificMultiplyButton : MultiplyButton,
+            "absButton" => ScientificAbsoluteButton,
+            "cubeRootButton" => ScientificCubeRootButton,
+            "ceilButton" => ScientificCeilingButton,
+            "cosButton" => ScientificCosButton,
+            "coshButton" => ScientificCoshButton,
+            "cotButton" => ScientificCotButton,
+            "cothButton" => ScientificCothButton,
+            "cscButton" => ScientificCscButton,
+            "cschButton" => ScientificCschButton,
+            "degreeButton" => ScientificDegreesButton,
+            "dmsButton" => ScientificDmsButton,
+            "eulerButton" => ScientificEulerButton,
+            "expButton" => ScientificExpButton,
+            "factorialButton" => ScientificFactorialButton,
+            "floorButton" => ScientificFloorButton,
+            "invcosButton" => ScientificInverseCosButton,
+            "invcoshButton" => ScientificInverseCoshButton,
+            "invcotButton" => ScientificInverseCotButton,
+            "invcothButton" => ScientificInverseCothButton,
+            "invcscButton" => ScientificInverseCscButton,
+            "invcschButton" => ScientificInverseCschButton,
+            "invsecButton" => ScientificInverseSecButton,
+            "invsechButton" => ScientificInverseSechButton,
+            "invsinButton" => ScientificInverseSinButton,
+            "invsinhButton" => ScientificInverseSinhButton,
+            "invtanButton" => ScientificInverseTanButton,
+            "invtanhButton" => ScientificInverseTanhButton,
+            "invertButton" => ScientificReciprocalButton,
+            "logBase10Button" => ScientificLogButton,
+            "logBaseEButton" => ScientificNaturalLogButton,
+            "logBaseY" => ScientificLogBaseYButton,
+            "openParenthesisButton" => ScientificOpenParenthesisButton,
+            "closeParenthesisButton" => ScientificCloseParenthesisButton,
+            "piButton" => ScientificPiButton,
+            "powerButton" => ScientificPowerButton,
+            "powerOf10Button" => ScientificTenPowerButton,
+            "powerOfEButton" => ScientificEPowerButton,
+            "randButton" => ScientificRandomButton,
+            "secButton" => ScientificSecButton,
+            "sechButton" => ScientificSechButton,
+            "sinButton" => ScientificSinButton,
+            "sinhButton" => ScientificSinhButton,
+            "tanButton" => ScientificTanButton,
+            "tanhButton" => ScientificTanhButton,
+            "twoPowerXButton" => ScientificTwoPowerButton,
+            "xpower2Button" => ScientificSquareButton,
+            "xpower3Button" => ScientificCubeButton,
+            "ySquareRootButton" => ScientificRootButton,
+            "degButton" or "radButton" or "gradButton" => ScientificAngleButton,
+            "ftoeButton" => ScientificNotationButton,
             "HistoryButton" => HistoryButton,
             "ClearMemoryButton" => MemoryClearButton,
             "MemRecall" => MemoryRecallButton,

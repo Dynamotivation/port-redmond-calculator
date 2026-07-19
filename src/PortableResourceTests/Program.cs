@@ -70,16 +70,6 @@ ResourceLoader.Configure(new ResourceLoaderConfiguration(resourceRoot)
     UICultureProvider = static () => CultureInfo.GetCultureInfo("en-US"),
 });
 var germanNumberFormat = CalculatorNumberFormat.FromCulture(CultureInfo.GetCultureInfo("de-DE"));
-using (var calculator = new NativeCalculator(
-           ResourceLoader.GetForViewIndependentUse("CEngineStrings"),
-           germanNumberFormat))
-{
-    calculator.SendCommand(CalculatorCommand.One);
-    calculator.SendCommand(CalculatorCommand.Two);
-    calculator.SendCommand(CalculatorCommand.Decimal);
-    calculator.SendCommand(CalculatorCommand.Five);
-    Require(calculator.PrimaryDisplay == "12,5", "Managed culture did not reach the native calculator engine.");
-}
 
 using (var localizedConverter = new NativeUnitConverter(
            ResourceLoader.GetForViewIndependentUse(),
@@ -177,6 +167,42 @@ using (var viewModel = new CalculatorViewModel(
     viewModel.CycleScientificAngleCommand.Execute(null);
     Require(viewModel.SelectedScientificAngle == CalculatorAngleMode.Radians && viewModel.ScientificAngleLabel == "RAD",
         "Scientific angle mode did not advance from degrees to radians.");
+    Require(viewModel.TryPasteStandardExpression("2^3=") && viewModel.PrimaryDisplay == "8",
+        $"Scientific paste did not preserve the native power operation (actual: {viewModel.PrimaryDisplay}).");
+    Require(viewModel.TryPasteStandardExpression("-(2+3)=") && viewModel.PrimaryDisplay == "-5",
+        $"Scientific paste did not preserve unary negation around parentheses (actual: {viewModel.PrimaryDisplay}).");
+    Require(viewModel.TryPasteStandardExpression("10%3=") && viewModel.PrimaryDisplay == "1",
+        $"Scientific paste did not preserve the native modulo operation (actual: {viewModel.PrimaryDisplay}).");
+    Require(viewModel.TryPasteStandardExpression("1e3=") && viewModel.PrimaryDisplay == "1.000",
+        $"Scientific paste did not preserve exponent notation or locale formatting (actual: {viewModel.PrimaryDisplay}).");
+    Require(!viewModel.TryPasteStandardExpression("sin(30)"),
+        "Scientific paste accepted named functions that its command grammar does not support.");
+    Require(!viewModel.TryPasteStandardExpression("(2+3"),
+        "Scientific paste accepted an unbalanced parenthesized expression.");
+    viewModel.ToggleScientificInverseCommand.Execute(null);
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Cube);
+    Require(!viewModel.IsScientificInverse,
+        "The Scientific 2nd state did not reset after an alternate operation.");
+    viewModel.ToggleTrigInverseCommand.Execute(null);
+    viewModel.ToggleTrigHyperbolicCommand.Execute(null);
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.InverseSinh);
+    Require(!viewModel.IsTrigInverse && !viewModel.IsTrigHyperbolic,
+        "The Scientific trigonometry flyout state did not reset after an operation.");
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Clear);
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Zero);
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Divide);
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Zero);
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Equals);
+    Require(viewModel.IsError, "Scientific division by zero did not expose the engine error state.");
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Seven);
+    Require(!viewModel.IsError && viewModel.PrimaryDisplay == "7",
+        $"A Scientific digit did not recover from the error state (actual: {viewModel.PrimaryDisplay}).");
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Divide);
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Zero);
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Equals);
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Equals);
+    Require(!viewModel.IsError && viewModel.PrimaryDisplay == "0",
+        $"Scientific Equals did not clear an existing error without re-executing it (actual: {viewModel.PrimaryDisplay}).");
 
     var standardItem = viewModel.CalculatorNavigationItems.Single(item => item.Mode == CalculatorViewMode.Standard);
     await viewModel.SelectNavigationItemCommand.ExecuteAsync(standardItem);

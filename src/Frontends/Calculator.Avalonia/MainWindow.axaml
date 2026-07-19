@@ -642,6 +642,15 @@
     <Style Selector="Grid.scientificSmall StackPanel.scientificOperatorPanel">
       <Setter Property="Height" Value="44" />
     </Style>
+    <Style Selector="Grid.scientificSmall TextBlock.operatorPanelText">
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="Grid.scientificSmall TextBlock.operatorPanelGlyph">
+      <Setter Property="FontSize" Value="16" />
+    </Style>
+    <Style Selector="Grid.scientificSmall TextBlock.operatorPanelChevron">
+      <Setter Property="FontSize" Value="12" />
+    </Style>
     <Style Selector="Grid.scientificMedium Button.calcButton">
       <Setter Property="FontSize" Value="20" />
     </Style>
@@ -654,6 +663,15 @@
     <Style Selector="Grid.scientificMedium StackPanel.scientificOperatorPanel">
       <Setter Property="Height" Value="70" />
     </Style>
+    <Style Selector="Grid.scientificMedium TextBlock.operatorPanelText">
+      <Setter Property="FontSize" Value="16" />
+    </Style>
+    <Style Selector="Grid.scientificMedium TextBlock.operatorPanelGlyph">
+      <Setter Property="FontSize" Value="20" />
+    </Style>
+    <Style Selector="Grid.scientificMedium TextBlock.operatorPanelChevron">
+      <Setter Property="FontSize" Value="10" />
+    </Style>
     <Style Selector="Grid.scientificLarge Button.calcButton">
       <Setter Property="FontSize" Value="34" />
     </Style>
@@ -665,6 +683,18 @@
     </Style>
     <Style Selector="Grid.scientificLarge StackPanel.scientificOperatorPanel">
       <Setter Property="Height" Value="70" />
+    </Style>
+    <Style Selector="Grid.scientificLarge TextBlock.operatorPanelText">
+      <Setter Property="FontSize" Value="24" />
+    </Style>
+    <Style Selector="Grid.scientificLarge TextBlock.operatorPanelGlyph">
+      <Setter Property="FontSize" Value="24" />
+    </Style>
+    <Style Selector="Grid.scientificLarge TextBlock.operatorPanelChevron">
+      <Setter Property="FontSize" Value="16" />
+    </Style>
+    <Style Selector="Grid.scientificError Button.scientificErrorDisabled">
+      <Setter Property="IsEnabled" Value="False" />
     </Style>
     <Style Selector="ComboBox.unitSelector">
       <Setter Property="MinHeight" Value="36" />
@@ -879,10 +909,12 @@
            extra 32-star row is owned by Calculator.xaml's Scientific state. -->
       <Grid Grid.Row="3" Margin="3,0" ColumnDefinitions="80,80,*"
             IsVisible="{Binding IsScientificMode}">
-        <Button Classes="memoryButton" Content="{Binding ScientificAngleLabel}"
+        <Button x:Name="ScientificAngleButton" Classes="memoryButton" Content="{Binding ScientificAngleLabel}"
+                IsEnabled="{Binding !IsError}"
                 Command="{Binding CycleScientificAngleCommand}" />
-        <Button Grid.Column="1" Classes="memoryButton"
+        <Button x:Name="ScientificNotationButton" Grid.Column="1" Classes="memoryButton"
                 Classes.selected="{Binding IsScientificNotation}"
+                IsEnabled="{Binding !IsError}"
                 Content="F-E" Command="{Binding ToggleScientificNotationCommand}" />
       </Grid>
 
@@ -926,80 +958,99 @@
            seven equal keypad rows across five equal columns. -->
       <Grid x:Name="ScientificNumpadPanel" Grid.Row="5" Margin="3,0,3,3"
             RowDefinitions="Auto,*,*,*,*,*,*,*" ColumnDefinitions="*,*,*,*,*"
+            Classes.scientificError="{Binding IsError}"
             IsVisible="{Binding IsScientificMode}">
         <StackPanel Grid.ColumnSpan="5" Classes="scientificOperatorPanel" Orientation="Horizontal">
-          <Button x:Name="ScientificTrigButton" Classes="memoryButton" Width="116" Content="{Binding TrigonometryName}">
+          <Button x:Name="ScientificTrigButton" Classes="memoryButton scientificErrorDisabled">
+            <Button.Content>
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Classes="operatorPanelGlyph" Margin="0,2,8,0" VerticalAlignment="Center"
+                           FontFamily="{StaticResource CalculatorIconFont}" Text="&#xF892;" />
+                <TextBlock Classes="operatorPanelText" VerticalAlignment="Center" Text="{Binding TrigonometryName}" />
+                <TextBlock Classes="operatorPanelChevron" Margin="8,4,0,0" VerticalAlignment="Center"
+                           FontFamily="{StaticResource CalculatorIconFont}" Text="&#xE70D;" />
+              </StackPanel>
+            </Button.Content>
             <Button.Flyout>
               <Flyout Placement="Bottom">
                 <Grid x:Name="ScientificTrigFlyoutGrid" Width="258" Height="96" RowDefinitions="*,*" ColumnDefinitions="64,*,*,*">
-                  <Button Classes="memoryButton" Content="2nd" Command="{Binding ToggleTrigInverseCommand}" />
-                  <Button Grid.Row="1" Classes="memoryButton" Content="hyp" Command="{Binding ToggleTrigHyperbolicCommand}" />
+                  <Button x:Name="ScientificTrigShiftButton" Classes="memoryButton" Content="2nd" Command="{Binding ToggleTrigInverseCommand}" />
+                  <Button x:Name="ScientificHypButton" Grid.Row="1" Classes="memoryButton" Content="hyp" Command="{Binding ToggleTrigHyperbolicCommand}" />
 
                   <Grid Grid.Column="1" Grid.ColumnSpan="3" Grid.RowSpan="2"
                         RowDefinitions="*,*" ColumnDefinitions="*,*,*"
                         IsVisible="{Binding ShowsRegularTrigFunctions}">
-                    <Button Classes="calcButton operator" Content="sin" Command="{Binding SendCommandCommand}" CommandParameter="Sin" />
-                    <Button Grid.Column="1" Classes="calcButton operator" Content="cos" Command="{Binding SendCommandCommand}" CommandParameter="Cos" />
-                    <Button Grid.Column="2" Classes="calcButton operator" Content="tan" Command="{Binding SendCommandCommand}" CommandParameter="Tan" />
-                    <Button Grid.Row="1" Classes="calcButton operator" Content="sec" Command="{Binding SendCommandCommand}" CommandParameter="Sec" />
-                    <Button Grid.Row="1" Grid.Column="1" Classes="calcButton operator" Content="csc" Command="{Binding SendCommandCommand}" CommandParameter="Csc" />
-                    <Button Grid.Row="1" Grid.Column="2" Classes="calcButton operator" Content="cot" Command="{Binding SendCommandCommand}" CommandParameter="Cot" />
+                    <Button x:Name="ScientificSinButton" Classes="calcButton operator" Content="sin" Command="{Binding SendCommandCommand}" CommandParameter="Sin" />
+                    <Button x:Name="ScientificCosButton" Grid.Column="1" Classes="calcButton operator" Content="cos" Command="{Binding SendCommandCommand}" CommandParameter="Cos" />
+                    <Button x:Name="ScientificTanButton" Grid.Column="2" Classes="calcButton operator" Content="tan" Command="{Binding SendCommandCommand}" CommandParameter="Tan" />
+                    <Button x:Name="ScientificSecButton" Grid.Row="1" Classes="calcButton operator" Content="sec" Command="{Binding SendCommandCommand}" CommandParameter="Sec" />
+                    <Button x:Name="ScientificCscButton" Grid.Row="1" Grid.Column="1" Classes="calcButton operator" Content="csc" Command="{Binding SendCommandCommand}" CommandParameter="Csc" />
+                    <Button x:Name="ScientificCotButton" Grid.Row="1" Grid.Column="2" Classes="calcButton operator" Content="cot" Command="{Binding SendCommandCommand}" CommandParameter="Cot" />
                   </Grid>
                   <Grid Grid.Column="1" Grid.ColumnSpan="3" Grid.RowSpan="2"
                         RowDefinitions="*,*" ColumnDefinitions="*,*,*"
                         IsVisible="{Binding ShowsInverseTrigFunctions}">
-                    <Button Classes="calcButton operator" Content="sin⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseSin" />
-                    <Button Grid.Column="1" Classes="calcButton operator" Content="cos⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseCos" />
-                    <Button Grid.Column="2" Classes="calcButton operator" Content="tan⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseTan" />
-                    <Button Grid.Row="1" Classes="calcButton operator" Content="sec⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseSec" />
-                    <Button Grid.Row="1" Grid.Column="1" Classes="calcButton operator" Content="csc⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseCsc" />
-                    <Button Grid.Row="1" Grid.Column="2" Classes="calcButton operator" Content="cot⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseCot" />
+                    <Button x:Name="ScientificInverseSinButton" Classes="calcButton operator" Content="sin⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseSin" />
+                    <Button x:Name="ScientificInverseCosButton" Grid.Column="1" Classes="calcButton operator" Content="cos⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseCos" />
+                    <Button x:Name="ScientificInverseTanButton" Grid.Column="2" Classes="calcButton operator" Content="tan⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseTan" />
+                    <Button x:Name="ScientificInverseSecButton" Grid.Row="1" Classes="calcButton operator" Content="sec⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseSec" />
+                    <Button x:Name="ScientificInverseCscButton" Grid.Row="1" Grid.Column="1" Classes="calcButton operator" Content="csc⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseCsc" />
+                    <Button x:Name="ScientificInverseCotButton" Grid.Row="1" Grid.Column="2" Classes="calcButton operator" Content="cot⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseCot" />
                   </Grid>
                   <Grid Grid.Column="1" Grid.ColumnSpan="3" Grid.RowSpan="2"
                         RowDefinitions="*,*" ColumnDefinitions="*,*,*"
                         IsVisible="{Binding ShowsHyperbolicTrigFunctions}">
-                    <Button Classes="calcButton operator" Content="sinh" Command="{Binding SendCommandCommand}" CommandParameter="Sinh" />
-                    <Button Grid.Column="1" Classes="calcButton operator" Content="cosh" Command="{Binding SendCommandCommand}" CommandParameter="Cosh" />
-                    <Button Grid.Column="2" Classes="calcButton operator" Content="tanh" Command="{Binding SendCommandCommand}" CommandParameter="Tanh" />
-                    <Button Grid.Row="1" Classes="calcButton operator" Content="sech" Command="{Binding SendCommandCommand}" CommandParameter="Sech" />
-                    <Button Grid.Row="1" Grid.Column="1" Classes="calcButton operator" Content="csch" Command="{Binding SendCommandCommand}" CommandParameter="Csch" />
-                    <Button Grid.Row="1" Grid.Column="2" Classes="calcButton operator" Content="coth" Command="{Binding SendCommandCommand}" CommandParameter="Coth" />
+                    <Button x:Name="ScientificSinhButton" Classes="calcButton operator" Content="sinh" Command="{Binding SendCommandCommand}" CommandParameter="Sinh" />
+                    <Button x:Name="ScientificCoshButton" Grid.Column="1" Classes="calcButton operator" Content="cosh" Command="{Binding SendCommandCommand}" CommandParameter="Cosh" />
+                    <Button x:Name="ScientificTanhButton" Grid.Column="2" Classes="calcButton operator" Content="tanh" Command="{Binding SendCommandCommand}" CommandParameter="Tanh" />
+                    <Button x:Name="ScientificSechButton" Grid.Row="1" Classes="calcButton operator" Content="sech" Command="{Binding SendCommandCommand}" CommandParameter="Sech" />
+                    <Button x:Name="ScientificCschButton" Grid.Row="1" Grid.Column="1" Classes="calcButton operator" Content="csch" Command="{Binding SendCommandCommand}" CommandParameter="Csch" />
+                    <Button x:Name="ScientificCothButton" Grid.Row="1" Grid.Column="2" Classes="calcButton operator" Content="coth" Command="{Binding SendCommandCommand}" CommandParameter="Coth" />
                   </Grid>
                   <Grid Grid.Column="1" Grid.ColumnSpan="3" Grid.RowSpan="2"
                         RowDefinitions="*,*" ColumnDefinitions="*,*,*"
                         IsVisible="{Binding ShowsInverseHyperbolicTrigFunctions}">
-                    <Button Classes="calcButton operator" Content="sinh⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseSinh" />
-                    <Button Grid.Column="1" Classes="calcButton operator" Content="cosh⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseCosh" />
-                    <Button Grid.Column="2" Classes="calcButton operator" Content="tanh⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseTanh" />
-                    <Button Grid.Row="1" Classes="calcButton operator" Content="sech⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseSech" />
-                    <Button Grid.Row="1" Grid.Column="1" Classes="calcButton operator" Content="csch⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseCsch" />
-                    <Button Grid.Row="1" Grid.Column="2" Classes="calcButton operator" Content="coth⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseCoth" />
+                    <Button x:Name="ScientificInverseSinhButton" Classes="calcButton operator" Content="sinh⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseSinh" />
+                    <Button x:Name="ScientificInverseCoshButton" Grid.Column="1" Classes="calcButton operator" Content="cosh⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseCosh" />
+                    <Button x:Name="ScientificInverseTanhButton" Grid.Column="2" Classes="calcButton operator" Content="tanh⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseTanh" />
+                    <Button x:Name="ScientificInverseSechButton" Grid.Row="1" Classes="calcButton operator" Content="sech⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseSech" />
+                    <Button x:Name="ScientificInverseCschButton" Grid.Row="1" Grid.Column="1" Classes="calcButton operator" Content="csch⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseCsch" />
+                    <Button x:Name="ScientificInverseCothButton" Grid.Row="1" Grid.Column="2" Classes="calcButton operator" Content="coth⁻¹" Command="{Binding SendCommandCommand}" CommandParameter="InverseCoth" />
                   </Grid>
                 </Grid>
               </Flyout>
             </Button.Flyout>
           </Button>
-          <Button x:Name="ScientificFunctionButton" Classes="memoryButton" Width="88" Content="{Binding FunctionName}">
+          <Button x:Name="ScientificFunctionButton" Classes="memoryButton scientificErrorDisabled">
+            <Button.Content>
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Classes="operatorPanelGlyph" Margin="0,2,8,0" VerticalAlignment="Center"
+                           FontFamily="{StaticResource CalculatorIconFont}" Text="&#xF893;" />
+                <TextBlock Classes="operatorPanelText" VerticalAlignment="Center" Text="{Binding FunctionName}" />
+                <TextBlock Classes="operatorPanelChevron" Margin="8,4,0,0" VerticalAlignment="Center"
+                           FontFamily="{StaticResource CalculatorIconFont}" Text="&#xE70D;" />
+              </StackPanel>
+            </Button.Content>
             <Button.Flyout>
               <Flyout Placement="Bottom">
                 <Grid x:Name="ScientificFunctionFlyoutGrid" Width="194" Height="96" RowDefinitions="*,*" ColumnDefinitions="*,*,*">
-                  <Button Classes="calcButton operator symbolOperator" Content="&#xF884;" Command="{Binding SendCommandCommand}" CommandParameter="Absolute" />
-                  <Button Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xF885;" Command="{Binding SendCommandCommand}" CommandParameter="Floor" />
-                  <Button Grid.Column="2" Classes="calcButton operator symbolOperator" Content="&#xF886;" Command="{Binding SendCommandCommand}" CommandParameter="Ceiling" />
-                  <Button Grid.Row="1" Classes="calcButton operator" Content="rand" Command="{Binding SendCommandCommand}" CommandParameter="Random" />
-                  <Button Grid.Row="1" Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xF890;" Command="{Binding SendCommandCommand}" CommandParameter="Dms" />
-                  <Button Grid.Row="1" Grid.Column="2" Classes="calcButton operator symbolOperator" Content="&#xF891;" Command="{Binding SendCommandCommand}" CommandParameter="Degrees" />
+                  <Button x:Name="ScientificFlyoutAbsoluteButton" Classes="calcButton operator symbolOperator" Content="&#xF884;" Command="{Binding SendCommandCommand}" CommandParameter="Absolute" />
+                  <Button x:Name="ScientificFloorButton" Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xF885;" Command="{Binding SendCommandCommand}" CommandParameter="Floor" />
+                  <Button x:Name="ScientificCeilingButton" Grid.Column="2" Classes="calcButton operator symbolOperator" Content="&#xF886;" Command="{Binding SendCommandCommand}" CommandParameter="Ceiling" />
+                  <Button x:Name="ScientificRandomButton" Grid.Row="1" Classes="calcButton operator" Content="rand" Command="{Binding SendCommandCommand}" CommandParameter="Random" />
+                  <Button x:Name="ScientificDmsButton" Grid.Row="1" Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xF890;" Command="{Binding SendCommandCommand}" CommandParameter="Dms" />
+                  <Button x:Name="ScientificDegreesButton" Grid.Row="1" Grid.Column="2" Classes="calcButton operator symbolOperator" Content="&#xF891;" Command="{Binding SendCommandCommand}" CommandParameter="Degrees" />
                 </Grid>
               </Flyout>
             </Button.Flyout>
           </Button>
         </StackPanel>
 
-        <Button Grid.Row="1" Classes="calcButton operator symbolOperator" Content="&#xF897;"
+        <Button x:Name="ScientificShiftButton" Grid.Row="1" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF897;"
                 Command="{Binding ToggleScientificInverseCommand}" />
-        <Button Grid.Row="1" Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xF7CF;"
+        <Button x:Name="ScientificPiButton" Grid.Row="1" Grid.Column="1" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF7CF;"
                 Command="{Binding SendCommandCommand}" CommandParameter="Pi" />
-        <Button Grid.Row="1" Grid.Column="2" Classes="calcButton operator" Content="e"
+        <Button x:Name="ScientificEulerButton" Grid.Row="1" Grid.Column="2" Classes="calcButton operator scientificErrorDisabled" Content="e"
                 Command="{Binding SendCommandCommand}" CommandParameter="Euler" />
         <Grid Grid.Row="1" Grid.Column="3">
           <Button x:Name="ScientificClearEntryButton" Classes="calcButton operator" Content="CE"
@@ -1014,46 +1065,46 @@
 
         <Grid Grid.Row="2" Grid.RowSpan="6" IsVisible="{Binding !IsScientificInverse}"
               RowDefinitions="*,*,*,*,*,*">
-          <Button Classes="calcButton operator symbolOperator" Content="&#xF7C8;" Command="{Binding SendCommandCommand}" CommandParameter="Square" />
-          <Button x:Name="ScientificSquareRootButton" Grid.Row="1" Classes="calcButton operator symbolOperator" Content="&#xF899;" Command="{Binding SendCommandCommand}" CommandParameter="SquareRoot" />
-          <Button Grid.Row="2" Classes="calcButton operator symbolOperator" Content="&#xF7CA;" Command="{Binding SendCommandCommand}" CommandParameter="Power" />
-          <Button Grid.Row="3" Classes="calcButton operator symbolOperator" Content="&#xF7CC;" Command="{Binding SendCommandCommand}" CommandParameter="TenPowerX" />
-          <Button Grid.Row="4" Classes="calcButton operator" Content="log" Command="{Binding SendCommandCommand}" CommandParameter="LogBase10" />
-          <Button Grid.Row="5" Classes="calcButton operator" Content="ln" Command="{Binding SendCommandCommand}" CommandParameter="NaturalLog" />
+          <Button x:Name="ScientificSquareButton" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF7C8;" Command="{Binding SendCommandCommand}" CommandParameter="Square" />
+          <Button x:Name="ScientificSquareRootButton" Grid.Row="1" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF899;" Command="{Binding SendCommandCommand}" CommandParameter="SquareRoot" />
+          <Button x:Name="ScientificPowerButton" Grid.Row="2" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF7CA;" Command="{Binding SendCommandCommand}" CommandParameter="Power" />
+          <Button x:Name="ScientificTenPowerButton" Grid.Row="3" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF7CC;" Command="{Binding SendCommandCommand}" CommandParameter="TenPowerX" />
+          <Button x:Name="ScientificLogButton" Grid.Row="4" Classes="calcButton operator scientificErrorDisabled" Content="log" Command="{Binding SendCommandCommand}" CommandParameter="LogBase10" />
+          <Button x:Name="ScientificNaturalLogButton" Grid.Row="5" Classes="calcButton operator scientificErrorDisabled" Content="ln" Command="{Binding SendCommandCommand}" CommandParameter="NaturalLog" />
         </Grid>
         <Grid x:Name="ScientificInverseOperators" Grid.Row="2" Grid.RowSpan="6" IsVisible="{Binding IsScientificInverse}"
               RowDefinitions="*,*,*,*,*,*">
-          <Button Classes="calcButton operator symbolOperator" Content="&#xF7CB;" Command="{Binding SendCommandCommand}" CommandParameter="Cube" />
-          <Button Grid.Row="1" Classes="calcButton operator symbolOperator" Content="&#xF881;" Command="{Binding SendCommandCommand}" CommandParameter="CubeRoot" />
-          <Button Grid.Row="2" Classes="calcButton operator symbolOperator" Content="&#xF7CD;" Command="{Binding SendCommandCommand}" CommandParameter="Root" />
-          <Button Grid.Row="3" Classes="calcButton operator symbolOperator" Content="&#xF882;" Command="{Binding SendCommandCommand}" CommandParameter="TwoPowerX" />
-          <Button Grid.Row="4" Classes="calcButton operator symbolOperator" Content="&#xF883;" Command="{Binding SendCommandCommand}" CommandParameter="LogBaseY" />
-          <Button Grid.Row="5" Classes="calcButton operator symbolOperator" Content="&#xF7CE;" Command="{Binding SendCommandCommand}" CommandParameter="EPowerX" />
+          <Button x:Name="ScientificCubeButton" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF7CB;" Command="{Binding SendCommandCommand}" CommandParameter="Cube" />
+          <Button x:Name="ScientificCubeRootButton" Grid.Row="1" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF881;" Command="{Binding SendCommandCommand}" CommandParameter="CubeRoot" />
+          <Button x:Name="ScientificRootButton" Grid.Row="2" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF7CD;" Command="{Binding SendCommandCommand}" CommandParameter="Root" />
+          <Button x:Name="ScientificTwoPowerButton" Grid.Row="3" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF882;" Command="{Binding SendCommandCommand}" CommandParameter="TwoPowerX" />
+          <Button x:Name="ScientificLogBaseYButton" Grid.Row="4" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF883;" Command="{Binding SendCommandCommand}" CommandParameter="LogBaseY" />
+          <Button x:Name="ScientificEPowerButton" Grid.Row="5" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF7CE;" Command="{Binding SendCommandCommand}" CommandParameter="EPowerX" />
         </Grid>
 
-        <Button Grid.Row="2" Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xF7C9;" Command="{Binding SendCommandCommand}" CommandParameter="Reciprocal" />
-        <Button Grid.Row="2" Grid.Column="2" Classes="calcButton operator symbolOperator" Content="&#xF884;" Command="{Binding SendCommandCommand}" CommandParameter="Absolute" />
-        <Button Grid.Row="2" Grid.Column="3" Classes="calcButton operator" Content="exp" Command="{Binding SendCommandCommand}" CommandParameter="Exp" />
-        <Button Grid.Row="2" Grid.Column="4" Classes="calcButton operator" Content="mod" Command="{Binding SendCommandCommand}" CommandParameter="Modulo" />
+        <Button x:Name="ScientificReciprocalButton" Grid.Row="2" Grid.Column="1" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF7C9;" Command="{Binding SendCommandCommand}" CommandParameter="Reciprocal" />
+        <Button x:Name="ScientificAbsoluteButton" Grid.Row="2" Grid.Column="2" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF884;" Command="{Binding SendCommandCommand}" CommandParameter="Absolute" />
+        <Button x:Name="ScientificExpButton" Grid.Row="2" Grid.Column="3" Classes="calcButton operator scientificErrorDisabled" Content="exp" Command="{Binding SendCommandCommand}" CommandParameter="Exp" />
+        <Button x:Name="ScientificModuloButton" Grid.Row="2" Grid.Column="4" Classes="calcButton operator scientificErrorDisabled" Content="mod" Command="{Binding SendCommandCommand}" CommandParameter="Modulo" />
 
-        <Button Grid.Row="3" Grid.Column="1" Classes="calcButton operator" Content="(" Command="{Binding SendCommandCommand}" CommandParameter="OpenParenthesis" />
-        <Button Grid.Row="3" Grid.Column="2" Classes="calcButton operator" Content=")" Command="{Binding SendCommandCommand}" CommandParameter="CloseParenthesis" />
-        <Button Grid.Row="3" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xF887;" Command="{Binding SendCommandCommand}" CommandParameter="Factorial" />
-        <Button x:Name="ScientificDivideButton" Grid.Row="3" Grid.Column="4" Classes="calcButton operator symbolOperator" Content="&#xE94A;" Command="{Binding SendCommandCommand}" CommandParameter="Divide" />
+        <Button x:Name="ScientificOpenParenthesisButton" Grid.Row="3" Grid.Column="1" Classes="calcButton operator scientificErrorDisabled" Content="(" Command="{Binding SendCommandCommand}" CommandParameter="OpenParenthesis" />
+        <Button x:Name="ScientificCloseParenthesisButton" Grid.Row="3" Grid.Column="2" Classes="calcButton operator scientificErrorDisabled" Content=")" Command="{Binding SendCommandCommand}" CommandParameter="CloseParenthesis" />
+        <Button x:Name="ScientificFactorialButton" Grid.Row="3" Grid.Column="3" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF887;" Command="{Binding SendCommandCommand}" CommandParameter="Factorial" />
+        <Button x:Name="ScientificDivideButton" Grid.Row="3" Grid.Column="4" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xE94A;" Command="{Binding SendCommandCommand}" CommandParameter="Divide" />
 
         <Button x:Name="ScientificSevenButton" Grid.Row="4" Grid.Column="1" Classes="calcButton numeric" Content="7" Command="{Binding SendCommandCommand}" CommandParameter="Seven" />
         <Button x:Name="ScientificEightButton" Grid.Row="4" Grid.Column="2" Classes="calcButton numeric" Content="8" Command="{Binding SendCommandCommand}" CommandParameter="Eight" />
         <Button x:Name="ScientificNineButton" Grid.Row="4" Grid.Column="3" Classes="calcButton numeric" Content="9" Command="{Binding SendCommandCommand}" CommandParameter="Nine" />
-        <Button x:Name="ScientificMultiplyButton" Grid.Row="4" Grid.Column="4" Classes="calcButton operator symbolOperator" Content="&#xE947;" Command="{Binding SendCommandCommand}" CommandParameter="Multiply" />
+        <Button x:Name="ScientificMultiplyButton" Grid.Row="4" Grid.Column="4" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xE947;" Command="{Binding SendCommandCommand}" CommandParameter="Multiply" />
         <Button x:Name="ScientificFourButton" Grid.Row="5" Grid.Column="1" Classes="calcButton numeric" Content="4" Command="{Binding SendCommandCommand}" CommandParameter="Four" />
         <Button x:Name="ScientificFiveButton" Grid.Row="5" Grid.Column="2" Classes="calcButton numeric" Content="5" Command="{Binding SendCommandCommand}" CommandParameter="Five" />
         <Button x:Name="ScientificSixButton" Grid.Row="5" Grid.Column="3" Classes="calcButton numeric" Content="6" Command="{Binding SendCommandCommand}" CommandParameter="Six" />
-        <Button x:Name="ScientificSubtractButton" Grid.Row="5" Grid.Column="4" Classes="calcButton operator symbolOperator" Content="&#xE949;" Command="{Binding SendCommandCommand}" CommandParameter="Subtract" />
+        <Button x:Name="ScientificSubtractButton" Grid.Row="5" Grid.Column="4" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xE949;" Command="{Binding SendCommandCommand}" CommandParameter="Subtract" />
         <Button x:Name="ScientificOneButton" Grid.Row="6" Grid.Column="1" Classes="calcButton numeric" Content="1" Command="{Binding SendCommandCommand}" CommandParameter="One" />
         <Button x:Name="ScientificTwoButton" Grid.Row="6" Grid.Column="2" Classes="calcButton numeric" Content="2" Command="{Binding SendCommandCommand}" CommandParameter="Two" />
         <Button x:Name="ScientificThreeButton" Grid.Row="6" Grid.Column="3" Classes="calcButton numeric" Content="3" Command="{Binding SendCommandCommand}" CommandParameter="Three" />
-        <Button x:Name="ScientificAddButton" Grid.Row="6" Grid.Column="4" Classes="calcButton operator symbolOperator" Content="&#xE948;" Command="{Binding SendCommandCommand}" CommandParameter="Add" />
-        <Button x:Name="ScientificSignButton" Grid.Row="7" Grid.Column="1" Classes="calcButton numeric symbolOperator" Content="&#xF898;" Command="{Binding SendCommandCommand}" CommandParameter="Sign" />
+        <Button x:Name="ScientificAddButton" Grid.Row="6" Grid.Column="4" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xE948;" Command="{Binding SendCommandCommand}" CommandParameter="Add" />
+        <Button x:Name="ScientificSignButton" Grid.Row="7" Grid.Column="1" Classes="calcButton numeric symbolOperator scientificErrorDisabled" Content="&#xF898;" Command="{Binding SendCommandCommand}" CommandParameter="Sign" />
         <Button x:Name="ScientificZeroButton" Grid.Row="7" Grid.Column="2" Classes="calcButton numeric" Content="0" Command="{Binding SendCommandCommand}" CommandParameter="Zero" />
         <Button x:Name="ScientificDecimalButton" Grid.Row="7" Grid.Column="3" Classes="calcButton numeric" Content="{Binding DecimalSeparator}" Command="{Binding SendCommandCommand}" CommandParameter="Decimal" />
         <Button x:Name="ScientificEqualsButton" Grid.Row="7" Grid.Column="4" Classes="calcButton equalsButton" Content="&#xE94E;" Command="{Binding SendCommandCommand}" CommandParameter="Equals" />

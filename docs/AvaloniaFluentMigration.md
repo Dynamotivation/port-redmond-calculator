@@ -183,6 +183,34 @@ pointer pressed state, and clear it on key-up and window deactivation. Capture
 key events in the tunnel phase so a focused button cannot also process Enter
 and invoke a second command.
 
+Do not let the physical-key fallback become a hand-picked list accumulated
+from whichever page was implemented first. Generate or audit it against the
+complete shortcut catalog, including function keys and shifted punctuation.
+When `KeySymbol` is unavailable, recover the layout-neutral fallback glyph
+from both the physical key and modifier state (`1`/`!`, `3`/`#`, `6`/`^`,
+`=`/`+`, and so on), then remove Shift before matching a character gesture.
+
+## Composite operator-panel controls
+
+A custom UWP button may encode more than its text property. Inspect its source
+template before replacing it with an Avalonia `Button`: an operator-panel
+control can combine a Calculator-font glyph, localized text, and a chevron,
+each with independent responsive font sizes and margins. Binding only the text
+produces a functional flyout but silently drops two visual affordances.
+
+Port the complete composition into the Avalonia content template and preserve
+the source's control-local size states. Keep the glyph and chevron on the icon
+font while allowing the localized label to use the selected UI font.
+
+## Error-state command gating
+
+Do not approximate a UWP error visual state by disabling an entire keypad. The
+source may disable only operators while leaving digits and the decimal key
+recoverable. Mirror the exact setter list in Avalonia, and mirror the view-model
+dispatch rule as well: clear the engine first for every command received during
+an error, then forward only recoverable operands. This matters for keyboard
+input because visual `IsEnabled` state alone is not a command boundary.
+
 ## Settings cards and expanders
 
 Toolkit `SettingsCard` and `SettingsExpander` controls are not equivalent to a
