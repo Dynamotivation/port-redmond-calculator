@@ -134,6 +134,48 @@
         </Grid>
       </Button>
     </DataTemplate>
+    <DataTemplate x:Key="HistoryPaneTemplate" x:CompileBindings="False">
+      <Grid RowDefinitions="58,*,52" Background="{DynamicResource CalculatorBackgroundBrush}">
+        <Grid ColumnDefinitions="*,44" Margin="16,0,8,0">
+          <TextBlock VerticalAlignment="Center" FontSize="20" FontWeight="Medium"
+                     Text="{Binding HistoryAutomationName}" />
+          <Button Grid.Column="1" Classes="chromeButton" IsVisible="{Binding IsHistoryCloseButtonVisible}"
+                  Command="{Binding CloseHistoryCommand}" AutomationProperties.Name="Close history">
+            <Canvas Width="18" Height="18">
+              <Path Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.35"
+                    StrokeLineCap="Round" Data="M 4,4 L 14,14 M 14,4 L 4,14" />
+            </Canvas>
+          </Button>
+        </Grid>
+        <TextBlock Grid.Row="1" Margin="18,18" HorizontalAlignment="Center" VerticalAlignment="Top"
+                   FontSize="14" Opacity="0.62" Text="{Binding HistoryEmptyText}"
+                   IsVisible="{Binding !HasHistory}" />
+        <ListBox Grid.Row="1" Margin="8,0" Background="Transparent" BorderThickness="0"
+                 ItemsSource="{Binding History}" IsVisible="{Binding HasHistory}">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="managed:CalculatorHistoryEntry" x:CompileBindings="False">
+              <Button Margin="0,2" Padding="12,9" HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Stretch" Background="Transparent" BorderThickness="0"
+                      Command="{Binding $parent[Window].DataContext.SelectHistoryEntryCommand}"
+                      CommandParameter="{Binding}">
+                <Grid RowDefinitions="Auto,Auto">
+                  <TextBlock HorizontalAlignment="Right" TextAlignment="Right" FontSize="13"
+                             Opacity="0.62" Text="{Binding Expression}" />
+                  <TextBlock Grid.Row="1" Margin="0,3,0,0" HorizontalAlignment="Right" TextAlignment="Right"
+                             FontSize="22" FontWeight="Medium" Text="{Binding Result}" />
+                </Grid>
+              </Button>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+        <Button Grid.Row="2" Width="44" Height="40" Margin="0,0,8,6" Padding="0"
+                HorizontalAlignment="Right" Background="Transparent" BorderThickness="0"
+                IsVisible="{Binding HasHistory}" Command="{Binding ClearHistoryCommand}"
+                ToolTip.Tip="{Binding ClearHistoryTooltip}">
+          <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="17" Text="&#xE74D;" />
+        </Button>
+      </Grid>
+    </DataTemplate>
     </ResourceDictionary>
   </Window.Resources>
 
@@ -190,6 +232,9 @@
       <Setter Property="FontSize" Value="24" />
     </Style>
     <Style Selector="Button.chromeButton:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ChromeHoverBrush}" />
+    </Style>
+    <Style Selector="Button.chromeButton.keyboardPressed">
       <Setter Property="Background" Value="{DynamicResource ChromeHoverBrush}" />
     </Style>
     <Style Selector="TextBlock.alwaysOnTopGlyph">
@@ -443,6 +488,9 @@
     <Style Selector="Button.memoryButton:pointerover">
       <Setter Property="Background" Value="{DynamicResource ChromeHoverBrush}" />
     </Style>
+    <Style Selector="Button.memoryButton.keyboardPressed">
+      <Setter Property="Background" Value="{DynamicResource ChromeHoverBrush}" />
+    </Style>
     <Style Selector="Button.memoryButton:disabled">
       <Setter Property="Opacity" Value="0.35" />
       <Setter Property="Background" Value="Transparent" />
@@ -496,6 +544,13 @@
     <Style Selector="Button.calcButton.numeric:pressed">
       <Setter Property="Background" Value="{DynamicResource NumericButtonPressedBrush}" />
     </Style>
+    <Style Selector="Button.calcButton.numeric.keyboardPressed">
+      <Setter Property="Background" Value="{DynamicResource NumericButtonPressedBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonPressedBorderBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton.numeric.keyboardPressed /template/ Border#CalcButtonSurface">
+      <Setter Property="BoxShadow" Value="{DynamicResource CalculatorButtonPressedShadow}" />
+    </Style>
     <Style Selector="Button.calcButton.operator">
       <Setter Property="Background" Value="{DynamicResource OperatorButtonBrush}" />
       <Setter Property="BorderBrush" Value="{DynamicResource OperatorButtonBorderBrush}" />
@@ -506,6 +561,13 @@
     <Style Selector="Button.calcButton.operator:pressed">
       <Setter Property="Background" Value="{DynamicResource OperatorButtonPressedBrush}" />
       <Setter Property="BorderBrush" Value="{DynamicResource OperatorButtonPressedBorderBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton.operator.keyboardPressed">
+      <Setter Property="Background" Value="{DynamicResource OperatorButtonPressedBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource OperatorButtonPressedBorderBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton.operator.keyboardPressed /template/ Border#CalcButtonSurface">
+      <Setter Property="BoxShadow" Value="{DynamicResource OperatorButtonPressedShadow}" />
     </Style>
     <Style Selector="Button.calcButton.operator /template/ Border#CalcButtonSurface">
       <Setter Property="BoxShadow" Value="{DynamicResource OperatorButtonShadow}" />
@@ -529,6 +591,10 @@
       <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaquePressedBrush}" />
       <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonPressedBorderBrush}" />
     </Style>
+    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator.keyboardPressed">
+      <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaquePressedBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonPressedBorderBrush}" />
+    </Style>
     <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator /template/ Border#CalcButtonSurface">
       <Setter Property="BoxShadow" Value="{DynamicResource CalculatorButtonShadow}" />
     </Style>
@@ -547,6 +613,10 @@
     </Style>
     <Style Selector="Button.calcButton.equalsButton:pressed">
       <Setter Property="Background" Value="{DynamicResource AccentButtonPressedBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton.equalsButton.keyboardPressed">
+      <Setter Property="Background" Value="{DynamicResource AccentButtonPressedBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonPressedBorderBrush}" />
     </Style>
     <Style Selector="ComboBox.unitSelector">
       <Setter Property="MinHeight" Value="36" />
@@ -694,7 +764,8 @@
            testing instead of covering it with a transparent overlay. -->
       <Grid Grid.Row="1" Grid.RowSpan="4" RowDefinitions="54,*,42,3.05*"
             IsVisible="{Binding !IsSettingsOpen}">
-      <local:NavigationCulledGrid Grid.RowSpan="4" RowDefinitions="54,*,42,3.05*"
+      <Grid x:Name="CalculatorResponsiveLayout" Grid.RowSpan="4" ColumnDefinitions="*,0">
+      <local:NavigationCulledGrid x:Name="CalculatorPageContent" Grid.RowSpan="4" RowDefinitions="54,*,42,3.05*"
                                  Margin="0,6,0,0"
                                  Classes="calculatorPageContent"
                                  Classes.paneOpen="{Binding IsNavigationPaneOpen}">
@@ -710,8 +781,10 @@
           </ToolTip.Tip>
           <TextBlock Classes="alwaysOnTopGlyph" Text="{Binding AlwaysOnTopGlyph}" />
         </Button>
-        <Button Grid.Column="4" Classes="chromeButton" AutomationProperties.Name="{Binding HistoryAutomationName}"
-                ToolTip.Tip="{Binding HistoryTooltip}">
+        <Button x:Name="HistoryButton" Grid.Column="4" Classes="chromeButton"
+                AutomationProperties.Name="{Binding HistoryAutomationName}"
+                IsVisible="{Binding IsHistoryButtonVisible}"
+                Command="{Binding ToggleHistoryCommand}" ToolTip.Tip="{Binding HistoryTooltip}">
           <Canvas Width="28" Height="28">
             <Path Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
                   Data="M 6,9 A 9,9 0 1 1 5,16 M 3,6 L 3,12 L 9,12 M 14,8 L 14,14 L 18,16" />
@@ -729,15 +802,15 @@
 
       <!-- MemoryPanel: MC, MR, M+, M−, MS, memory flyout. -->
       <Grid Grid.Row="2" Margin="3,0" ColumnDefinitions="*,*,*,*,*,*" IsVisible="{Binding IsStandardMode}">
-        <Button Classes="memoryButton" Content="MC" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryClearAllCommand}"
+        <Button x:Name="MemoryClearButton" Classes="memoryButton" Content="MC" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryClearAllCommand}"
                 ToolTip.Tip="{Binding ClearMemoryTooltip}" />
-        <Button Grid.Column="1" Classes="memoryButton" Content="MR" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryRecallCommand}"
+        <Button x:Name="MemoryRecallButton" Grid.Column="1" Classes="memoryButton" Content="MR" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryRecallCommand}"
                 ToolTip.Tip="{Binding MemoryRecallTooltip}" />
-        <Button Grid.Column="2" Classes="memoryButton" Content="M+" Command="{Binding MemoryAddCommand}"
+        <Button x:Name="MemoryAddButton" Grid.Column="2" Classes="memoryButton" Content="M+" Command="{Binding MemoryAddCommand}"
                 ToolTip.Tip="{Binding MemoryAddTooltip}" />
-        <Button Grid.Column="3" Classes="memoryButton" Content="M−" Command="{Binding MemorySubtractCommand}"
+        <Button x:Name="MemorySubtractButton" Grid.Column="3" Classes="memoryButton" Content="M−" Command="{Binding MemorySubtractCommand}"
                 ToolTip.Tip="{Binding MemorySubtractTooltip}" />
-        <Button Grid.Column="4" Classes="memoryButton" Content="MS" Command="{Binding MemoryStoreCommand}"
+        <Button x:Name="MemoryStoreButton" Grid.Column="4" Classes="memoryButton" Content="MS" Command="{Binding MemoryStoreCommand}"
                 ToolTip.Tip="{Binding MemoryStoreTooltip}" />
         <Button Grid.Column="5" Classes="memoryButton" Content="M⌄" IsEnabled="False"
                 ToolTip.Tip="{Binding MemoryTooltip}" />
@@ -747,35 +820,35 @@
       <Grid Grid.Row="3" Margin="3,0,3,3"
             RowDefinitions="*,*,*,*,*,*" ColumnDefinitions="*,*,*,*"
             IsVisible="{Binding IsStandardMode}">
-        <Button Classes="calcButton operator symbolOperator" Content="&#xE94C;" Command="{Binding SendCommandCommand}" CommandParameter="Percent" />
-        <Button Grid.Column="1" Classes="calcButton operator" Content="CE" FontSize="17.6" Command="{Binding SendCommandCommand}" CommandParameter="ClearEntry" />
-        <Button Grid.Column="2" Classes="calcButton operator" Content="C" FontSize="17.6" Command="{Binding SendCommandCommand}" CommandParameter="Clear" />
-        <Button Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE94F;" FontSize="19.36" Command="{Binding SendCommandCommand}" CommandParameter="Backspace" />
+        <Button x:Name="PercentButton" Classes="calcButton operator symbolOperator" Content="&#xE94C;" Command="{Binding SendCommandCommand}" CommandParameter="Percent" />
+        <Button x:Name="ClearEntryButton" Grid.Column="1" Classes="calcButton operator" Content="CE" FontSize="17.6" Command="{Binding SendCommandCommand}" CommandParameter="ClearEntry" />
+        <Button x:Name="ClearButton" Grid.Column="2" Classes="calcButton operator" Content="C" FontSize="17.6" Command="{Binding SendCommandCommand}" CommandParameter="Clear" />
+        <Button x:Name="BackspaceButton" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE94F;" FontSize="19.36" Command="{Binding SendCommandCommand}" CommandParameter="Backspace" />
 
         <Button Grid.Row="1" Classes="calcButton operator symbolOperator" Content="&#xF7C9;" FontSize="21.78" Command="{Binding SendCommandCommand}" CommandParameter="Reciprocal" />
         <Button Grid.Row="1" Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xF7C8;" FontSize="21.78" Command="{Binding SendCommandCommand}" CommandParameter="Square" />
-        <Button Grid.Row="1" Grid.Column="2" Classes="calcButton operator symbolOperator" Content="&#xF899;" FontSize="21.78" Command="{Binding SendCommandCommand}" CommandParameter="SquareRoot" />
-        <Button Grid.Row="1" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE94A;" Command="{Binding SendCommandCommand}" CommandParameter="Divide" />
+        <Button x:Name="SquareRootButton" Grid.Row="1" Grid.Column="2" Classes="calcButton operator symbolOperator" Content="&#xF899;" FontSize="21.78" Command="{Binding SendCommandCommand}" CommandParameter="SquareRoot" />
+        <Button x:Name="DivideButton" Grid.Row="1" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE94A;" Command="{Binding SendCommandCommand}" CommandParameter="Divide" />
 
-        <Button Grid.Row="2" Classes="calcButton numeric" Content="7" Command="{Binding SendCommandCommand}" CommandParameter="Seven" />
-        <Button Grid.Row="2" Grid.Column="1" Classes="calcButton numeric" Content="8" Command="{Binding SendCommandCommand}" CommandParameter="Eight" />
-        <Button Grid.Row="2" Grid.Column="2" Classes="calcButton numeric" Content="9" Command="{Binding SendCommandCommand}" CommandParameter="Nine" />
-        <Button Grid.Row="2" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE947;" Command="{Binding SendCommandCommand}" CommandParameter="Multiply" />
+        <Button x:Name="SevenButton" Grid.Row="2" Classes="calcButton numeric" Content="7" Command="{Binding SendCommandCommand}" CommandParameter="Seven" />
+        <Button x:Name="EightButton" Grid.Row="2" Grid.Column="1" Classes="calcButton numeric" Content="8" Command="{Binding SendCommandCommand}" CommandParameter="Eight" />
+        <Button x:Name="NineButton" Grid.Row="2" Grid.Column="2" Classes="calcButton numeric" Content="9" Command="{Binding SendCommandCommand}" CommandParameter="Nine" />
+        <Button x:Name="MultiplyButton" Grid.Row="2" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE947;" Command="{Binding SendCommandCommand}" CommandParameter="Multiply" />
 
-        <Button Grid.Row="3" Classes="calcButton numeric" Content="4" Command="{Binding SendCommandCommand}" CommandParameter="Four" />
-        <Button Grid.Row="3" Grid.Column="1" Classes="calcButton numeric" Content="5" Command="{Binding SendCommandCommand}" CommandParameter="Five" />
-        <Button Grid.Row="3" Grid.Column="2" Classes="calcButton numeric" Content="6" Command="{Binding SendCommandCommand}" CommandParameter="Six" />
-        <Button Grid.Row="3" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE949;" Command="{Binding SendCommandCommand}" CommandParameter="Subtract" />
+        <Button x:Name="FourButton" Grid.Row="3" Classes="calcButton numeric" Content="4" Command="{Binding SendCommandCommand}" CommandParameter="Four" />
+        <Button x:Name="FiveButton" Grid.Row="3" Grid.Column="1" Classes="calcButton numeric" Content="5" Command="{Binding SendCommandCommand}" CommandParameter="Five" />
+        <Button x:Name="SixButton" Grid.Row="3" Grid.Column="2" Classes="calcButton numeric" Content="6" Command="{Binding SendCommandCommand}" CommandParameter="Six" />
+        <Button x:Name="SubtractButton" Grid.Row="3" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE949;" Command="{Binding SendCommandCommand}" CommandParameter="Subtract" />
 
-        <Button Grid.Row="4" Classes="calcButton numeric" Content="1" Command="{Binding SendCommandCommand}" CommandParameter="One" />
-        <Button Grid.Row="4" Grid.Column="1" Classes="calcButton numeric" Content="2" Command="{Binding SendCommandCommand}" CommandParameter="Two" />
-        <Button Grid.Row="4" Grid.Column="2" Classes="calcButton numeric" Content="3" Command="{Binding SendCommandCommand}" CommandParameter="Three" />
-        <Button Grid.Row="4" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE948;" Command="{Binding SendCommandCommand}" CommandParameter="Add" />
+        <Button x:Name="OneButton" Grid.Row="4" Classes="calcButton numeric" Content="1" Command="{Binding SendCommandCommand}" CommandParameter="One" />
+        <Button x:Name="TwoButton" Grid.Row="4" Grid.Column="1" Classes="calcButton numeric" Content="2" Command="{Binding SendCommandCommand}" CommandParameter="Two" />
+        <Button x:Name="ThreeButton" Grid.Row="4" Grid.Column="2" Classes="calcButton numeric" Content="3" Command="{Binding SendCommandCommand}" CommandParameter="Three" />
+        <Button x:Name="AddButton" Grid.Row="4" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE948;" Command="{Binding SendCommandCommand}" CommandParameter="Add" />
 
-        <Button Grid.Row="5" Classes="calcButton numeric symbolOperator" Content="&#xF898;" FontSize="23.1" Command="{Binding SendCommandCommand}" CommandParameter="Sign" />
-        <Button Grid.Row="5" Grid.Column="1" Classes="calcButton numeric" Content="0" Command="{Binding SendCommandCommand}" CommandParameter="Zero" />
-        <Button Grid.Row="5" Grid.Column="2" Classes="calcButton numeric" Content="{Binding DecimalSeparator}" Command="{Binding SendCommandCommand}" CommandParameter="Decimal" />
-        <Button Grid.Row="5" Grid.Column="3" Classes="calcButton equalsButton" Content="&#xE94E;" Command="{Binding SendCommandCommand}" CommandParameter="Equals" />
+        <Button x:Name="SignButton" Grid.Row="5" Classes="calcButton numeric symbolOperator" Content="&#xF898;" FontSize="23.1" Command="{Binding SendCommandCommand}" CommandParameter="Sign" />
+        <Button x:Name="ZeroButton" Grid.Row="5" Grid.Column="1" Classes="calcButton numeric" Content="0" Command="{Binding SendCommandCommand}" CommandParameter="Zero" />
+        <Button x:Name="DecimalButton" Grid.Row="5" Grid.Column="2" Classes="calcButton numeric" Content="{Binding DecimalSeparator}" Command="{Binding SendCommandCommand}" CommandParameter="Decimal" />
+        <Button x:Name="EqualsButton" Grid.Row="5" Grid.Column="3" Classes="calcButton equalsButton" Content="&#xE94E;" Command="{Binding SendCommandCommand}" CommandParameter="Equals" />
       </Grid>
 
       <!-- Unit converter: the controls are backed by CalcViewModel's native
@@ -875,6 +948,13 @@
 
       </local:NavigationCulledGrid>
 
+      <Border x:Name="DockedHistoryPane" Grid.Column="1" Margin="0,6,0,0"
+              BorderBrush="{DynamicResource CalculatorBorderBrush}" BorderThickness="1,0,0,0"
+              IsVisible="{Binding IsDockedHistoryPaneVisible}">
+        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HistoryPaneTemplate}" />
+      </Border>
+      </Grid>
+
       <!-- Source NavigationView replacement. The pane overlays content in the
            original LeftMinimal mode and keeps the title bar unobstructed. -->
       <Grid Grid.Row="0" Grid.RowSpan="4" ColumnDefinitions="320,*"
@@ -943,6 +1023,15 @@
           </Canvas>
         </Grid>
       </Button>
+
+      <!-- UWP uses Flyout Placement="Full" with BackgroundSmokeFill here.
+           Keep this after the NavigationView toggle so the flyout owns the
+           complete calculator page's visual and input layer. -->
+      <Border Grid.Row="0" Grid.RowSpan="4" Margin="0,6,0,0"
+              HorizontalAlignment="Stretch" Background="{DynamicResource SolidSurfaceBrush}"
+              ZIndex="12" IsVisible="{Binding IsNarrowHistoryPaneVisible}">
+        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HistoryPaneTemplate}" />
+      </Border>
       </Grid>
 
       <!-- Settings mirrors the source page's Appearance and About groups. -->

@@ -75,9 +75,10 @@ using (var calculator = new NativeCalculator(
            germanNumberFormat))
 {
     calculator.SendCommand(CalculatorCommand.One);
-    calculator.SendCommand(CalculatorCommand.Decimal);
     calculator.SendCommand(CalculatorCommand.Two);
-    Require(calculator.PrimaryDisplay == "1,2", "Managed culture did not reach the native calculator engine.");
+    calculator.SendCommand(CalculatorCommand.Decimal);
+    calculator.SendCommand(CalculatorCommand.Five);
+    Require(calculator.PrimaryDisplay == "12,5", "Managed culture did not reach the native calculator engine.");
 }
 
 using (var localizedConverter = new NativeUnitConverter(
@@ -137,6 +138,28 @@ using (var viewModel = new CalculatorViewModel(
     Require(viewModel.IsStandardMode
         && viewModel.CalculatorNavigationItems.Single(item => item.Mode == CalculatorViewMode.Standard).IsSelected,
         "Navigation did not initialize in Standard mode.");
+
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.One);
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Add);
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Two);
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Equals);
+    Require(viewModel.PrimaryDisplay == "3" && viewModel.HasHistory && viewModel.History.Count == 1,
+        "Standard calculations did not synchronize typed history from CalculatorManager.");
+    viewModel.SetHistoryDocked(false);
+    viewModel.ToggleHistoryCommand.Execute(null);
+    Require(viewModel.IsNarrowHistoryPaneVisible && !viewModel.IsDockedHistoryPaneVisible,
+        "Narrow history did not open on demand.");
+    viewModel.SelectHistoryEntryCommand.Execute(viewModel.History[0]);
+    Require(viewModel.PrimaryDisplay == "3" && !viewModel.IsHistoryOpen,
+        "Selecting narrow history did not restore its display and close the full-page flyout.");
+    viewModel.SetHistoryDocked(true);
+    Require(viewModel.IsDockedHistoryPaneVisible && !viewModel.IsHistoryOpen && !viewModel.IsHistoryButtonVisible,
+        "Wide history did not switch to the source Calculator's docked state.");
+    Require(viewModel.TryPasteStandardExpression("-12.5 + 2 =") && viewModel.PrimaryDisplay == "-10,5",
+        $"Cross-platform Standard paste did not preserve CalculatorManager semantics or locale formatting (actual: {viewModel.PrimaryDisplay}).");
+    viewModel.ClearHistoryCommand.Execute(null);
+    Require(!viewModel.HasHistory && viewModel.History.Count == 0,
+        "Clear history did not update CalculatorManager and the managed collection together.");
 
     await viewModel.ToggleNavigationPaneCommand.ExecuteAsync(null);
     Require(viewModel.IsNavigationPaneOpen, "Hamburger command did not open the navigation pane.");

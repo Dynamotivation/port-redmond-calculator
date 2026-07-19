@@ -25,8 +25,30 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     public partial bool HasMemory { get; private set; }
 
-    public ObservableCollection<string> History { get; } = [];
+    public ObservableCollection<CalculatorHistoryEntry> History { get; } = [];
     public ObservableCollection<string> Memory { get; } = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsHistoryPaneVisible))]
+    [NotifyPropertyChangedFor(nameof(IsNarrowHistoryPaneVisible))]
+    public partial bool IsHistoryOpen { get; private set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsHistoryPaneVisible))]
+    [NotifyPropertyChangedFor(nameof(IsDockedHistoryPaneVisible))]
+    [NotifyPropertyChangedFor(nameof(IsNarrowHistoryPaneVisible))]
+    [NotifyPropertyChangedFor(nameof(IsHistoryButtonVisible))]
+    [NotifyPropertyChangedFor(nameof(IsHistoryCloseButtonVisible))]
+    public partial bool IsHistoryDocked { get; private set; }
+
+    [ObservableProperty]
+    public partial bool HasHistory { get; private set; }
+
+    public bool IsHistoryPaneVisible => IsStandardMode && (IsHistoryDocked || IsHistoryOpen);
+    public bool IsDockedHistoryPaneVisible => IsStandardMode && IsHistoryDocked;
+    public bool IsNarrowHistoryPaneVisible => IsStandardMode && !IsHistoryDocked && IsHistoryOpen;
+    public bool IsHistoryButtonVisible => IsStandardMode && !IsHistoryDocked;
+    public bool IsHistoryCloseButtonVisible => !IsHistoryDocked;
     public string ApplicationName { get; } = "Redmond Calculator";
     public string TitleBarApplicationName { get; }
     public string DecimalSeparator { get; }
@@ -36,6 +58,10 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsStandardMode))]
     [NotifyPropertyChangedFor(nameof(IsUnitConverterMode))]
+    [NotifyPropertyChangedFor(nameof(IsHistoryPaneVisible))]
+    [NotifyPropertyChangedFor(nameof(IsDockedHistoryPaneVisible))]
+    [NotifyPropertyChangedFor(nameof(IsNarrowHistoryPaneVisible))]
+    [NotifyPropertyChangedFor(nameof(IsHistoryButtonVisible))]
     public partial CalculatorViewMode CurrentViewMode { get; private set; } = CalculatorViewMode.Standard;
 
     [ObservableProperty]
@@ -168,6 +194,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public string FeedbackName { get; }
     public string AboutVersionText { get; } = "Redmond Calculator 0.1.0";
     public string HistoryAutomationName { get; }
+    public string HistoryEmptyText { get; }
+    public string ClearHistoryTooltip { get; }
     public string MemoryTooltip { get; }
     public string HistoryTooltip { get; }
     public string SettingsBackTooltip { get; }
@@ -228,6 +256,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         AboutPrivacyName = appResources.GetString("AboutControlPrivacyStatement.Text");
         FeedbackName = appResources.GetString("FeedbackButton.Content");
         HistoryAutomationName = appResources.GetString("HistoryLabel/Text");
+        HistoryEmptyText = appResources.GetString("HistoryEmpty/Text");
+        ClearHistoryTooltip = appResources.GetString("ClearHistory/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
         MemoryTooltip = appResources.GetString("MemoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
         HistoryTooltip = appResources.GetString("HistoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
         SettingsBackTooltip = appResources.GetString("AboutControlBackButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
@@ -261,9 +291,112 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void SendCommand(string commandName)
     {
-        var command = Enum.Parse<CalculatorCommand>(commandName, ignoreCase: false);
+        ExecuteCalculatorCommand(Enum.Parse<CalculatorCommand>(commandName, ignoreCase: false));
+    }
+
+    public void ExecuteCalculatorCommand(CalculatorCommand command)
+    {
         _calculator.SendCommand(command);
         Synchronize();
+    }
+
+    /// <summary>
+    /// Cross-platform counterpart of StandardCalculatorViewModel::OnPaste.
+    /// Clipboard access stays in the frontend; expression interpretation stays
+    /// beside the shared CalculatorManager command surface.
+    /// </summary>
+    public bool TryPasteStandardExpression(string? expression)
+    {
+        if (string.IsNullOrWhiteSpace(expression) || expression.Length > 512)
+        {
+            return false;
+        }
+
+        var normalized = expression
+            .Replace('×', '*')
+            .Replace('÷', '/')
+            .Replace('−', '-');
+        if (normalized.Any(character =>
+                !char.IsWhiteSpace(character)
+                && !char.IsDigit(character)
+                && character is not '+' and not '-' and not '*' and not '/' and not '=' and not '.' and not ','))
+        {
+            return false;
+        }
+
+        // A history selection intentionally changes only the presentation in
+        // Microsoft's view model. Reset the pending engine state before paste
+        // so the pasted expression cannot inherit an earlier completed binary
+        // operation; memory and history remain intact.
+        _calculator.Reset(clearMemory: false);
+        var isFirstLegalCharacter = true;
+        var isPreviousOperator = false;
+        var sendNegate = false;
+        var sentCommand = false;
+
+        foreach (var character in normalized)
+        {
+            if (char.IsWhiteSpace(character))
+            {
+                continue;
+            }
+
+            CalculatorCommand? command = character switch
+            {
+                '0' => CalculatorCommand.Zero,
+                '1' => CalculatorCommand.One,
+                '2' => CalculatorCommand.Two,
+                '3' => CalculatorCommand.Three,
+                '4' => CalculatorCommand.Four,
+                '5' => CalculatorCommand.Five,
+                '6' => CalculatorCommand.Six,
+                '7' => CalculatorCommand.Seven,
+                '8' => CalculatorCommand.Eight,
+                '9' => CalculatorCommand.Nine,
+                '.' or ',' => CalculatorCommand.Decimal,
+                '+' => CalculatorCommand.Add,
+                '-' => CalculatorCommand.Subtract,
+                '*' => CalculatorCommand.Multiply,
+                '/' => CalculatorCommand.Divide,
+                '=' => CalculatorCommand.Equals,
+                _ => null,
+            };
+
+            if (command is null)
+            {
+                continue;
+            }
+
+            var isOperator = command is CalculatorCommand.Add or CalculatorCommand.Subtract
+                or CalculatorCommand.Multiply or CalculatorCommand.Divide;
+            if (isFirstLegalCharacter || isPreviousOperator)
+            {
+                isFirstLegalCharacter = false;
+                isPreviousOperator = false;
+                if (command == CalculatorCommand.Subtract)
+                {
+                    sendNegate = true;
+                    continue;
+                }
+                if (command == CalculatorCommand.Add)
+                {
+                    continue;
+                }
+            }
+
+            _calculator.SendCommand(command.Value);
+            sentCommand = true;
+            isPreviousOperator = isOperator;
+
+            if (sendNegate && command is >= CalculatorCommand.Zero and <= CalculatorCommand.Nine)
+            {
+                _calculator.SendCommand(CalculatorCommand.Sign);
+                sendNegate = false;
+            }
+        }
+
+        Synchronize();
+        return sentCommand;
     }
 
     [RelayCommand]
@@ -290,6 +423,64 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
     [RelayCommand]
     private void MemoryClearAll() { _calculator.MemoryClearAll(); Synchronize(); }
+
+    [RelayCommand]
+    private void ToggleHistory()
+    {
+        if (!IsHistoryDocked)
+        {
+            IsHistoryOpen = !IsHistoryOpen;
+        }
+    }
+
+    [RelayCommand]
+    private void CloseHistory() => IsHistoryOpen = false;
+
+    [RelayCommand]
+    private void ClearHistory()
+    {
+        _calculator.HistoryClear();
+        Synchronize();
+    }
+
+    [RelayCommand]
+    private void DeleteHistoryEntry(CalculatorHistoryEntry? entry)
+    {
+        var index = entry is null ? -1 : History.IndexOf(entry);
+        if (index < 0)
+        {
+            return;
+        }
+
+        _calculator.HistoryRemove(checked((nuint)index));
+        Synchronize();
+    }
+
+    [RelayCommand]
+    private void SelectHistoryEntry(CalculatorHistoryEntry? entry)
+    {
+        if (entry is null)
+        {
+            return;
+        }
+
+        ExpressionDisplay = entry.Expression;
+        PrimaryDisplay = entry.Result;
+        IsError = false;
+        if (!IsHistoryDocked)
+        {
+            IsHistoryOpen = false;
+        }
+    }
+
+    public void SetHistoryDocked(bool value)
+    {
+        IsHistoryDocked = value;
+        if (value)
+        {
+            IsHistoryOpen = false;
+        }
+    }
 
     [RelayCommand]
     private Task ToggleNavigationPane() => SetNavigationPaneOpenAsync(!IsNavigationPaneOpen);
@@ -330,6 +521,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         }
 
         CurrentViewMode = item.Mode;
+        IsHistoryOpen = false;
         ModeDisplayName = item.Name;
         SetSelectedNavigationItem(item.Mode);
 
@@ -377,7 +569,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         ExpressionDisplay = _calculator.ExpressionDisplay;
         IsError = _calculator.IsError;
 
-        Replace(History, _calculator.History.Select(entry => $"{entry.Expression}  {entry.Result}"));
+        Replace(History, _calculator.History);
+        HasHistory = History.Count != 0;
         Replace(Memory, _calculator.MemoryValues);
         HasMemory = Memory.Count != 0;
     }

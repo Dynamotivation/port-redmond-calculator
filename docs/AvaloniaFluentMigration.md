@@ -126,6 +126,44 @@ controls in layout and hit testing.
 Use mutually exclusive sibling page containers. Keep only genuinely shared
 chrome outside those containers.
 
+## Adaptive layouts and full-page flyouts
+
+UWP `VisualState` breakpoints do not transfer to Avalonia automatically. Port
+the source thresholds and column math as behavior, not as a one-time window
+size approximation. Preserve minimum window dimensions at the host boundary,
+re-evaluate adaptive state during live resize, and notify every computed
+visibility property affected by the breakpoint.
+
+When a UWP `Flyout` uses `Placement="Full"`, do not replace it with a narrow
+side panel merely because its content resembles a pane. The full placement
+owns the page's visual and input layer. Put the Avalonia replacement after any
+persistent page chrome in sibling order (or assign equivalent top-level
+layering), use the source smoke/opaque surface, and keep covered controls out of
+the rendered result. A high `ZIndex` on a descendant cannot outdraw a later
+sibling of its parent.
+
+## Keyboard accelerators and pressed feedback
+
+UWP `KeyboardAccelerator` and resource-defined shortcut metadata are not
+consumed by Avalonia controls. Keep the shortcut catalog and command IDs in a
+framework-neutral layer, then translate Avalonia input only at the frontend
+boundary.
+
+Use `KeyEventArgs.KeySymbol` for printable operators and digits so punctuation
+follows the active keyboard layout. Use named keys for Enter, Escape, Delete,
+Backspace, and keypad Decimal, with explicit physical-key fallbacks for
+synthetic input and numpads. A shifted symbol such as `+` already contains its
+Shift transformation; do not require Shift a second time when matching a
+character gesture. Platform-editing conventions such as Command+C/V should be
+adapted narrowly instead of globally remapping Command to Control and stealing
+host shortcuts.
+
+Keyboard activation does not set Avalonia's `:pressed` pointer pseudo-class.
+Add a short-lived semantic class to the same named button surface used by the
+pointer pressed state, and clear it on key-up and window deactivation. Capture
+key events in the tunnel phase so a focused button cannot also process Enter
+and invoke a second command.
+
 ## Settings cards and expanders
 
 Toolkit `SettingsCard` and `SettingsExpander` controls are not equivalent to a

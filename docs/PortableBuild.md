@@ -69,6 +69,20 @@ serialization IDs, localized labels, category groups, and glyphs from
 `CalculatorIcons.ttf` rather than approximate platform symbols. The pane uses
 overlay/light-dismiss behavior and retains the selected mode.
 
+The Standard page now consumes the portable shortcut catalog and sends every
+calculator operation through the managed `CalculatorManager` bridge. Printable
+keys remain keyboard-layout aware, keypad and named-key fallbacks are supported,
+and keyboard activation drives the same pressed visuals as pointer input.
+Copy/paste uses Avalonia's platform clipboard while expression parsing remains
+framework-neutral and feeds CalculatorManager commands.
+
+History is sourced directly from CalculatorManager rather than duplicated UI
+state. At the original 560-logical-pixel breakpoint it changes from UWP's full
+page history flyout to a docked `320*:240*` layout; from 1024 logical pixels the
+history column is fixed at 320. The source minimum window size of 320 by 500 is
+enforced by the Avalonia host. History selection, clear, keyboard toggling, and
+empty state are wired on both responsive surfaces.
+
 Standard and all 12 static converter categories route to working native-backed
 surfaces. Settings routes to a functional cross-platform page with persisted
 Light, Dark, and system theme preferences. Scientific, Graphing, Programmer,
