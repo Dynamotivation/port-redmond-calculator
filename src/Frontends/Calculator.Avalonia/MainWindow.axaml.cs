@@ -60,8 +60,8 @@ public partial class MainWindow : Window
         AddHandler(KeyDownEvent, OnCalculatorKeyDown, RoutingStrategies.Tunnel);
         AddHandler(KeyUpEvent, OnCalculatorKeyUp, RoutingStrategies.Tunnel);
         Deactivated += OnWindowDeactivated;
-        SizeChanged += (_, _) => UpdateResponsiveCalculatorLayout(Bounds.Width);
-        UpdateResponsiveCalculatorLayout(Bounds.Width);
+        SizeChanged += (_, _) => UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
+        UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
         ApplyFontFamily(_viewModel.SelectedFontFamily);
         if (!string.Equals(_settings.FontFamily, _viewModel.SelectedFontFamily, StringComparison.Ordinal))
         {
@@ -94,18 +94,19 @@ public partial class MainWindow : Window
         };
     }
 
-    private void UpdateResponsiveCalculatorLayout(double width)
+    private void UpdateResponsiveCalculatorLayout(double width, double height)
     {
         const double historyDockThreshold = 560;
-        const double fixedHistoryThreshold = 1024;
         var isDocked = width >= historyDockThreshold;
+        var usesFixedHistoryWidth = (width >= 768 && height >= 1366)
+            || (width >= 1024 && height >= 768);
         _viewModel.SetHistoryDocked(isDocked);
 
         if (!isDocked)
         {
             CalculatorResponsiveLayout.ColumnDefinitions = new ColumnDefinitions("*,0");
         }
-        else if (width >= fixedHistoryThreshold)
+        else if (usesFixedHistoryWidth)
         {
             CalculatorResponsiveLayout.ColumnDefinitions = new ColumnDefinitions("*,320");
         }
@@ -113,6 +114,24 @@ public partial class MainWindow : Window
         {
             // These are the source UWP Calculator proportions: 320*:240*.
             CalculatorResponsiveLayout.ColumnDefinitions = new ColumnDefinitions("320*,240*");
+        }
+
+        // Calculator.xaml has three height states for the result row. Keep the
+        // original thresholds, minimums, star weight, and maximum font sizes.
+        if (height >= 800)
+        {
+            CalculatorResultHost.MinHeight = 108;
+            PrimaryResultText.FontSize = 72;
+        }
+        else if (height >= 640)
+        {
+            CalculatorResultHost.MinHeight = 72;
+            PrimaryResultText.FontSize = 46;
+        }
+        else
+        {
+            CalculatorResultHost.MinHeight = 42;
+            PrimaryResultText.FontSize = 26;
         }
     }
 

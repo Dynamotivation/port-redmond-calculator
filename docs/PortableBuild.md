@@ -77,11 +77,25 @@ Copy/paste uses Avalonia's platform clipboard while expression parsing remains
 framework-neutral and feeds CalculatorManager commands.
 
 History is sourced directly from CalculatorManager rather than duplicated UI
-state. At the original 560-logical-pixel breakpoint it changes from UWP's full
-page history flyout to a docked `320*:240*` layout; from 1024 logical pixels the
-history column is fixed at 320. The source minimum window size of 320 by 500 is
-enforced by the Avalonia host. History selection, clear, keyboard toggling, and
-empty state are wired on both responsive surfaces.
+state. The Avalonia host reproduces all three source layout states rather than
+approximating them from width alone: below 560 logical pixels history is a full
+placement flyout; from 560 it is docked at `320*:240*`; at 1024 by 768 or 768 by
+1366 it becomes a fixed 320-logical-pixel column. The source minimum window size
+of 320 by 500 is enforced. The result area likewise keeps the original 640 and
+800 height breakpoints, row minimums, and 26/46/72 maximum font sizes.
+
+The narrow history flyout is deliberately two materials. Its full-window layer
+is the source `BackgroundSmokeFillColorBrush`: black at 30% opacity in light
+theme and 42% in dark theme, so it dims the calculator controls still rendered
+beneath it. Only the numpad-height lower row is painted with the opaque
+`SolidBackgroundFillColorBase` surface. It is therefore neither a fully opaque
+replacement page nor host-backdrop transparency showing the desktop. In docked
+layout the opaque lower shade is removed, matching `HistoryList.xaml`'s
+`DockedLayout` state. The solid surface values are `#F3F3F3` in light theme and
+`#202020` in dark theme; this is intentionally a dedicated history resource so
+unrelated custom window-surface colors cannot leak into the flyout. History
+selection, clear, keyboard toggling, and empty state are wired on both
+responsive surfaces.
 
 Standard and all 12 static converter categories route to working native-backed
 surfaces. Settings routes to a functional cross-platform page with persisted

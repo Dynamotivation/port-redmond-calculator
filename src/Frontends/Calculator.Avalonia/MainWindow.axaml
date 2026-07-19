@@ -21,6 +21,8 @@
         <ResourceDictionary x:Key="Dark">
           <SolidColorBrush x:Key="CalculatorBackgroundBrush" Color="#18383D40" />
           <SolidColorBrush x:Key="SolidSurfaceBrush" Color="#202027" />
+          <SolidColorBrush x:Key="HistorySmokeBrush" Color="#6B000000" />
+          <SolidColorBrush x:Key="HistorySolidSurfaceBrush" Color="#202020" />
           <SolidColorBrush x:Key="CardBrush" Color="#303139" />
           <SolidColorBrush x:Key="SettingsExpanderBrush" Color="#80303139" />
           <SolidColorBrush x:Key="NumericButtonBrush" Color="#3C3C3C" />
@@ -64,6 +66,8 @@
         <ResourceDictionary x:Key="Light">
           <SolidColorBrush x:Key="CalculatorBackgroundBrush" Color="#18F3F3F3" />
           <SolidColorBrush x:Key="SolidSurfaceBrush" Color="#F3F3F3" />
+          <SolidColorBrush x:Key="HistorySmokeBrush" Color="#4D000000" />
+          <SolidColorBrush x:Key="HistorySolidSurfaceBrush" Color="#F3F3F3" />
           <SolidColorBrush x:Key="CardBrush" Color="#FBFBFB" />
           <SolidColorBrush x:Key="SettingsExpanderBrush" Color="#80FBFBFB" />
           <SolidColorBrush x:Key="NumericButtonBrush" Color="#FCFCFC" />
@@ -134,23 +138,12 @@
         </Grid>
       </Button>
     </DataTemplate>
-    <DataTemplate x:Key="HistoryPaneTemplate" x:CompileBindings="False">
-      <Grid RowDefinitions="58,*,52" Background="{DynamicResource CalculatorBackgroundBrush}">
-        <Grid ColumnDefinitions="*,44" Margin="16,0,8,0">
-          <TextBlock VerticalAlignment="Center" FontSize="20" FontWeight="Medium"
-                     Text="{Binding HistoryAutomationName}" />
-          <Button Grid.Column="1" Classes="chromeButton" IsVisible="{Binding IsHistoryCloseButtonVisible}"
-                  Command="{Binding CloseHistoryCommand}" AutomationProperties.Name="Close history">
-            <Canvas Width="18" Height="18">
-              <Path Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.35"
-                    StrokeLineCap="Round" Data="M 4,4 L 14,14 M 14,4 L 4,14" />
-            </Canvas>
-          </Button>
-        </Grid>
-        <TextBlock Grid.Row="1" Margin="18,18" HorizontalAlignment="Center" VerticalAlignment="Top"
+    <DataTemplate x:Key="HistoryListTemplate" x:CompileBindings="False">
+      <Grid RowDefinitions="*,52" Background="Transparent">
+        <TextBlock Margin="18,18" HorizontalAlignment="Center" VerticalAlignment="Top"
                    FontSize="14" Opacity="0.62" Text="{Binding HistoryEmptyText}"
                    IsVisible="{Binding !HasHistory}" />
-        <ListBox Grid.Row="1" Margin="8,0" Background="Transparent" BorderThickness="0"
+        <ListBox Margin="8,0" Background="Transparent" BorderThickness="0"
                  ItemsSource="{Binding History}" IsVisible="{Binding HasHistory}">
           <ListBox.ItemTemplate>
             <DataTemplate x:DataType="managed:CalculatorHistoryEntry" x:CompileBindings="False">
@@ -168,12 +161,20 @@
             </DataTemplate>
           </ListBox.ItemTemplate>
         </ListBox>
-        <Button Grid.Row="2" Width="44" Height="40" Margin="0,0,8,6" Padding="0"
+        <Button Grid.Row="1" Width="44" Height="40" Margin="0,0,8,6" Padding="0"
                 HorizontalAlignment="Right" Background="Transparent" BorderThickness="0"
                 IsVisible="{Binding HasHistory}" Command="{Binding ClearHistoryCommand}"
                 ToolTip.Tip="{Binding ClearHistoryTooltip}">
           <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="17" Text="&#xE74D;" />
         </Button>
+      </Grid>
+    </DataTemplate>
+    <DataTemplate x:Key="HistoryPaneTemplate" x:CompileBindings="False">
+      <Grid RowDefinitions="58,*" Background="Transparent">
+        <TextBlock Margin="16,0" VerticalAlignment="Center" FontSize="20" FontWeight="Medium"
+                   Text="{Binding HistoryAutomationName}" />
+        <ContentControl Grid.Row="1" Content="{Binding}"
+                        ContentTemplate="{StaticResource HistoryListTemplate}" />
       </Grid>
     </DataTemplate>
     </ResourceDictionary>
@@ -682,7 +683,7 @@
         </BrushTransition>
       </Transitions>
     </Border.Transitions>
-    <Grid RowDefinitions="Auto,54,*,42,3.05*">
+    <Grid RowDefinitions="Auto,48,22*,72*,0,32*,308*">
       <!-- Source-faithful replacement for CalculatorApp.TitleBar. -->
       <Grid Grid.Row="0" Height="42" ColumnDefinitions="Auto,*,Auto,Auto,Auto" Background="Transparent"
             PointerPressed="TitleBar_OnPointerPressed">
@@ -762,13 +763,20 @@
       <!-- Calculator and Settings are separate page surfaces beneath the
            shared title bar. Keep the inactive page out of layout and hit
            testing instead of covering it with a transparent overlay. -->
-      <Grid Grid.Row="1" Grid.RowSpan="4" RowDefinitions="54,*,42,3.05*"
+      <Grid Grid.Row="1" Grid.RowSpan="6" RowDefinitions="48,22*,72*,0,32*,308*"
             IsVisible="{Binding !IsSettingsOpen}">
-      <Grid x:Name="CalculatorResponsiveLayout" Grid.RowSpan="4" ColumnDefinitions="*,0">
-      <local:NavigationCulledGrid x:Name="CalculatorPageContent" Grid.RowSpan="4" RowDefinitions="54,*,42,3.05*"
-                                 Margin="0,6,0,0"
+      <Grid x:Name="CalculatorResponsiveLayout" Grid.RowSpan="6" ColumnDefinitions="*,0">
+      <local:NavigationCulledGrid x:Name="CalculatorPageContent" Grid.RowSpan="6"
                                  Classes="calculatorPageContent"
                                  Classes.paneOpen="{Binding IsNavigationPaneOpen}">
+      <local:NavigationCulledGrid.RowDefinitions>
+        <RowDefinition Height="48" />
+        <RowDefinition Height="22*" MinHeight="0" />
+        <RowDefinition Height="72*" MinHeight="20" />
+        <RowDefinition Height="0" />
+        <RowDefinition Height="32*" MinHeight="0" />
+        <RowDefinition Height="308*" MinHeight="0" />
+      </local:NavigationCulledGrid.RowDefinitions>
       <!-- Hamburger/category/history row from MainPage + Calculator. -->
       <Grid Grid.Row="0" ColumnDefinitions="68,Auto,62,*,56">
         <TextBlock Grid.Column="1" Classes="pageHeading" VerticalAlignment="Center" Text="{Binding ModeDisplayName}" />
@@ -793,15 +801,19 @@
       </Grid>
 
       <!-- The original uses proportional Expression and Result rows. -->
-      <Grid Grid.Row="1" Margin="8,0,14,0" IsVisible="{Binding IsStandardMode}">
-        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Top"
-                   Margin="0,8,0,0" Opacity="0.64" FontSize="14" Text="{Binding ExpressionDisplay}" />
-        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,0,24"
-                   FontSize="48" FontWeight="SemiBold" Text="{Binding PrimaryDisplay}" />
+      <TextBlock Grid.Row="1" Margin="6,0" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                 Opacity="0.64" FontSize="14" Text="{Binding ExpressionDisplay}"
+                 IsVisible="{Binding IsStandardMode}" />
+      <Grid x:Name="CalculatorResultHost" Grid.Row="2" MinHeight="72"
+            IsVisible="{Binding IsStandardMode}">
+        <TextBlock x:Name="PrimaryResultText" Margin="6,0"
+                   HorizontalAlignment="Right" VerticalAlignment="Center"
+                   TextAlignment="Right" TextTrimming="CharacterEllipsis"
+                   FontSize="46" FontWeight="SemiBold" Text="{Binding PrimaryDisplay}" />
       </Grid>
 
       <!-- MemoryPanel: MC, MR, M+, M−, MS, memory flyout. -->
-      <Grid Grid.Row="2" Margin="3,0" ColumnDefinitions="*,*,*,*,*,*" IsVisible="{Binding IsStandardMode}">
+      <Grid Grid.Row="4" Margin="3,0" ColumnDefinitions="*,*,*,*,*,*" IsVisible="{Binding IsStandardMode}">
         <Button x:Name="MemoryClearButton" Classes="memoryButton" Content="MC" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryClearAllCommand}"
                 ToolTip.Tip="{Binding ClearMemoryTooltip}" />
         <Button x:Name="MemoryRecallButton" Grid.Column="1" Classes="memoryButton" Content="MR" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryRecallCommand}"
@@ -817,7 +829,7 @@
       </Grid>
 
       <!-- CalculatorStandardOperators + NumberPad, flattened without changing geometry. -->
-      <Grid Grid.Row="3" Margin="3,0,3,3"
+      <Grid x:Name="NumpadPanel" Grid.Row="5" Margin="3,0,3,3"
             RowDefinitions="*,*,*,*,*,*" ColumnDefinitions="*,*,*,*"
             IsVisible="{Binding IsStandardMode}">
         <Button x:Name="PercentButton" Classes="calcButton operator symbolOperator" Content="&#xE94C;" Command="{Binding SendCommandCommand}" CommandParameter="Percent" />
@@ -853,7 +865,7 @@
 
       <!-- Unit converter: the controls are backed by CalcViewModel's native
            UnitConverter and the original Microsoft conversion catalog. -->
-      <Grid Grid.Row="1" Grid.RowSpan="3" Margin="12,2,12,12"
+      <Grid Grid.Row="1" Grid.RowSpan="5" Margin="12,2,12,12"
             RowDefinitions="Auto,1.12*,Auto,1.12*,Auto,1.65*"
             IsVisible="{Binding IsUnitConverterMode}">
         <ui:FAComboBox Grid.Row="0" Classes="unitSelector" Margin="0,0,0,7"
@@ -948,7 +960,7 @@
 
       </local:NavigationCulledGrid>
 
-      <Border x:Name="DockedHistoryPane" Grid.Column="1" Margin="0,6,0,0"
+      <Border x:Name="DockedHistoryPane" Grid.Column="1"
               BorderBrush="{DynamicResource CalculatorBorderBrush}" BorderThickness="1,0,0,0"
               IsVisible="{Binding IsDockedHistoryPaneVisible}">
         <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HistoryPaneTemplate}" />
@@ -957,7 +969,7 @@
 
       <!-- Source NavigationView replacement. The pane overlays content in the
            original LeftMinimal mode and keeps the title bar unobstructed. -->
-      <Grid Grid.Row="0" Grid.RowSpan="4" ColumnDefinitions="320,*"
+      <Grid Grid.Row="0" Grid.RowSpan="6" ColumnDefinitions="320,*"
             Classes="navigationOverlay" Classes.open="{Binding IsNavigationPaneOpen}">
         <Button Grid.ColumnSpan="2" Classes="navigationScrim" Padding="0" Background="Transparent" BorderThickness="0"
                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
@@ -1027,15 +1039,24 @@
       <!-- UWP uses Flyout Placement="Full" with BackgroundSmokeFill here.
            Keep this after the NavigationView toggle so the flyout owns the
            complete calculator page's visual and input layer. -->
-      <Border Grid.Row="0" Grid.RowSpan="4" Margin="0,6,0,0"
-              HorizontalAlignment="Stretch" Background="{DynamicResource SolidSurfaceBrush}"
-              ZIndex="12" IsVisible="{Binding IsNarrowHistoryPaneVisible}">
-        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HistoryPaneTemplate}" />
-      </Border>
+      <Grid Grid.Row="0" Grid.RowSpan="6" ZIndex="12"
+            IsVisible="{Binding IsNarrowHistoryPaneVisible}">
+        <!-- UWP's full-placement FlyoutPresenter is a smoke layer over the
+             calculator. HistoryList then paints only its numpad-height lower
+             row with SolidBackgroundFillColorBase. This is intentionally not
+             host-backdrop transparency: the calculator remains visible under
+             the smoke while the bottom sheet is opaque. -->
+        <Border Background="{DynamicResource HistorySmokeBrush}" />
+        <Border Height="{Binding #NumpadPanel.Bounds.Height}"
+                VerticalAlignment="Bottom"
+                Background="{DynamicResource HistorySolidSurfaceBrush}">
+          <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HistoryListTemplate}" />
+        </Border>
+      </Grid>
       </Grid>
 
       <!-- Settings mirrors the source page's Appearance and About groups. -->
-      <Grid Grid.Row="1" Grid.RowSpan="4" Background="Transparent"
+      <Grid Grid.Row="1" Grid.RowSpan="6" Background="Transparent"
             RowDefinitions="54,*" IsVisible="{Binding IsSettingsOpen}">
         <Grid.Resources>
           <!-- The outer Settings card owns its fill, border, and radius. Do not
