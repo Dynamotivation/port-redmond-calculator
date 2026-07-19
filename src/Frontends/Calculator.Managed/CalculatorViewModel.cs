@@ -384,15 +384,24 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
                 }
             }
 
-            _calculator.SendCommand(command.Value);
-            sentCommand = true;
-            isPreviousOperator = isOperator;
-
-            if (sendNegate && command is >= CalculatorCommand.Zero and <= CalculatorCommand.Nine)
+            if (sendNegate && (isOperator || command == CalculatorCommand.Equals))
             {
+                // Apply a unary minus only after the complete operand has been
+                // entered. Sending Sign after its first digit makes the native
+                // engine treat the remaining digits as a continuation of an
+                // intermediate signed result and can overflow on paste.
                 _calculator.SendCommand(CalculatorCommand.Sign);
                 sendNegate = false;
             }
+
+            _calculator.SendCommand(command.Value);
+            sentCommand = true;
+            isPreviousOperator = isOperator;
+        }
+
+        if (sendNegate && sentCommand)
+        {
+            _calculator.SendCommand(CalculatorCommand.Sign);
         }
 
         Synchronize();
