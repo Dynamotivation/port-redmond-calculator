@@ -198,6 +198,15 @@ public partial class MainWindow : Window
         _keyboardPressedButtons.Clear();
     }
 
+    private void HistorySmoke_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (_viewModel.IsNarrowHistoryPaneVisible)
+        {
+            _viewModel.CloseHistoryCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
+
     private static bool TryCreateShortcutInput(KeyEventArgs e, out ShortcutInput input)
     {
         var modifiers = ShortcutModifiers.None;

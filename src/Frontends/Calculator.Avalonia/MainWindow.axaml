@@ -1047,6 +1047,11 @@
              host-backdrop transparency: the calculator remains visible under
              the smoke while the bottom sheet is opaque. -->
         <Border Background="{DynamicResource HistorySmokeBrush}" />
+        <!-- Flyout is light-dismissible in UWP. Keep the dismiss target above
+             the smoke but below the opaque history sheet so only the covered
+             calculator region closes it. -->
+        <Border Background="Transparent"
+                PointerPressed="HistorySmoke_OnPointerPressed" />
         <Border Height="{Binding #NumpadPanel.Bounds.Height}"
                 VerticalAlignment="Bottom"
                 Background="{DynamicResource HistorySolidSurfaceBrush}">

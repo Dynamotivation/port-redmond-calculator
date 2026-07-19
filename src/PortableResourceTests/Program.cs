@@ -149,6 +149,10 @@ using (var viewModel = new CalculatorViewModel(
     viewModel.ToggleHistoryCommand.Execute(null);
     Require(viewModel.IsNarrowHistoryPaneVisible && !viewModel.IsDockedHistoryPaneVisible,
         "Narrow history did not open on demand.");
+    viewModel.CloseHistoryCommand.Execute(null);
+    Require(!viewModel.IsNarrowHistoryPaneVisible && !viewModel.IsHistoryOpen,
+        "Narrow history did not support the flyout light-dismiss path.");
+    viewModel.ToggleHistoryCommand.Execute(null);
     viewModel.SelectHistoryEntryCommand.Execute(viewModel.History[0]);
     Require(viewModel.PrimaryDisplay == "3" && !viewModel.IsHistoryOpen,
         "Selecting narrow history did not restore its display and close the full-page flyout.");
