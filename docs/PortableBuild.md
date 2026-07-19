@@ -25,9 +25,9 @@ dotnet run --project src/PortableResourceTests/Calculator.ResourceLoader.Tests.c
 The shared-library output is named `calculator_engine.dll` on Windows,
 `libcalculator_engine.dylib` on macOS, and `libcalculator_engine.so` on Linux.
 
-## Avalonia vertical slice on macOS
+## Avalonia calculator frontend on macOS
 
-The source-faithful Standard Calculator and Unit Converter frontend calls the
+The source-faithful Standard, Scientific, and Unit Converter frontend calls the
 portable engine through the managed C ABI wrapper. The Unit Converter surface
 uses the original `UnitConverter`, catalog, regional defaults, input behavior,
 and suggested-value generation; it is not a UI-only approximation. Build the
@@ -69,20 +69,31 @@ serialization IDs, localized labels, category groups, and glyphs from
 `CalculatorIcons.ttf` rather than approximate platform symbols. The pane uses
 overlay/light-dismiss behavior and retains the selected mode.
 
-The Standard page now consumes the portable shortcut catalog and sends every
+The Standard and Scientific pages consume the portable shortcut catalog and send every
 calculator operation through the managed `CalculatorManager` bridge. Printable
 keys remain keyboard-layout aware, keypad and named-key fallbacks are supported,
 and keyboard activation drives the same pressed visuals as pointer input.
 Copy/paste uses Avalonia's platform clipboard while expression parsing remains
 framework-neutral and feeds CalculatorManager commands.
 
+Scientific mode uses the original five-column operator topology, normal and
+inverse operator banks, DEG/RAD/GRAD cycling, F-E state, trigonometry and
+function popups, culture-sensitive decimal input, and the same native history
+and memory collections as Standard mode. Its compact, medium, and large operator
+states are selected from the operator panel's own arranged width and height,
+using the original two-axis UWP thresholds and corresponding caption, numeric,
+operator-row, and popup dimensions. The native boundary exposes mode selection
+and input-empty state directly so the frontend does not infer engine state from
+localized display strings.
+
 History is sourced directly from CalculatorManager rather than duplicated UI
 state. The Avalonia host reproduces all three source layout states rather than
 approximating them from width alone: below 560 logical pixels history is a full
 placement flyout; from 560 it is docked at `320*:240*`; at 1024 by 768 or 768 by
 1366 it becomes a fixed 320-logical-pixel column. The source minimum window size
-of 320 by 500 is enforced. The result area likewise keeps the original 640 and
-800 height breakpoints, row minimums, and 26/46/72 maximum font sizes.
+of 320 by 500 is enforced. The result area likewise keeps the source mode-aware
+height states: Scientific uses the original 544 and 800 thresholds, while the
+shared large state uses the source 108 minimum and 72 maximum font size.
 
 The narrow history flyout is deliberately two materials. Its full-window layer
 is the source `BackgroundSmokeFillColorBrush`: black at 30% opacity in light
@@ -97,10 +108,10 @@ unrelated custom window-surface colors cannot leak into the flyout. History
 selection, clear, keyboard toggling, and empty state are wired on both
 responsive surfaces.
 
-Standard and all 12 static converter categories route to working native-backed
+Standard, Scientific, and all 12 static converter categories route to working native-backed
 surfaces. Settings routes to a functional cross-platform page with persisted
-Light, Dark, and system theme preferences. Scientific, Graphing, Programmer,
-Date, and Currency remain present but disabled until their corresponding
+Light, Dark, and system theme preferences. Graphing, Programmer, Date, and
+Currency remain present but disabled until their corresponding
 frontend or platform layer is ported. Currency remains unavailable until its
 Windows HTTP/cache implementation is replaced with a real cross-platform loader.
 

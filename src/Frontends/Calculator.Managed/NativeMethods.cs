@@ -72,6 +72,10 @@ internal static unsafe partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
     internal static partial NativeStatus Reset(nint handle, int clearMemory);
 
+    [LibraryImport(LibraryName, EntryPoint = "calculator_set_mode")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus SetMode(nint handle, CalculatorMode mode);
+
     [LibraryImport(LibraryName, EntryPoint = "calculator_send_command")]
     [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
     internal static partial NativeStatus SendCommand(nint handle, int command);
@@ -87,6 +91,10 @@ internal static unsafe partial class NativeMethods
     [LibraryImport(LibraryName, EntryPoint = "calculator_get_is_error")]
     [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
     internal static partial int IsError(nint handle);
+
+    [LibraryImport(LibraryName, EntryPoint = "calculator_get_is_input_empty")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial int IsInputEmpty(nint handle);
 
     [LibraryImport(LibraryName, EntryPoint = "calculator_get_event_state")]
     [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]

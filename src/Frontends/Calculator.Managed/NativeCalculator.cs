@@ -57,6 +57,7 @@ public sealed unsafe class NativeCalculator : IDisposable
     public string PrimaryDisplay => ReadUtf8(NativeMethods.GetPrimaryDisplay);
     public string ExpressionDisplay => ReadUtf8(NativeMethods.GetExpressionDisplay);
     public bool IsError => NativeMethods.IsError(Handle) != 0;
+    public bool IsInputEmpty => NativeMethods.IsInputEmpty(Handle) != 0;
     public CalculatorEventState EventState
     {
         get
@@ -108,6 +109,8 @@ public sealed unsafe class NativeCalculator : IDisposable
     {
         ThrowIfFailed(NativeMethods.Reset(Handle, clearMemory ? 1 : 0));
     }
+
+    public void SetMode(CalculatorMode mode) => ThrowIfFailed(NativeMethods.SetMode(Handle, mode));
 
     public void MemoryStore() => ThrowIfFailed(NativeMethods.MemoryStore(Handle));
     public void MemoryRecall(nuint index = 0) => ThrowIfFailed(NativeMethods.MemoryRecall(Handle, index));

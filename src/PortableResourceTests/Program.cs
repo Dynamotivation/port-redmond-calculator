@@ -165,6 +165,23 @@ using (var viewModel = new CalculatorViewModel(
     Require(!viewModel.HasHistory && viewModel.History.Count == 0,
         "Clear history did not update CalculatorManager and the managed collection together.");
 
+    var scientificItem = viewModel.CalculatorNavigationItems.Single(item => item.Mode == CalculatorViewMode.Scientific);
+    Require(scientificItem.IsEnabled, "Scientific navigation was not enabled by the portable frontend.");
+    await viewModel.SelectNavigationItemCommand.ExecuteAsync(scientificItem);
+    Require(viewModel.IsScientificMode && viewModel.IsCalculatorMode && viewModel.IsDockedHistoryPaneVisible,
+        "Scientific navigation did not switch the shared CalculatorManager or retain calculator history behavior.");
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Clear);
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.Nine);
+    viewModel.ExecuteCalculatorCommand(CalculatorCommand.SquareRoot);
+    Require(viewModel.PrimaryDisplay == "3", "Scientific commands did not execute through CalculatorManager.");
+    viewModel.CycleScientificAngleCommand.Execute(null);
+    Require(viewModel.SelectedScientificAngle == CalculatorAngleMode.Radians && viewModel.ScientificAngleLabel == "RAD",
+        "Scientific angle mode did not advance from degrees to radians.");
+
+    var standardItem = viewModel.CalculatorNavigationItems.Single(item => item.Mode == CalculatorViewMode.Standard);
+    await viewModel.SelectNavigationItemCommand.ExecuteAsync(standardItem);
+    Require(viewModel.IsStandardMode, "Scientific mode did not switch back to Standard through the shared mode boundary.");
+
     await viewModel.ToggleNavigationPaneCommand.ExecuteAsync(null);
     Require(viewModel.IsNavigationPaneOpen, "Hamburger command did not open the navigation pane.");
     var temperatureItem = viewModel.ConverterNavigationItems.Single(item => item.Mode == CalculatorViewMode.Temperature);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -23,6 +24,11 @@ public partial class MainWindow : Window
     private readonly IReadOnlySet<string> _calculatorShortcutScope = new HashSet<string>(StringComparer.Ordinal)
     {
         "calculator",
+    };
+    private readonly IReadOnlySet<string> _scientificShortcutScope = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "calculator",
+        "scientific",
     };
     private AppSettings _settings;
     private bool _isOpened;
@@ -48,6 +54,7 @@ public partial class MainWindow : Window
         _viewModel.FontPreferenceChanged += OnFontPreferenceChanged;
         _viewModel.PlatformAppearancePreferencesChanged += OnPlatformAppearancePreferencesChanged;
         DataContext = _viewModel;
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         var shortcutPlatform = OperatingSystem.IsWindows()
             ? ShortcutPlatform.Windows
             : OperatingSystem.IsMacOS()
@@ -59,9 +66,15 @@ public partial class MainWindow : Window
         _shortcutRegistrations = ShortcutCatalogLoader.LoadBuiltIn().RegisterAll(_shortcutService);
         AddHandler(KeyDownEvent, OnCalculatorKeyDown, RoutingStrategies.Tunnel);
         AddHandler(KeyUpEvent, OnCalculatorKeyUp, RoutingStrategies.Tunnel);
+        ScientificTrigFlyoutGrid.AddHandler(Button.ClickEvent, ScientificPopupCommand_OnClick);
+        ScientificFunctionFlyoutGrid.AddHandler(Button.ClickEvent, ScientificPopupCommand_OnClick);
+        ScientificInverseOperators.AddHandler(Button.ClickEvent, ScientificInverseCommand_OnClick);
         Deactivated += OnWindowDeactivated;
         SizeChanged += (_, _) => UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
+        ScientificNumpadPanel.SizeChanged += (_, _) => UpdateScientificControlSizeState();
         UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
+        UpdateCalculatorModeLayout();
+        UpdateScientificControlSizeState();
         ApplyFontFamily(_viewModel.SelectedFontFamily);
         if (!string.Equals(_settings.FontFamily, _viewModel.SelectedFontFamily, StringComparison.Ordinal))
         {
@@ -83,6 +96,7 @@ public partial class MainWindow : Window
             _viewModel.ThemePreferenceChanged -= OnThemePreferenceChanged;
             _viewModel.FontPreferenceChanged -= OnFontPreferenceChanged;
             _viewModel.PlatformAppearancePreferencesChanged -= OnPlatformAppearancePreferencesChanged;
+            _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
             RemoveHandler(KeyDownEvent, OnCalculatorKeyDown);
             RemoveHandler(KeyUpEvent, OnCalculatorKeyUp);
             Deactivated -= OnWindowDeactivated;
@@ -123,7 +137,7 @@ public partial class MainWindow : Window
             CalculatorResultHost.MinHeight = 108;
             PrimaryResultText.FontSize = 72;
         }
-        else if (height >= 640)
+        else if (height >= (_viewModel.IsScientificMode ? 544 : 1))
         {
             CalculatorResultHost.MinHeight = 72;
             PrimaryResultText.FontSize = 46;
@@ -135,9 +149,64 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(CalculatorViewModel.CurrentViewMode))
+        {
+            UpdateCalculatorModeLayout();
+            UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
+        }
+    }
+
+    private void UpdateCalculatorModeLayout()
+    {
+        var scientific = _viewModel.IsScientificMode;
+        var displayControlsRow = CalculatorPageContent.RowDefinitions[3];
+        displayControlsRow.Height = scientific ? new GridLength(32, GridUnitType.Star) : new GridLength(0);
+        displayControlsRow.MinHeight = scientific ? 32 : 0;
+        CalculatorPageContent.RowDefinitions[5].Height = new GridLength(scientific ? 276 : 308, GridUnitType.Star);
+    }
+
+    private void UpdateScientificControlSizeState()
+    {
+        var width = ScientificNumpadPanel.Bounds.Width;
+        var height = ScientificNumpadPanel.Bounds.Height;
+        var state = width >= 878 && height >= 851
+            ? "scientificLarge"
+            : width >= 527 && height >= 523
+                ? "scientificMedium"
+                : "scientificSmall";
+
+        ScientificNumpadPanel.Classes.Set("scientificSmall", state == "scientificSmall");
+        ScientificNumpadPanel.Classes.Set("scientificMedium", state == "scientificMedium");
+        ScientificNumpadPanel.Classes.Set("scientificLarge", state == "scientificLarge");
+
+        if (state == "scientificLarge")
+        {
+            ScientificTrigFlyoutGrid.Width = 516;
+            ScientificTrigFlyoutGrid.Height = 192;
+            ScientificFunctionFlyoutGrid.Width = 387;
+            ScientificFunctionFlyoutGrid.Height = 192;
+        }
+        else if (state == "scientificMedium")
+        {
+            ScientificTrigFlyoutGrid.Width = 480;
+            ScientificTrigFlyoutGrid.Height = 144;
+            ScientificFunctionFlyoutGrid.Width = 360;
+            ScientificFunctionFlyoutGrid.Height = 144;
+        }
+        else
+        {
+            ScientificTrigFlyoutGrid.Width = 258;
+            ScientificTrigFlyoutGrid.Height = 96;
+            ScientificFunctionFlyoutGrid.Width = 194;
+            ScientificFunctionFlyoutGrid.Height = 96;
+        }
+    }
+
     private void OnCalculatorKeyDown(object? sender, KeyEventArgs e)
     {
-        if (!_viewModel.IsStandardMode || _viewModel.IsSettingsOpen || _viewModel.IsNavigationPaneOpen)
+        if (!_viewModel.IsCalculatorMode || _viewModel.IsSettingsOpen || _viewModel.IsNavigationPaneOpen)
         {
             return;
         }
@@ -147,7 +216,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        var result = _shortcutService.Process(input, _calculatorShortcutScope);
+        var result = _shortcutService.Process(
+            input,
+            _viewModel.IsScientificMode ? _scientificShortcutScope : _calculatorShortcutScope);
         if (!result.WasMatched
             && OperatingSystem.IsMacOS()
             && input.Gesture.Modifiers.HasFlag(ShortcutModifiers.Command)
@@ -204,6 +275,40 @@ public partial class MainWindow : Window
         {
             _viewModel.CloseHistoryCommand.Execute(null);
             e.Handled = true;
+        }
+    }
+
+    private void ScientificPopupCommand_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (e.Source is not Button button)
+        {
+            return;
+        }
+
+        // The 2nd/hyp controls alter the currently displayed trig group and do
+        // not invoke a calculator operation, so the source flyout stays open.
+        if (ReferenceEquals(button.Command, _viewModel.ToggleTrigInverseCommand)
+            || ReferenceEquals(button.Command, _viewModel.ToggleTrigHyperbolicCommand))
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            ScientificTrigButton.Flyout?.Hide();
+            ScientificFunctionButton.Flyout?.Hide();
+            _viewModel.IsTrigInverse = false;
+            _viewModel.IsTrigHyperbolic = false;
+        });
+    }
+
+    private void ScientificInverseCommand_OnClick(object? sender, RoutedEventArgs e)
+    {
+        // UWP unchecks 2nd after an inverse operator executes. Post the state
+        // change so the button's calculator command completes first.
+        if (e.Source is Button)
+        {
+            Dispatcher.UIThread.Post(() => _viewModel.IsScientificInverse = false);
         }
     }
 
@@ -328,6 +433,54 @@ public partial class MainWindow : Window
             "squareRootButton" => CalculatorCommand.SquareRoot,
             "backSpaceButton" => CalculatorCommand.Backspace,
             "multiplyButton" => CalculatorCommand.Multiply,
+            "absButton" => CalculatorCommand.Absolute,
+            "ceilButton" => CalculatorCommand.Ceiling,
+            "closeParenthesisButton" => CalculatorCommand.CloseParenthesis,
+            "cosButton" => CalculatorCommand.Cos,
+            "coshButton" => CalculatorCommand.Cosh,
+            "cotButton" => CalculatorCommand.Cot,
+            "cothButton" => CalculatorCommand.Coth,
+            "cscButton" => CalculatorCommand.Csc,
+            "cschButton" => CalculatorCommand.Csch,
+            "cubeRootButton" => CalculatorCommand.CubeRoot,
+            "degreeButton" => CalculatorCommand.Degrees,
+            "dmsButton" => CalculatorCommand.Dms,
+            "eulerButton" => CalculatorCommand.Euler,
+            "expButton" => CalculatorCommand.Exp,
+            "factorialButton" => CalculatorCommand.Factorial,
+            "floorButton" => CalculatorCommand.Floor,
+            "invcosButton" => CalculatorCommand.InverseCos,
+            "invcoshButton" => CalculatorCommand.InverseCosh,
+            "invcotButton" => CalculatorCommand.InverseCot,
+            "invcothButton" => CalculatorCommand.InverseCoth,
+            "invcscButton" => CalculatorCommand.InverseCsc,
+            "invcschButton" => CalculatorCommand.InverseCsch,
+            "invertButton" => CalculatorCommand.Reciprocal,
+            "invsecButton" => CalculatorCommand.InverseSec,
+            "invsechButton" => CalculatorCommand.InverseSech,
+            "invsinButton" => CalculatorCommand.InverseSin,
+            "invsinhButton" => CalculatorCommand.InverseSinh,
+            "invtanButton" => CalculatorCommand.InverseTan,
+            "invtanhButton" => CalculatorCommand.InverseTanh,
+            "logBase10Button" => CalculatorCommand.LogBase10,
+            "logBaseEButton" => CalculatorCommand.NaturalLog,
+            "logBaseY" => CalculatorCommand.LogBaseY,
+            "openParenthesisButton" => CalculatorCommand.OpenParenthesis,
+            "piButton" => CalculatorCommand.Pi,
+            "powerButton" => CalculatorCommand.Power,
+            "powerOf10Button" => CalculatorCommand.TenPowerX,
+            "powerOfEButton" => CalculatorCommand.EPowerX,
+            "randButton" => CalculatorCommand.Random,
+            "secButton" => CalculatorCommand.Sec,
+            "sechButton" => CalculatorCommand.Sech,
+            "sinButton" => CalculatorCommand.Sin,
+            "sinhButton" => CalculatorCommand.Sinh,
+            "tanButton" => CalculatorCommand.Tan,
+            "tanhButton" => CalculatorCommand.Tanh,
+            "twoPowerXButton" => CalculatorCommand.TwoPowerX,
+            "xpower2Button" => CalculatorCommand.Square,
+            "xpower3Button" => CalculatorCommand.Cube,
+            "ySquareRootButton" => CalculatorCommand.Root,
             _ => null,
         };
 
@@ -345,6 +498,10 @@ public partial class MainWindow : Window
             case "MemRecall": _viewModel.MemoryRecallCommand.Execute(null); return true;
             case "MemPlus": _viewModel.MemoryAddCommand.Execute(null); return true;
             case "MemMinus": _viewModel.MemorySubtractCommand.Execute(null); return true;
+            case "degButton": _viewModel.ExecuteCalculatorCommand(CalculatorCommand.Degree); return true;
+            case "radButton": _viewModel.ExecuteCalculatorCommand(CalculatorCommand.Radian); return true;
+            case "gradButton": _viewModel.ExecuteCalculatorCommand(CalculatorCommand.Grads); return true;
+            case "ftoeButton": _viewModel.ToggleScientificNotationCommand.Execute(null); return true;
             case "copyButton":
             case "copyButtonAlternate": _ = CopyDisplayToClipboardAsync(); return true;
             case "pasteButton":
@@ -378,28 +535,28 @@ public partial class MainWindow : Window
     {
         button = shortcutId switch
         {
-            "clearButton" => ClearButton,
-            "clearEntryButton" => ClearEntryButton,
-            "decimalSeparatorButton" => DecimalButton,
-            "divideButton" => DivideButton,
-            "equalButton" => EqualsButton,
-            "minusButton" => SubtractButton,
-            "negateButton" => SignButton,
-            "num0Button" => ZeroButton,
-            "num1Button" => OneButton,
-            "num2Button" => TwoButton,
-            "num3Button" => ThreeButton,
-            "num4Button" => FourButton,
-            "num5Button" => FiveButton,
-            "num6Button" => SixButton,
-            "num7Button" => SevenButton,
-            "num8Button" => EightButton,
-            "num9Button" => NineButton,
+            "clearButton" => _viewModel.IsScientificMode ? ScientificClearButton : ClearButton,
+            "clearEntryButton" => _viewModel.IsScientificMode ? ScientificClearEntryButton : ClearEntryButton,
+            "decimalSeparatorButton" => _viewModel.IsScientificMode ? ScientificDecimalButton : DecimalButton,
+            "divideButton" => _viewModel.IsScientificMode ? ScientificDivideButton : DivideButton,
+            "equalButton" => _viewModel.IsScientificMode ? ScientificEqualsButton : EqualsButton,
+            "minusButton" => _viewModel.IsScientificMode ? ScientificSubtractButton : SubtractButton,
+            "negateButton" => _viewModel.IsScientificMode ? ScientificSignButton : SignButton,
+            "num0Button" => _viewModel.IsScientificMode ? ScientificZeroButton : ZeroButton,
+            "num1Button" => _viewModel.IsScientificMode ? ScientificOneButton : OneButton,
+            "num2Button" => _viewModel.IsScientificMode ? ScientificTwoButton : TwoButton,
+            "num3Button" => _viewModel.IsScientificMode ? ScientificThreeButton : ThreeButton,
+            "num4Button" => _viewModel.IsScientificMode ? ScientificFourButton : FourButton,
+            "num5Button" => _viewModel.IsScientificMode ? ScientificFiveButton : FiveButton,
+            "num6Button" => _viewModel.IsScientificMode ? ScientificSixButton : SixButton,
+            "num7Button" => _viewModel.IsScientificMode ? ScientificSevenButton : SevenButton,
+            "num8Button" => _viewModel.IsScientificMode ? ScientificEightButton : EightButton,
+            "num9Button" => _viewModel.IsScientificMode ? ScientificNineButton : NineButton,
             "percentButton" => PercentButton,
-            "plusButton" => AddButton,
-            "squareRootButton" => SquareRootButton,
-            "backSpaceButton" => BackspaceButton,
-            "multiplyButton" => MultiplyButton,
+            "plusButton" => _viewModel.IsScientificMode ? ScientificAddButton : AddButton,
+            "squareRootButton" => _viewModel.IsScientificMode ? ScientificSquareRootButton : SquareRootButton,
+            "backSpaceButton" => _viewModel.IsScientificMode ? ScientificBackspaceButton : BackspaceButton,
+            "multiplyButton" => _viewModel.IsScientificMode ? ScientificMultiplyButton : MultiplyButton,
             "HistoryButton" => HistoryButton,
             "ClearMemoryButton" => MemoryClearButton,
             "MemRecall" => MemoryRecallButton,

@@ -50,6 +50,7 @@ maintainers do not “correct” a deliberate numerical difference.
 | Small responsive buttons | Parent grids can enforce a fixed ratio to larger input controls. | Default minimum width and padding can defeat the ratio. | Set `MinWidth=0`, `MinHeight=0`, zero padding, stretch alignment, and let the grid define width. |
 | Full-placement flyout material | A flyout can combine a translucent smoke presenter with an opaque content region; transparency is relative to app content, not necessarily the desktop. | Replacing the flyout with one opaque page or one backdrop-transparent panel changes both composition and meaning. | Port each source layer independently. Keep the covered page mounted under the scrim, then paint only the source-defined content row with the solid surface brush. |
 | Adaptive pane widths | Visual states can combine width and height triggers and may switch between proportional and fixed columns. | A width-only breakpoint often looks correct on common landscape windows while failing portrait and short-wide layouts. | Translate the complete ordered trigger predicates, including portrait states, and preserve star ratios as ratios rather than copied pixels. |
+| Control-local visual states | A reusable UWP control can select Large/Medium/Small from its own arranged width and height, independently of the window. | Avalonia ports commonly listen only to the host window and therefore select the wrong typography, row height, or popup dimensions when a side pane changes the control's available area. | Listen to the source control's `SizeChanged`, preserve the ordered two-axis predicates, and switch semantic classes on that control. Let selectors apply the state values to descendants. Do not substitute window breakpoints. |
 | Button typography | Caption/memory labels and large numeric-entry glyphs can look similarly heavy while resolving from different weights. | Assigning one replacement weight globally can make already-Regular numeric keys heavier while correctly reducing captions. | Inspect each class's resolved weight and compare visible strokes, not weight names. Reduce each independently—for example, memory captions and Regular numeric keys may both require Light on the target—while leaving operators and accent actions on their own typography contract. |
 | Brush transitions | WinUI templates may specify short `BrushTransition` durations. | Avalonia property changes are immediate unless a transition is declared. | Port timing and easing when the transition is visually material. |
 | Template state targeting | WinUI visual states usually target named elements directly. | Avalonia selector specificity and declaration order can let generic rules beat specialized rules. | Name important template surfaces and target them through `/template/`. Order selected and disabled overrides deliberately. |
@@ -143,6 +144,22 @@ persistent page chrome in sibling order (or assign equivalent top-level
 layering), use the source smoke/opaque surface, and keep covered controls out of
 the rendered result. A high `ZIndex` on a descendant cannot outdraw a later
 sibling of its parent.
+
+### Flyouts owned by custom-templated buttons
+
+Retain Avalonia's themed `Button.Flyout` when replacing the stock button
+template; do not substitute a low-level `Popup` plus a hand-drawn border merely
+to preserve placement. That loses the Fluent presenter, elevation, theme
+resources, focus treatment, and visual-state contract even if light dismiss
+still works.
+
+On desktop hosts, a flyout may render in a separate native popup surface. A
+window-only screenshot can therefore omit a correctly visible flyout while the
+accessibility tree still exposes its controls. Verify with the complete desktop
+surface or direct interaction before diagnosing the flyout as closed. If popup
+command buttons should dismiss the surface, handle their routed click at the
+flyout content root and call `Hide` after command dispatch; leave state-only
+toggles open.
 
 ## Keyboard accelerators and pressed feedback
 

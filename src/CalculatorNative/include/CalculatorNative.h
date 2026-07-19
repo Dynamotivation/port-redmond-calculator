@@ -97,6 +97,7 @@ extern "C"
         size_t* required_size);
 
     CALCULATOR_API int32_t calculator_get_is_error(const calculator_handle* handle);
+    CALCULATOR_API int32_t calculator_get_is_input_empty(const calculator_handle* handle);
 
     CALCULATOR_API calculator_status calculator_get_event_state(
         const calculator_handle* handle,

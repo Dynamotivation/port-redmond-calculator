@@ -401,6 +401,11 @@ int32_t calculator_get_is_error(const calculator_handle* handle)
     return handle != nullptr && handle->display->IsError() ? 1 : 0;
 }
 
+int32_t calculator_get_is_input_empty(const calculator_handle* handle)
+{
+    return handle != nullptr && handle->manager->IsInputEmpty() ? 1 : 0;
+}
+
 calculator_status calculator_get_event_state(const calculator_handle* handle, calculator_event_state* result)
 {
     if (handle == nullptr || result == nullptr)
