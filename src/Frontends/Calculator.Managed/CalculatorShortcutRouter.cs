@@ -189,8 +189,24 @@ public static class CalculatorShortcutRouter
             case "byteButton": viewModel.SelectProgrammerWordSizeCommand.Execute("Byte"); break;
             case "HistoryButton": viewModel.History.ToggleCommand.Execute(null); break;
             case "ClearHistory": viewModel.History.ClearCommand.Execute(null); break;
-            case "ClearMemoryButton": viewModel.Memory.ClearAllCommand.Execute(null); break;
-            case "MemRecall": viewModel.Memory.RecallCommand.Execute(null); break;
+            // The keyboard mirrors what the keypad allows. MC and MR are
+            // disabled while memory is empty, and the engine faults if they are
+            // invoked anyway, so the shortcut has to check too. M+ and M- stay
+            // live because they store into an empty slot. MS was never wired at
+            // all, which made Ctrl+M a dead key.
+            case "memButton": viewModel.Memory.StoreCommand.Execute(null); break;
+            case "ClearMemoryButton":
+                if (viewModel.Memory.HasEntries)
+                {
+                    viewModel.Memory.ClearAllCommand.Execute(null);
+                }
+                break;
+            case "MemRecall":
+                if (viewModel.Memory.HasEntries)
+                {
+                    viewModel.Memory.RecallCommand.Execute(null);
+                }
+                break;
             case "MemPlus": viewModel.Memory.AddCommand.Execute(null); break;
             case "MemMinus": viewModel.Memory.SubtractCommand.Execute(null); break;
             case "degButton": if (!viewModel.IsError) viewModel.ExecuteCalculatorCommand(CalculatorCommand.Degree); break;
