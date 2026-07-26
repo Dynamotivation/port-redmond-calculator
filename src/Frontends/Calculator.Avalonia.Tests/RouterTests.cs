@@ -167,13 +167,13 @@ internal static class RouterTests
 
         CalculatorShortcutRouter.Dispatch(viewModel, "num9Button");
         CalculatorShortcutRouter.Dispatch(viewModel, "hexButton");
-        Assert(viewModel.IsProgrammerHexadecimal, "hexButton should select the hexadecimal radix");
+        Assert(viewModel.Programmer.IsHexadecimal, "hexButton should select the hexadecimal radix");
 
         CalculatorShortcutRouter.Dispatch(viewModel, "binaryButton");
-        Assert(viewModel.IsProgrammerBinary, "binaryButton should select the binary radix");
+        Assert(viewModel.Programmer.IsBinary, "binaryButton should select the binary radix");
 
         CalculatorShortcutRouter.Dispatch(viewModel, "byteButton");
-        Assert(viewModel.SelectedProgrammerWordSize == CalculatorProgrammerWordSize.Byte,
+        Assert(viewModel.Programmer.SelectedWordSize == CalculatorProgrammerWordSize.Byte,
             "byteButton should select the byte word size");
     }
 

@@ -174,19 +174,19 @@ public static class CalculatorShortcutRouter
             case "lshButton":
             case "lshLogicalButton":
             case "rolButton":
-            case "rolCarryButton": viewModel.ExecuteProgrammerLeftShiftCommand.Execute(null); break;
+            case "rolCarryButton": viewModel.Programmer.ExecuteLeftShiftCommand.Execute(null); break;
             case "rshButton":
             case "rshLogicalButton":
             case "rorButton":
-            case "rorCarryButton": viewModel.ExecuteProgrammerRightShiftCommand.Execute(null); break;
-            case "hexButton": viewModel.SelectProgrammerRadixCommand.Execute("Hexadecimal"); break;
-            case "decimalButton": viewModel.SelectProgrammerRadixCommand.Execute("Decimal"); break;
-            case "octButton": viewModel.SelectProgrammerRadixCommand.Execute("Octal"); break;
-            case "binaryButton": viewModel.SelectProgrammerRadixCommand.Execute("Binary"); break;
-            case "qwordButton": viewModel.SelectProgrammerWordSizeCommand.Execute("Qword"); break;
-            case "dwordButton": viewModel.SelectProgrammerWordSizeCommand.Execute("Dword"); break;
-            case "wordButton": viewModel.SelectProgrammerWordSizeCommand.Execute("Word"); break;
-            case "byteButton": viewModel.SelectProgrammerWordSizeCommand.Execute("Byte"); break;
+            case "rorCarryButton": viewModel.Programmer.ExecuteRightShiftCommand.Execute(null); break;
+            case "hexButton": viewModel.Programmer.SelectRadixCommand.Execute("Hexadecimal"); break;
+            case "decimalButton": viewModel.Programmer.SelectRadixCommand.Execute("Decimal"); break;
+            case "octButton": viewModel.Programmer.SelectRadixCommand.Execute("Octal"); break;
+            case "binaryButton": viewModel.Programmer.SelectRadixCommand.Execute("Binary"); break;
+            case "qwordButton": viewModel.Programmer.SelectWordSizeCommand.Execute("Qword"); break;
+            case "dwordButton": viewModel.Programmer.SelectWordSizeCommand.Execute("Dword"); break;
+            case "wordButton": viewModel.Programmer.SelectWordSizeCommand.Execute("Word"); break;
+            case "byteButton": viewModel.Programmer.SelectWordSizeCommand.Execute("Byte"); break;
             case "HistoryButton": viewModel.History.ToggleCommand.Execute(null); break;
             case "ClearHistory": viewModel.History.ClearCommand.Execute(null); break;
             // The keyboard mirrors what the keypad allows. MC and MR are
