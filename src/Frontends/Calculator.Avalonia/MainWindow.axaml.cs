@@ -10,6 +10,8 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Calculator.Avalonia.Controls;
+using Calculator.Avalonia.Services;
+using Calculator.Avalonia.Services.Platform;
 using Calculator.Managed;
 using Calculator.Shortcuts;
 
@@ -17,8 +19,6 @@ namespace Calculator.Avalonia;
 
 public partial class MainWindow : Window
 {
-    private MacOSMicaBackdrop? _micaBackdrop;
-    private MacOSWindowControls? _macOSWindowControls;
     private readonly CalculatorViewModel _viewModel;
     private readonly ShortcutService _shortcutService;
     private readonly IReadOnlyList<IDisposable> _shortcutRegistrations;
@@ -38,21 +38,15 @@ public partial class MainWindow : Window
         "calculator",
         "programmer",
     };
+    private readonly IWindowPresentationService _presentation;
     private AppSettings _settings;
-    private bool _isOpened;
-    private int _presentationVersion;
-    private bool _hasNormalWindowPlacement;
-    private PixelPoint _normalWindowPosition;
-    private Size _normalWindowSize;
-    private WindowState _normalWindowState;
-    private Size _compactWindowSize = new(320, 394);
 
     public MainWindow()
         : this(new AppSettings())
     {
     }
 
-    internal MainWindow(AppSettings settings)
+    internal MainWindow(AppSettings settings, bool enableNativeEffects = true)
     {
         InitializeComponent();
         var appearance = settings.ToPlatformAppearance();
@@ -65,7 +59,7 @@ public partial class MainWindow : Window
             initialFontFamily: settings.FontFamily);
         _viewModel.ThemePreferenceChanged += OnThemePreferenceChanged;
         _viewModel.FontPreferenceChanged += OnFontPreferenceChanged;
-        _viewModel.PlatformAppearancePreferencesChanged += OnPlatformAppearancePreferencesChanged;
+        _viewModel.PlatformAppearancePreferencesChanged += OnAppearancePreferencesChanged;
         DataContext = _viewModel;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         var shortcutPlatform = OperatingSystem.IsWindows()
@@ -97,21 +91,17 @@ public partial class MainWindow : Window
             _settings = _settings with { FontFamily = _viewModel.SelectedFontFamily };
             AppSettingsStore.Save(_settings);
         }
-        ApplyWindowDecorations(appearance);
-        Opened += (_, _) =>
-        {
-            _isOpened = true;
-            RefreshBackdrop(appearance);
-            RefreshWindowPresentation(appearance);
-        };
+        var presentation = new WindowPresentationService(
+            this, _viewModel, () => _settings.ToPlatformAppearance(), enableNativeEffects);
+        _presentation = presentation;
+        presentation.ApplyWindowDecorations(appearance);
+        Opened += (_, _) => _presentation.OnWindowOpened(appearance);
         Closed += (_, _) =>
         {
-            _isOpened = false;
-            _micaBackdrop?.Dispose();
-            _macOSWindowControls?.Dispose();
+            _presentation.Dispose();
             _viewModel.ThemePreferenceChanged -= OnThemePreferenceChanged;
             _viewModel.FontPreferenceChanged -= OnFontPreferenceChanged;
-            _viewModel.PlatformAppearancePreferencesChanged -= OnPlatformAppearancePreferencesChanged;
+            _viewModel.PlatformAppearancePreferencesChanged -= OnAppearancePreferencesChanged;
             _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
             RemoveHandler(KeyDownEvent, OnCalculatorKeyDown);
             RemoveHandler(KeyUpEvent, OnCalculatorKeyUp);
@@ -177,7 +167,7 @@ public partial class MainWindow : Window
         {
             if (_viewModel.IsAlwaysOnTop && !_viewModel.IsStandardMode)
             {
-                ExitCompactAlwaysOnTop();
+                _presentation.ExitCompactOverlay();
             }
 
             UpdateCalculatorModeLayout();
@@ -543,64 +533,35 @@ public partial class MainWindow : Window
     {
         if (_viewModel.IsAlwaysOnTop)
         {
-            ExitCompactAlwaysOnTop();
+            _presentation.ExitCompactOverlay();
         }
         else
         {
-            EnterCompactAlwaysOnTop();
+            _presentation.EnterCompactOverlay();
         }
     }
 
 
-    private void EnterCompactAlwaysOnTop()
-    {
-        if (!_viewModel.CanEnterAlwaysOnTop)
-        {
-            return;
-        }
 
-        _normalWindowState = WindowState;
-        _normalWindowPosition = Position;
-        _normalWindowSize = Bounds.Size;
-        _hasNormalWindowPlacement = true;
-
-        _viewModel.CloseHistoryCommand.Execute(null);
-        _viewModel.CloseNavigationPaneCommand.Execute(null);
-        WindowState = WindowState.Normal;
-        MinWidth = 240;
-        MinHeight = 260;
-        Width = Math.Max(MinWidth, _compactWindowSize.Width);
-        Height = Math.Max(MinHeight, _compactWindowSize.Height);
-        _viewModel.IsAlwaysOnTop = true;
-        Topmost = true;
-    }
-
-    private void ExitCompactAlwaysOnTop()
-    {
-        if (!_viewModel.IsAlwaysOnTop)
-        {
-            return;
-        }
-
-        _compactWindowSize = Bounds.Size;
-        Topmost = false;
-        _viewModel.IsAlwaysOnTop = false;
-        MinWidth = 320;
-        MinHeight = 500;
-
-        if (_hasNormalWindowPlacement)
-        {
-            Width = Math.Max(MinWidth, _normalWindowSize.Width);
-            Height = Math.Max(MinHeight, _normalWindowSize.Height);
-            Position = _normalWindowPosition;
-            WindowState = _normalWindowState;
-        }
-    }
 
     private void TitleBarChrome_OnMaximizeRequested(object? sender, EventArgs e) =>
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
     private void TitleBarChrome_OnCloseRequested(object? sender, EventArgs e) => Close();
+
+    private void OnAppearancePreferencesChanged(PlatformAppearancePreferences preferences)
+    {
+        // Persist first: the service reads the stored preferences back when it
+        // stages a title-bar change across dispatcher frames.
+        _settings = _settings with
+        {
+            UseMicaEffect = preferences.UseMicaEffect,
+            WindowCornerStyle = preferences.WindowCornerStyle,
+            WindowControlStyle = preferences.WindowControlStyle,
+        };
+        AppSettingsStore.Save(_settings);
+        _presentation.ApplyAppearance(preferences);
+    }
 
     private void OnThemePreferenceChanged(AppThemePreference preference)
     {
@@ -633,125 +594,11 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnPlatformAppearancePreferencesChanged(PlatformAppearancePreferences preferences)
-    {
-        var previousPreferences = _settings.ToPlatformAppearance();
-        var wasUsingNativeTitleBar = UsesFullNativeTitleBar(previousPreferences);
-        var requiresStagedHostedControls = _isOpened
-            && wasUsingNativeTitleBar
-            && preferences.WindowCornerStyle != WindowCornerStyle.MacOS
-            && preferences.WindowControlStyle == WindowControlStyle.MacOS;
-        var presentationVersion = ++_presentationVersion;
 
-        _macOSWindowControls?.Dispose();
-        _macOSWindowControls = null;
 
-        _settings = _settings with
-        {
-            UseMicaEffect = preferences.UseMicaEffect,
-            WindowCornerStyle = preferences.WindowCornerStyle,
-            WindowControlStyle = preferences.WindowControlStyle,
-        };
-        AppSettingsStore.Save(_settings);
 
-        if (requiresStagedHostedControls)
-        {
-            var teardownPreferences = preferences with
-            {
-                WindowCornerStyle = WindowCornerStyle.MacOS,
-                WindowControlStyle = WindowControlStyle.Windows11,
-            };
-            ApplyWindowDecorations(teardownPreferences);
-            RefreshBackdrop(teardownPreferences);
 
-            Dispatcher.UIThread.Post(() =>
-            {
-                if (!_isOpened
-                    || presentationVersion != _presentationVersion
-                    || _settings.ToPlatformAppearance() != preferences)
-                {
-                    return;
-                }
 
-                ApplyWindowDecorations(preferences);
-                RefreshBackdrop(preferences);
-                RefreshWindowPresentation(preferences);
-            }, DispatcherPriority.Background);
-            return;
-        }
-
-        ApplyWindowDecorations(preferences);
-        RefreshBackdrop(preferences);
-        RefreshWindowPresentation(preferences, deferFullNativeTitleBar: true);
-    }
-
-    private void ApplyWindowDecorations(PlatformAppearancePreferences preferences)
-    {
-        var usesNativeTitleBar = UsesFullNativeTitleBar(preferences);
-        var usesNativeGeometry = preferences.WindowCornerStyle == WindowCornerStyle.MacOS;
-        ExtendClientAreaToDecorationsHint = usesNativeGeometry;
-        ExtendClientAreaTitleBarHeightHint = 42;
-        WindowDecorations = usesNativeTitleBar
-            ? global::Avalonia.Controls.WindowDecorations.Full
-            : usesNativeGeometry
-                ? global::Avalonia.Controls.WindowDecorations.BorderOnly
-                : global::Avalonia.Controls.WindowDecorations.None;
-    }
-
-    private void RefreshBackdrop(PlatformAppearancePreferences preferences)
-    {
-        _micaBackdrop?.Dispose();
-        _micaBackdrop = null;
-
-        if (_isOpened && preferences.UseMicaEffect)
-        {
-            var cornerRadius = preferences.WindowCornerStyle == WindowCornerStyle.Windows11 ? 8 : 0;
-            _micaBackdrop = MacOSMicaBackdrop.Attach(this, cornerRadius);
-        }
-
-        MacOSMicaBackdrop.InvalidateWindowShadow(this);
-    }
-
-    private void RefreshWindowPresentation(
-        PlatformAppearancePreferences preferences,
-        bool deferFullNativeTitleBar = false)
-    {
-        if (!_isOpened)
-        {
-            return;
-        }
-
-        if (UsesFullNativeTitleBar(preferences))
-        {
-            if (deferFullNativeTitleBar)
-            {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    if (_isOpened && UsesFullNativeTitleBar(_settings.ToPlatformAppearance()))
-                    {
-                        MacOSNativeTitleBar.Apply(this, enabled: true);
-                        MacOSMicaBackdrop.InvalidateWindowShadow(this);
-                    }
-                }, DispatcherPriority.Background);
-            }
-            else
-            {
-                MacOSNativeTitleBar.Apply(this, enabled: true);
-            }
-        }
-        else if (UsesStandaloneMacOSControls(preferences))
-        {
-            _macOSWindowControls = MacOSWindowControls.Attach(this);
-        }
-    }
-
-    private static bool UsesFullNativeTitleBar(PlatformAppearancePreferences preferences) =>
-        preferences.WindowCornerStyle == WindowCornerStyle.MacOS
-        && preferences.WindowControlStyle == WindowControlStyle.MacOS;
-
-    private static bool UsesStandaloneMacOSControls(PlatformAppearancePreferences preferences) =>
-        preferences.WindowCornerStyle != WindowCornerStyle.MacOS
-        && preferences.WindowControlStyle == WindowControlStyle.MacOS;
 
 
 

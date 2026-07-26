@@ -30,15 +30,15 @@ internal static class SnapshotRunner
     /// </summary>
     private const int MaxToleratedChannelDelta = 2;
 
-    /// <summary>Largest share of pixels allowed to carry that difference.</summary>
-    private const double MaxToleratedPixelFraction = 0.005;
-
     /// <summary>
     /// How many pixels of the window's outermost frame may exceed the channel
     /// delta. Kept small deliberately: a single glyph stroke is far more than
     /// this, so nothing meaningful can hide inside the allowance.
     /// </summary>
     private const int MaxToleratedBorderOutliers = 16;
+
+    /// <summary>Largest share of pixels allowed to differ at all.</summary>
+    private const double MaxToleratedPixelFraction = 0.005;
 
     /// <summary>Width in pixels of the window frame the looser rule covers.</summary>
     private const int WindowBorderBand = 2;
@@ -61,7 +61,10 @@ internal static class SnapshotRunner
             ?? throw new InvalidOperationException("Avalonia application was not initialised.");
         application.RequestedThemeVariant = scenario.Theme;
 
-        var window = new MainWindow(scenario.Settings)
+        // Native effects off: a headless platform handle is not an NSWindow,
+        // so the AppKit backdrop would render unreproducibly. Every brush the
+        // view layer chooses, including the mica/noBackdrop split, still applies.
+        var window = new MainWindow(scenario.Settings, enableNativeEffects: false)
         {
             Width = scenario.Width,
             Height = scenario.Height,
@@ -298,13 +301,18 @@ internal static class SnapshotRunner
         // than that (a moved control, a wrong brush, a changed font size) blows
         // straight past both limits, so they stay tight.
         //
-        // The window's own rounded border is held to a looser rule, because a
-        // 1px border can land exactly on it: the navigation pane parks at
-        // Margin="-320,0,320,0" when closed, which puts its right edge on
-        // column 0. Compositing a border over an antialiased corner is steep
-        // enough that a 1/255 alpha change lands tens of units away in the
-        // final pixel. Only a handful of pixels may do this, and only in the
-        // outermost two-pixel frame; the interior stays on the tight rule.
+        // Two limits: how far any pixel moved, and how many moved at all. A
+        // difference of one or two units out of 255 is below what a display can
+        // resolve; anything that actually changes the UI (a moved control, a
+        // wrong brush, a different font size) lands tens to hundreds of units
+        // away and is caught on the first such pixel.
+        //
+        // The window's own rounded border is looser still, because a 1px border
+        // can land exactly on it: the navigation pane parks at
+        // Margin="-320,0,320,0" when closed, putting its right edge on column 0.
+        // Compositing a border over an antialiased corner is steep enough that a
+        // 1/255 alpha change lands tens of units away. Only a handful of pixels
+        // may do that, and only in the outermost two-pixel frame.
         var isAcceptable = fraction <= MaxToleratedPixelFraction
             && interiorOutliers == 0
             && borderOutliers <= MaxToleratedBorderOutliers;
