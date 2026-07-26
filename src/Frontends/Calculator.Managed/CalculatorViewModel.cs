@@ -10,8 +10,6 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 {
     private const int NavigationTransitionDurationMilliseconds = 220;
     private readonly NativeCalculator _calculator;
-    private readonly NativeUnitConverter _unitConverter;
-    private bool synchronizingUnitSelection;
 
     [ObservableProperty]
     public partial string PrimaryDisplay { get; private set; }
@@ -32,6 +30,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public HistoryViewModel History { get; }
 
     public MemoryViewModel Memory { get; }
+
+    public UnitConverterViewModel Converter { get; }
 
 
 
@@ -251,28 +251,14 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public string ProgrammerWordSizeLabel => SelectedProgrammerWordSize.ToString().ToUpperInvariant();
     public ObservableCollection<CalculatorProgrammerBitGroup> ProgrammerBitGroups { get; } = [];
 
-    [ObservableProperty]
-    public partial string UnitFromDisplay { get; private set; } = "0";
 
-    [ObservableProperty]
-    public partial string UnitToDisplay { get; private set; } = "0";
 
-    [ObservableProperty]
-    public partial UnitConverterCategory? SelectedUnitCategory { get; set; }
 
-    [ObservableProperty]
-    public partial UnitConverterUnit? SelectedFromUnit { get; set; }
 
-    [ObservableProperty]
-    public partial UnitConverterUnit? SelectedToUnit { get; set; }
 
-    public ObservableCollection<UnitConverterCategory> UnitCategories { get; } = [];
-    public ObservableCollection<UnitConverterUnit> UnitDefinitions { get; } = [];
-    public ObservableCollection<string> UnitSuggestions { get; } = [];
     public ObservableCollection<CalculatorNavigationItem> CalculatorNavigationItems { get; } = [];
     public ObservableCollection<CalculatorNavigationItem> ConverterNavigationItems { get; } = [];
     public string CalculatorGroupName { get; }
-    public string ConverterGroupName { get; }
     public string SettingsName { get; }
     public string SettingsAppearanceName { get; }
     public string AppThemeName { get; }
@@ -333,7 +319,6 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         TitleBarApplicationName = appResources.GetString("AppName");
         ModeDisplayName = appResources.GetString("StandardModeText");
         CalculatorGroupName = appResources.GetString("CalculatorModeTextCaps");
-        ConverterGroupName = appResources.GetString("ConverterModeTextCaps");
         SettingsName = appResources.GetString("SettingsHeader.Text");
         SettingsAppearanceName = appResources.GetString("SettingsAppearance.Text");
         AppThemeName = appResources.GetString("AppThemeExpander.Header");
@@ -387,16 +372,17 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         History.PropertyChanged += (_, _) => NotifyHistoryVisibilityChanged();
         BuildProgrammerBitGroups();
         var regionCode = GetCurrentRegionCode();
-        _unitConverter = new NativeUnitConverter(appResources, regionCode, numberFormat);
-        Replace(UnitCategories, _unitConverter.Categories);
-        synchronizingUnitSelection = true;
-        SelectedUnitCategory = UnitCategories.FirstOrDefault();
-        synchronizingUnitSelection = false;
-        if (SelectedUnitCategory is not null)
+        Converter = new UnitConverterViewModel(
+            new NativeUnitConverter(appResources, regionCode, numberFormat),
+            appResources.GetString("ConverterModeTextCaps"));
+        Converter.CategorySelected += category =>
         {
-            _unitConverter.SelectCategory(SelectedUnitCategory.Id);
-        }
-        SynchronizeUnitConverter();
+            // Choosing a category is a mode change, so the shell owns what
+            // follows from it.
+            ModeDisplayName = category.Name;
+            CurrentViewMode = (CalculatorViewMode)category.Id;
+            SetSelectedNavigationItem(CurrentViewMode);
+        };
         BuildNavigationItems(appResources);
         SetSelectedNavigationItem(CalculatorViewMode.Standard);
         PrimaryDisplay = _calculator.PrimaryDisplay;
@@ -905,39 +891,18 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
         if (item.Group == CalculatorNavigationGroup.Converter)
         {
-            var category = UnitCategories.FirstOrDefault(value => value.Id == (int)item.Mode);
-            if (category is not null)
-            {
-                SelectedUnitCategory = category;
-                if (_unitConverter.SelectedUnits.FromUnitId < 0)
-                {
-                    _unitConverter.SelectCategory(category.Id);
-                    SynchronizeUnitConverter();
-                }
-            }
+            Converter.SelectCategoryForMode((int)item.Mode);
         }
 
         await SetNavigationPaneOpenAsync(false);
     }
 
-    [RelayCommand]
-    private void SendUnitCommand(string commandName)
-    {
-        _unitConverter.SendCommand(Enum.Parse<UnitConverterCommand>(commandName, ignoreCase: false));
-        SynchronizeUnitDisplays();
-    }
 
-    [RelayCommand]
-    private void SwapUnits()
-    {
-        _unitConverter.SwitchActive(UnitToDisplay);
-        SynchronizeUnitConverter();
-    }
 
     public void Dispose()
     {
         _calculator.Dispose();
-        _unitConverter.Dispose();
+        Converter.Dispose();
         GC.SuppressFinalize(this);
     }
 
@@ -1040,21 +1005,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         }
     }
 
-    partial void OnSelectedUnitCategoryChanged(UnitConverterCategory? value)
-    {
-        if (value is null || synchronizingUnitSelection)
-        {
-            return;
-        }
-        _unitConverter.SelectCategory(value.Id);
-        ModeDisplayName = value.Name;
-        CurrentViewMode = (CalculatorViewMode)value.Id;
-        SetSelectedNavigationItem(CurrentViewMode);
-        SynchronizeUnitConverter();
-    }
 
-    partial void OnSelectedFromUnitChanged(UnitConverterUnit? value) => ApplySelectedUnits();
-    partial void OnSelectedToUnitChanged(UnitConverterUnit? value) => ApplySelectedUnits();
 
     partial void OnUseMicaEffectChanged(bool value) => NotifyPlatformAppearanceChanged();
     partial void OnSelectedFontFamilyChanged(string value)
@@ -1073,44 +1024,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             SelectedWindowCornerStyle,
             SelectedWindowControlStyle));
 
-    private void ApplySelectedUnits()
-    {
-        if (synchronizingUnitSelection || SelectedFromUnit is null || SelectedToUnit is null)
-        {
-            return;
-        }
-        _unitConverter.SetUnits(SelectedFromUnit.Id, SelectedToUnit.Id);
-        SynchronizeUnitDisplays();
-    }
 
-    private void SynchronizeUnitConverter()
-    {
-        synchronizingUnitSelection = true;
-        try
-        {
-            var units = _unitConverter.Units.Where(unit => !unit.IsWhimsical).ToArray();
-            Replace(UnitDefinitions, units);
-            var selected = _unitConverter.SelectedUnits;
-            SelectedFromUnit = units.FirstOrDefault(unit => unit.Id == selected.FromUnitId);
-            SelectedToUnit = units.FirstOrDefault(unit => unit.Id == selected.ToUnitId);
-        }
-        finally
-        {
-            synchronizingUnitSelection = false;
-        }
-        SynchronizeUnitDisplays();
-    }
 
-    private void SynchronizeUnitDisplays()
-    {
-        UnitFromDisplay = _unitConverter.FromDisplay;
-        UnitToDisplay = _unitConverter.ToDisplay;
-        var abbreviations = _unitConverter.Units.ToDictionary(unit => unit.Id, unit => unit.Abbreviation);
-        Replace(UnitSuggestions, _unitConverter.Suggestions.Select(suggestion =>
-            abbreviations.TryGetValue(suggestion.UnitId, out var abbreviation)
-                ? $"{suggestion.Value} {abbreviation}"
-                : suggestion.Value));
-    }
 
     private static string GetCurrentRegionCode()
     {

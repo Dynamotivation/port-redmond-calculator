@@ -42,7 +42,7 @@
                           ItemTemplate="{StaticResource NavigationItemTemplate}" />
 
             <TextBlock Margin="16,18,8,5" FontSize="19" FontWeight="Medium" Opacity="0.62"
-                       Text="{Binding ConverterGroupName}" />
+                       Text="{Binding Converter.GroupName}" />
             <ItemsControl ItemsSource="{Binding ConverterNavigationItems}"
                           ItemTemplate="{StaticResource NavigationItemTemplate}" />
           </StackPanel>
