@@ -753,15 +753,7 @@ public partial class MainWindow : Window
         preferences.WindowCornerStyle != WindowCornerStyle.MacOS
         && preferences.WindowControlStyle == WindowControlStyle.MacOS;
 
-    private async void License_OnClick(object? sender, RoutedEventArgs e) =>
-        await Launcher.LaunchUriAsync(new Uri("https://github.com/microsoft/calculator/blob/main/LICENSE"));
 
-    private async void ServicesAgreement_OnClick(object? sender, RoutedEventArgs e) =>
-        await Launcher.LaunchUriAsync(new Uri("https://go.microsoft.com/fwlink/?LinkID=822631"));
 
-    private async void PrivacyStatement_OnClick(object? sender, RoutedEventArgs e) =>
-        await Launcher.LaunchUriAsync(new Uri("https://go.microsoft.com/fwlink/?LinkID=521839"));
 
-    private async void Feedback_OnClick(object? sender, RoutedEventArgs e) =>
-        await Launcher.LaunchUriAsync(new Uri("https://github.com/Dynamotivation/RedmondCalculator/issues"));
 }
