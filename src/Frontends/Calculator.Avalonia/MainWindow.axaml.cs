@@ -120,7 +120,7 @@ public partial class MainWindow : Window
 
         if (_viewModel.IsAlwaysOnTop)
         {
-            _viewModel.SetHistoryDocked(false);
+            _viewModel.History.SetDocked(false);
             CalculatorResponsiveLayout.ColumnDefinitions = new ColumnDefinitions("*,0");
             Display.Size = height >= 260
                 ? CalculatorDisplaySize.Medium
@@ -132,7 +132,7 @@ public partial class MainWindow : Window
         var isDocked = width >= historyDockThreshold;
         var usesFixedHistoryWidth = (width >= 768 && height >= 1366)
             || (width >= 1024 && height >= 768);
-        _viewModel.SetHistoryDocked(isDocked);
+        _viewModel.History.SetDocked(isDocked);
 
         if (!isDocked)
         {
@@ -320,7 +320,7 @@ public partial class MainWindow : Window
     {
         if (_viewModel.IsNarrowHistoryPaneVisible)
         {
-            _viewModel.CloseHistoryCommand.Execute(null);
+            _viewModel.History.CloseCommand.Execute(null);
         }
     }
 

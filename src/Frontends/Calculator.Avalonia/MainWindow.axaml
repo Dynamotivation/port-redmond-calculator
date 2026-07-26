@@ -69,9 +69,9 @@
           <TextBlock Classes="alwaysOnTopGlyph" Text="{Binding AlwaysOnTopGlyph}" />
         </Button>
         <Button x:Name="HistoryButton" Grid.Column="4" Classes="chromeButton"
-                AutomationProperties.Name="{Binding HistoryAutomationName}"
+                AutomationProperties.Name="{Binding History.Strings.AutomationName}"
                 IsVisible="{Binding IsHistoryButtonVisible}"
-                Command="{Binding ToggleHistoryCommand}" ToolTip.Tip="{Binding HistoryTooltip}">
+                Command="{Binding History.ToggleCommand}" ToolTip.Tip="{Binding History.Strings.ToggleTooltip}">
           <Canvas Width="28" Height="28">
             <Path Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
                   Data="M 6,9 A 9,9 0 1 1 5,16 M 3,6 L 3,12 L 9,12 M 14,8 L 14,14 L 18,16" />
