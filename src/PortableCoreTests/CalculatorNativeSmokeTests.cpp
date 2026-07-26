@@ -167,6 +167,43 @@ int main()
         calculator_destroy(handle);
         return 1;
     }
+    if (calculator_history_recall(handle, 0, 0) != CALCULATOR_STATUS_OK)
+    {
+        std::cerr << "native history recall failed\n";
+        calculator_destroy(handle);
+        return 1;
+    }
+    const auto recalledDisplay = ReadString([&](char* buffer, size_t size, size_t* required) {
+        return calculator_get_primary_display(handle, buffer, size, required);
+    });
+    if (recalledDisplay != "5"
+        || calculator_send_command(handle, static_cast<int32_t>(Command::CommandADD)) != CALCULATOR_STATUS_OK
+        || calculator_send_command(handle, static_cast<int32_t>(Command::Command5)) != CALCULATOR_STATUS_OK
+        || calculator_send_command(handle, static_cast<int32_t>(Command::CommandEQU)) != CALCULATOR_STATUS_OK)
+    {
+        std::cerr << "native history recall did not restore its display\n";
+        calculator_destroy(handle);
+        return 1;
+    }
+    const auto recalledResult = ReadString([&](char* buffer, size_t size, size_t* required) {
+        return calculator_get_primary_display(handle, buffer, size, required);
+    });
+    if (recalledResult != "10")
+    {
+        std::cerr << "native history recall did not restore an executable value\n";
+        calculator_destroy(handle);
+        return 1;
+    }
+    if (calculator_send_command(handle, static_cast<int32_t>(Command::CommandCLEAR)) != CALCULATOR_STATUS_OK
+        || calculator_send_command(handle, static_cast<int32_t>(Command::Command2)) != CALCULATOR_STATUS_OK
+        || calculator_send_command(handle, static_cast<int32_t>(Command::CommandADD)) != CALCULATOR_STATUS_OK
+        || calculator_send_command(handle, static_cast<int32_t>(Command::Command3)) != CALCULATOR_STATUS_OK
+        || calculator_send_command(handle, static_cast<int32_t>(Command::CommandEQU)) != CALCULATOR_STATUS_OK)
+    {
+        std::cerr << "failed to restore memory test value after history recall\n";
+        calculator_destroy(handle);
+        return 1;
+    }
 
     if (calculator_memory_store(handle) != CALCULATOR_STATUS_OK)
     {
@@ -202,7 +239,7 @@ int main()
 
     calculator_event_state events{};
     if (calculator_get_event_state(handle, &events) != CALCULATOR_STATUS_OK || events.binary_operator_received_count == 0
-        || events.history_item_added_count != 1 || events.memory_item_changed_count == 0 || events.input_changed_count == 0)
+        || events.history_item_added_count < 3 || events.memory_item_changed_count == 0 || events.input_changed_count == 0)
     {
         std::cerr << "native event state did not reflect calculator activity\n";
         calculator_destroy(handle);

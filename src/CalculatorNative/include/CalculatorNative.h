@@ -139,6 +139,10 @@ extern "C"
         char* buffer,
         size_t buffer_size,
         size_t* required_size);
+    CALCULATOR_API calculator_status calculator_history_recall(
+        calculator_handle* handle,
+        size_t index,
+        int32_t scientific_notation_enabled);
     CALCULATOR_API calculator_status calculator_history_remove(calculator_handle* handle, size_t index);
     CALCULATOR_API calculator_status calculator_history_clear(calculator_handle* handle);
 

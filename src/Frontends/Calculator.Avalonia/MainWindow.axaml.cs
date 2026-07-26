@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
@@ -60,6 +61,11 @@ public partial class MainWindow : Window
     private AppSettings _settings;
     private bool _isOpened;
     private int _presentationVersion;
+    private bool _hasNormalWindowPlacement;
+    private PixelPoint _normalWindowPosition;
+    private Size _normalWindowSize;
+    private WindowState _normalWindowState;
+    private Size _compactWindowSize = new(320, 394);
 
     public MainWindow()
         : this(new AppSettings())
@@ -139,6 +145,15 @@ public partial class MainWindow : Window
 
     private void UpdateResponsiveCalculatorLayout(double width, double height)
     {
+        if (_viewModel.IsAlwaysOnTop)
+        {
+            _viewModel.SetHistoryDocked(false);
+            CalculatorResponsiveLayout.ColumnDefinitions = new ColumnDefinitions("*,0");
+            CalculatorResultHost.MinHeight = height >= 260 ? 54 : 20;
+            PrimaryResultText.FontSize = height >= 260 ? 46 : 18;
+            return;
+        }
+
         const double historyDockThreshold = 560;
         var isDocked = width >= historyDockThreshold;
         var usesFixedHistoryWidth = (width >= 768 && height >= 1366)
@@ -182,6 +197,16 @@ public partial class MainWindow : Window
     {
         if (e.PropertyName == nameof(CalculatorViewModel.CurrentViewMode))
         {
+            if (_viewModel.IsAlwaysOnTop && !_viewModel.IsStandardMode)
+            {
+                ExitCompactAlwaysOnTop();
+            }
+
+            UpdateCalculatorModeLayout();
+            UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
+        }
+        else if (e.PropertyName == nameof(CalculatorViewModel.IsAlwaysOnTop))
+        {
             UpdateCalculatorModeLayout();
             UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
         }
@@ -189,8 +214,24 @@ public partial class MainWindow : Window
 
     private void UpdateCalculatorModeLayout()
     {
+        if (_viewModel.IsAlwaysOnTop)
+        {
+            CalculatorPageContent.RowDefinitions[0].Height = new GridLength(0);
+            CalculatorPageContent.RowDefinitions[1].Height = new GridLength(0);
+            CalculatorPageContent.RowDefinitions[2].Height = new GridLength(72, GridUnitType.Star);
+            CalculatorPageContent.RowDefinitions[3].Height = new GridLength(0);
+            CalculatorPageContent.RowDefinitions[3].MinHeight = 0;
+            CalculatorPageContent.RowDefinitions[4].Height = new GridLength(0);
+            CalculatorPageContent.RowDefinitions[5].Height = new GridLength(308, GridUnitType.Star);
+            return;
+        }
+
         var scientific = _viewModel.IsScientificMode;
         var programmer = _viewModel.IsProgrammerMode;
+        CalculatorPageContent.RowDefinitions[0].Height = new GridLength(48);
+        CalculatorPageContent.RowDefinitions[1].Height = new GridLength(22, GridUnitType.Star);
+        CalculatorPageContent.RowDefinitions[2].Height = new GridLength(72, GridUnitType.Star);
+        CalculatorPageContent.RowDefinitions[4].Height = new GridLength(32, GridUnitType.Star);
         var displayControlsRow = CalculatorPageContent.RowDefinitions[3];
         displayControlsRow.Height = new GridLength(programmer ? 96 : scientific ? 32 : 0, programmer || scientific ? GridUnitType.Star : GridUnitType.Pixel);
         displayControlsRow.MinHeight = programmer ? 96 : scientific ? 32 : 0;
@@ -372,7 +413,7 @@ public partial class MainWindow : Window
             shortcutKey = ShortcutKey.Named("DECIMAL");
             modifiers = ShortcutModifiers.None;
         }
-        else if (symbol?.Length == 1 && !char.IsControl(symbol[0]))
+        else if (symbol?.Length == 1 && !char.IsControl(symbol[0]) && !char.IsWhiteSpace(symbol[0]))
         {
             var hasCommandModifier = (modifiers & (ShortcutModifiers.Control | ShortcutModifiers.Alt | ShortcutModifiers.Command)) != 0;
             var isLetterKey = char.IsLetter(symbol[0]);
@@ -400,6 +441,12 @@ public partial class MainWindow : Window
             }
         }
         else
+        {
+            input = default;
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(shortcutKey.Value))
         {
             input = default;
             return false;
@@ -757,8 +804,68 @@ public partial class MainWindow : Window
 
     private void AlwaysOnTop_OnClick(object? sender, RoutedEventArgs e)
     {
-        _viewModel.IsAlwaysOnTop = !_viewModel.IsAlwaysOnTop;
-        Topmost = _viewModel.IsAlwaysOnTop;
+        if (_viewModel.IsAlwaysOnTop)
+        {
+            ExitCompactAlwaysOnTop();
+        }
+        else
+        {
+            EnterCompactAlwaysOnTop();
+        }
+    }
+
+    private void MemoryFlyout_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Control)
+        {
+            MemoryPopup.IsOpen = !MemoryPopup.IsOpen;
+            e.Handled = true;
+        }
+    }
+
+    private void EnterCompactAlwaysOnTop()
+    {
+        if (!_viewModel.CanEnterAlwaysOnTop)
+        {
+            return;
+        }
+
+        _normalWindowState = WindowState;
+        _normalWindowPosition = Position;
+        _normalWindowSize = Bounds.Size;
+        _hasNormalWindowPlacement = true;
+
+        _viewModel.CloseHistoryCommand.Execute(null);
+        _viewModel.CloseNavigationPaneCommand.Execute(null);
+        WindowState = WindowState.Normal;
+        MinWidth = 240;
+        MinHeight = 260;
+        Width = Math.Max(MinWidth, _compactWindowSize.Width);
+        Height = Math.Max(MinHeight, _compactWindowSize.Height);
+        _viewModel.IsAlwaysOnTop = true;
+        Topmost = true;
+    }
+
+    private void ExitCompactAlwaysOnTop()
+    {
+        if (!_viewModel.IsAlwaysOnTop)
+        {
+            return;
+        }
+
+        _compactWindowSize = Bounds.Size;
+        Topmost = false;
+        _viewModel.IsAlwaysOnTop = false;
+        MinWidth = 320;
+        MinHeight = 500;
+
+        if (_hasNormalWindowPlacement)
+        {
+            Width = Math.Max(MinWidth, _normalWindowSize.Width);
+            Height = Math.Max(MinHeight, _normalWindowSize.Height);
+            Position = _normalWindowPosition;
+            WindowState = _normalWindowState;
+        }
     }
 
     private void Maximize_OnClick(object? sender, RoutedEventArgs e) =>

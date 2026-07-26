@@ -4,6 +4,7 @@
 #include "CalcManager/CalculatorManager.h"
 #include "CalcManager/CalculatorResource.h"
 #include "CalcManager/Command.h"
+#include "CalcManager/ExpressionCommandInterface.h"
 #include "CalcManager/UnitConverter.h"
 #include "CalcViewModel/DataLoaders/UnitConverterDataLoader.h"
 
@@ -256,6 +257,64 @@ namespace
             return CALCULATOR_STATUS_INTERNAL_ERROR;
         }
     }
+
+    std::vector<int> FlattenExpressionCommands(
+        const std::vector<std::shared_ptr<IExpressionCommand>>& expressionCommands)
+    {
+        std::vector<int> commands;
+        for (const auto& expressionCommand : expressionCommands)
+        {
+            switch (expressionCommand->GetCommandType())
+            {
+            case CalculationManager::CommandType::UnaryCommand:
+            {
+                const auto command = std::dynamic_pointer_cast<IUnaryCommand>(expressionCommand);
+                commands.insert(commands.end(), command->GetCommands()->begin(), command->GetCommands()->end());
+                break;
+            }
+            case CalculationManager::CommandType::BinaryCommand:
+                commands.push_back(std::dynamic_pointer_cast<IBinaryCommand>(expressionCommand)->GetCommand());
+                break;
+            case CalculationManager::CommandType::Parentheses:
+                commands.push_back(std::dynamic_pointer_cast<IParenthesisCommand>(expressionCommand)->GetCommand());
+                break;
+            case CalculationManager::CommandType::OperandCommand:
+            {
+                const auto command = std::dynamic_pointer_cast<IOpndCommand>(expressionCommand);
+                bool needsSign = command->IsNegative();
+                for (const auto operandCommand : *command->GetCommands())
+                {
+                    commands.push_back(operandCommand);
+                    if (needsSign && operandCommand != static_cast<int>(Command::Command0))
+                    {
+                        commands.push_back(static_cast<int>(Command::CommandSIGN));
+                        needsSign = false;
+                    }
+                }
+                break;
+            }
+            }
+        }
+        return commands;
+    }
+
+    class HistoryLoadScope
+    {
+    public:
+        explicit HistoryLoadScope(CalculatorManager& manager)
+            : m_manager(manager)
+        {
+            m_manager.SetInHistoryItemLoadMode(true);
+        }
+
+        ~HistoryLoadScope()
+        {
+            m_manager.SetInHistoryItemLoadMode(false);
+        }
+
+    private:
+        CalculatorManager& m_manager;
+    };
 }
 
 struct calculator_handle
@@ -263,6 +322,7 @@ struct calculator_handle
     std::unique_ptr<ResourceProvider> resources;
     std::unique_ptr<DisplayAdapter> display;
     std::unique_ptr<CalculatorManager> manager;
+    calculator_mode mode = CALCULATOR_MODE_STANDARD;
 };
 
 struct calculator_unit_converter_handle
@@ -342,7 +402,10 @@ calculator_status calculator_reset(calculator_handle* handle, int32_t clearMemor
     {
         return CALCULATOR_STATUS_INVALID_ARGUMENT;
     }
-    return Protect([&]() { handle->manager->Reset(clearMemory != 0); });
+    return Protect([&]() {
+        handle->manager->Reset(clearMemory != 0);
+        handle->mode = CALCULATOR_MODE_STANDARD;
+    });
 }
 
 calculator_status calculator_set_mode(calculator_handle* handle, calculator_mode mode)
@@ -366,6 +429,7 @@ calculator_status calculator_set_mode(calculator_handle* handle, calculator_mode
         default:
             throw std::invalid_argument("unknown calculator mode");
         }
+        handle->mode = mode;
     });
 }
 
@@ -561,6 +625,58 @@ calculator_status calculator_get_history_result(
     }
     const auto value = CalculatorNative::Utf8::FromWide(handle->manager->GetHistoryItems()[index]->historyItemVector.result);
     return CopyString(value, buffer, bufferSize, requiredSize);
+}
+
+calculator_status calculator_history_recall(
+    calculator_handle* handle,
+    size_t index,
+    int32_t scientificNotationEnabled)
+{
+    if (handle == nullptr || index >= handle->manager->GetHistoryItems().size()
+        || handle->mode == CALCULATOR_MODE_PROGRAMMER)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+
+    return Protect([&]() {
+        const auto item = handle->manager->GetHistoryItems()[index];
+        const auto commands = FlattenExpressionCommands(*item->historyItemVector.spCommands);
+        const auto degreeMode = handle->manager->GetCurrentDegreeMode();
+
+        {
+            HistoryLoadScope historyLoad(*handle->manager);
+            handle->manager->Reset(false);
+            if (handle->mode == CALCULATOR_MODE_SCIENTIFIC)
+            {
+                handle->manager->SetScientificMode();
+            }
+            else
+            {
+                handle->manager->SetStandardMode();
+            }
+
+            if (scientificNotationEnabled != 0)
+            {
+                handle->manager->SendCommand(Command::CommandFE);
+            }
+            handle->manager->SendCommand(degreeMode);
+            for (const auto command : commands)
+            {
+                handle->manager->SendCommand(static_cast<Command>(command));
+            }
+
+            // Match StandardCalculatorViewModel::Recalculate(fromHistory: true):
+            // the double toggle commits the final operand while preserving F-E.
+            handle->manager->SendCommand(Command::CommandFE);
+            handle->manager->SendCommand(Command::CommandFE);
+        }
+
+        // Recalculation deliberately suppresses intermediate callbacks. UWP's
+        // view model then restores the selected item's presentation in one
+        // update; the portable adapter owns that boundary here.
+        handle->display->SetPrimaryDisplay(item->historyItemVector.result, false);
+        handle->display->SetExpressionDisplay(item->historyItemVector.spTokens, item->historyItemVector.spCommands);
+    });
 }
 
 calculator_status calculator_history_remove(calculator_handle* handle, size_t index)

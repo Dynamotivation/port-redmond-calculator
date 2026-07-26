@@ -150,6 +150,10 @@ internal static unsafe partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
     internal static partial NativeStatus GetHistoryResult(nint handle, nuint index, byte* buffer, nuint bufferSize, out nuint requiredSize);
 
+    [LibraryImport(LibraryName, EntryPoint = "calculator_history_recall")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus HistoryRecall(nint handle, nuint index, int scientificNotationEnabled);
+
     [LibraryImport(LibraryName, EntryPoint = "calculator_history_remove")]
     [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
     internal static partial NativeStatus HistoryRemove(nint handle, nuint index);

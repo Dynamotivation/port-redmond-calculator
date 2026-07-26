@@ -94,13 +94,14 @@ public sealed unsafe class NativeCalculator : IDisposable
         {
             ThrowIfFailed(NativeMethods.GetHistoryCount(Handle, out var count));
             var values = new CalculatorHistoryEntry[checked((int)count)];
-            for (nuint index = 0; index < count; index++)
+            for (nuint displayIndex = 0; displayIndex < count; displayIndex++)
             {
+                var nativeIndex = count - 1 - displayIndex;
                 var expression = ReadUtf8((nint handle, byte* buffer, nuint size, out nuint required) =>
-                    NativeMethods.GetHistoryExpression(handle, index, buffer, size, out required));
+                    NativeMethods.GetHistoryExpression(handle, nativeIndex, buffer, size, out required));
                 var result = ReadUtf8((nint handle, byte* buffer, nuint size, out nuint required) =>
-                    NativeMethods.GetHistoryResult(handle, index, buffer, size, out required));
-                values[checked((int)index)] = new CalculatorHistoryEntry(expression, result);
+                    NativeMethods.GetHistoryResult(handle, nativeIndex, buffer, size, out required));
+                values[checked((int)displayIndex)] = new CalculatorHistoryEntry(nativeIndex, expression, result);
             }
             return values;
         }
@@ -125,6 +126,8 @@ public sealed unsafe class NativeCalculator : IDisposable
     public void MemoryClear(nuint index = 0) => ThrowIfFailed(NativeMethods.MemoryClear(Handle, index));
     public void MemoryClearAll() => ThrowIfFailed(NativeMethods.MemoryClearAll(Handle));
     public void HistoryRemove(nuint index) => ThrowIfFailed(NativeMethods.HistoryRemove(Handle, index));
+    public void HistoryRecall(nuint index, bool scientificNotationEnabled) =>
+        ThrowIfFailed(NativeMethods.HistoryRecall(Handle, index, scientificNotationEnabled ? 1 : 0));
     public void HistoryClear() => ThrowIfFailed(NativeMethods.HistoryClear(Handle));
 
     public void Dispose()
@@ -169,4 +172,6 @@ public sealed unsafe class NativeCalculator : IDisposable
     private unsafe delegate NativeStatus GetString(nint handle, byte* buffer, nuint bufferSize, out nuint requiredSize);
 }
 
-public sealed record CalculatorHistoryEntry(string Expression, string Result);
+public sealed record CalculatorHistoryEntry(nuint NativeIndex, string Expression, string Result);
+
+public sealed record CalculatorMemoryEntry(nuint Index, string Value);
