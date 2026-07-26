@@ -40,13 +40,13 @@ internal static class Scenarios
     [
         Standard("standard-dark-default", 524, 773, ThemeVariant.Dark, Opaque),
         Standard("standard-light-default", 524, 773, ThemeVariant.Light, Opaque),
-        // NOTE: the mica/transparent variants are deliberately absent. With
-        // UseMicaEffect on, MainWindow attaches MacOSMicaBackdrop, which sends
-        // Objective-C messages to the headless window's platform handle. The
-        // result is not a real NSWindow, so the frame it produces is not
-        // reproducible. Once IWindowPresentationService exists (step 8) the
-        // harness can inject a portable implementation and these come back as
-        // "standard-{dark,light}-transparent".
+        // NOTE: no mica/transparent scenario. Suppressing the AppKit backdrop
+        // was not enough to make one reproducible -- the instability is the
+        // headless compositor's handling of a translucent window surface, not
+        // the native call. Identical code re-run differs by up to 9/255 across
+        // most of the frame in light theme, and intermittently by 3/255 in
+        // dark. Backdrop parity stays a manual check; a baseline that fails one
+        // run in three is worse than none.
 
         // Height bands for the result row: >=800, the mid band, and the small band.
         Standard("standard-dark-tall", 524, 820, ThemeVariant.Dark, Opaque),
