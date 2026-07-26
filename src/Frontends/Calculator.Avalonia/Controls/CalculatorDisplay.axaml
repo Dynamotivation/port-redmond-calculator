@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:managed="using:Calculator.Managed"
+             x:Class="Calculator.Avalonia.Controls.CalculatorDisplay"
+             x:DataType="managed:CalculatorViewModel"
+             IsVisible="{Binding IsCalculatorMode}">
+  <!-- The original uses proportional Expression and Result rows. The 22:72
+       split matches the row weights this control replaced in MainWindow. -->
+  <Grid x:Name="DisplayRows" RowDefinitions="22*,72*">
+    <TextBlock x:Name="ExpressionText" Margin="6,0"
+               HorizontalAlignment="Right" VerticalAlignment="Bottom"
+               Opacity="0.64" FontSize="14" Text="{Binding ExpressionDisplay}" />
+    <Grid x:Name="ResultHost" Grid.Row="1" MinHeight="72">
+      <TextBlock x:Name="PrimaryResultText" Margin="6,0"
+                 HorizontalAlignment="Right" VerticalAlignment="Center"
+                 TextAlignment="Right" TextTrimming="CharacterEllipsis"
+                 FontSize="46" FontWeight="SemiBold" Text="{Binding PrimaryDisplay}" />
+    </Grid>
+  </Grid>
+</UserControl>

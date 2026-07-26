@@ -9,6 +9,7 @@ using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Calculator.Avalonia.Controls;
 using Calculator.Managed;
 using Calculator.Shortcuts;
 
@@ -21,7 +22,8 @@ public partial class MainWindow : Window
     private readonly CalculatorViewModel _viewModel;
     private readonly ShortcutService _shortcutService;
     private readonly IReadOnlyList<IDisposable> _shortcutRegistrations;
-    private readonly Dictionary<Key, Button> _keyboardPressedButtons = [];
+    private readonly Dictionary<Key, string> _pressedShortcutIds = [];
+    private IReadOnlyList<IShortcutPressedTarget> _shortcutPressedTargets = [];
     private readonly IReadOnlySet<string> _calculatorShortcutScope = new HashSet<string>(StringComparer.Ordinal)
     {
         "calculator",
@@ -35,28 +37,6 @@ public partial class MainWindow : Window
     {
         "calculator",
         "programmer",
-    };
-    private static readonly IReadOnlySet<CalculatorCommand> ScientificErrorDisabledCommands = new HashSet<CalculatorCommand>
-    {
-        CalculatorCommand.Divide, CalculatorCommand.Multiply, CalculatorCommand.Subtract,
-        CalculatorCommand.Add, CalculatorCommand.Sign,
-        CalculatorCommand.Square, CalculatorCommand.Cube, CalculatorCommand.SquareRoot,
-        CalculatorCommand.CubeRoot, CalculatorCommand.Power, CalculatorCommand.Root,
-        CalculatorCommand.TenPowerX, CalculatorCommand.TwoPowerX, CalculatorCommand.EPowerX,
-        CalculatorCommand.LogBase10, CalculatorCommand.NaturalLog, CalculatorCommand.LogBaseY,
-        CalculatorCommand.Reciprocal, CalculatorCommand.Absolute, CalculatorCommand.Exp,
-        CalculatorCommand.Modulo, CalculatorCommand.Factorial, CalculatorCommand.OpenParenthesis,
-        CalculatorCommand.CloseParenthesis, CalculatorCommand.Pi, CalculatorCommand.Euler,
-        CalculatorCommand.Sin, CalculatorCommand.Cos, CalculatorCommand.Tan,
-        CalculatorCommand.Sinh, CalculatorCommand.Cosh, CalculatorCommand.Tanh,
-        CalculatorCommand.InverseSin, CalculatorCommand.InverseCos, CalculatorCommand.InverseTan,
-        CalculatorCommand.InverseSinh, CalculatorCommand.InverseCosh, CalculatorCommand.InverseTanh,
-        CalculatorCommand.Sec, CalculatorCommand.Csc, CalculatorCommand.Cot,
-        CalculatorCommand.Sech, CalculatorCommand.Csch, CalculatorCommand.Coth,
-        CalculatorCommand.InverseSec, CalculatorCommand.InverseCsc, CalculatorCommand.InverseCot,
-        CalculatorCommand.InverseSech, CalculatorCommand.InverseCsch, CalculatorCommand.InverseCoth,
-        CalculatorCommand.Floor, CalculatorCommand.Ceiling, CalculatorCommand.Random,
-        CalculatorCommand.Dms, CalculatorCommand.Degrees,
     };
     private AppSettings _settings;
     private bool _isOpened;
@@ -102,6 +82,13 @@ public partial class MainWindow : Window
         ScientificTrigFlyoutGrid.AddHandler(Button.ClickEvent, ScientificPopupCommand_OnClick);
         ScientificFunctionFlyoutGrid.AddHandler(Button.ClickEvent, ScientificPopupCommand_OnClick);
         ScientificInverseOperators.AddHandler(Button.ClickEvent, ScientificInverseCommand_OnClick);
+        TitleBarChrome.DragRequested += TitleBarChrome_OnDragRequested;
+        TitleBarChrome.MinimizeRequested += TitleBarChrome_OnMinimizeRequested;
+        TitleBarChrome.MaximizeRequested += TitleBarChrome_OnMaximizeRequested;
+        TitleBarChrome.CloseRequested += TitleBarChrome_OnCloseRequested;
+        TitleBarChrome.AlwaysOnTopToggleRequested += TitleBarChrome_OnAlwaysOnTopToggleRequested;
+        _shortcutPressedTargets = [MemoryRow];
+        NarrowHistory.DismissRequested += NarrowHistory_OnDismissRequested;
         Deactivated += OnWindowDeactivated;
         SizeChanged += (_, _) => UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
         ScientificNumpadPanel.SizeChanged += (_, _) => UpdateScientificControlSizeState();
@@ -145,12 +132,15 @@ public partial class MainWindow : Window
 
     private void UpdateResponsiveCalculatorLayout(double width, double height)
     {
+        Display.IsCompactOverlay = _viewModel.IsAlwaysOnTop;
+
         if (_viewModel.IsAlwaysOnTop)
         {
             _viewModel.SetHistoryDocked(false);
             CalculatorResponsiveLayout.ColumnDefinitions = new ColumnDefinitions("*,0");
-            CalculatorResultHost.MinHeight = height >= 260 ? 54 : 20;
-            PrimaryResultText.FontSize = height >= 260 ? 46 : 18;
+            Display.Size = height >= 260
+                ? CalculatorDisplaySize.Medium
+                : CalculatorDisplaySize.Small;
             return;
         }
 
@@ -174,23 +164,17 @@ public partial class MainWindow : Window
             CalculatorResponsiveLayout.ColumnDefinitions = new ColumnDefinitions("320*,240*");
         }
 
-        // Calculator.xaml has three height states for the result row. Keep the
-        // original thresholds, minimums, star weight, and maximum font sizes.
-        if (height >= 800)
-        {
-            CalculatorResultHost.MinHeight = 108;
-            PrimaryResultText.FontSize = 72;
-        }
-        else if (height >= (_viewModel.IsProgrammerMode ? 640 : _viewModel.IsScientificMode ? 544 : 1))
-        {
-            CalculatorResultHost.MinHeight = 72;
-            PrimaryResultText.FontSize = 46;
-        }
-        else
-        {
-            CalculatorResultHost.MinHeight = 42;
-            PrimaryResultText.FontSize = 26;
-        }
+        // Calculator.xaml has three height states for the result row, and the
+        // middle threshold depends on the mode. The band is decided here
+        // because it is measured against the window; the metrics that follow
+        // from it belong to CalculatorDisplay.
+        var mediumThreshold = _viewModel.IsProgrammerMode ? 640
+            : _viewModel.IsScientificMode ? 544
+            : 1;
+
+        Display.Size = height >= 800 ? CalculatorDisplaySize.Large
+            : height >= mediumThreshold ? CalculatorDisplaySize.Medium
+            : CalculatorDisplaySize.Small;
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -322,15 +306,23 @@ public partial class MainWindow : Window
         }
 
         var match = result[0];
-        if (DispatchCalculatorShortcut(match.ShortcutId) && TryGetShortcutButton(match.ShortcutId, out var button))
+        if (DispatchCalculatorShortcut(match.ShortcutId))
         {
-            if (_keyboardPressedButtons.TryGetValue(e.Key, out var previousButton))
+            // Holding a key that maps to a different button than the one this
+            // key last pressed has to release the earlier one first.
+            if (_pressedShortcutIds.TryGetValue(e.Key, out var previousShortcutId))
             {
-                previousButton.Classes.Remove("keyboardPressed");
+                SetShortcutPressed(previousShortcutId, isPressed: false);
             }
 
-            button.Classes.Add("keyboardPressed");
-            _keyboardPressedButtons[e.Key] = button;
+            if (SetShortcutPressed(match.ShortcutId, isPressed: true))
+            {
+                _pressedShortcutIds[e.Key] = match.ShortcutId;
+            }
+            else
+            {
+                _pressedShortcutIds.Remove(e.Key);
+            }
         }
 
         e.Handled = result.Handled;
@@ -338,27 +330,50 @@ public partial class MainWindow : Window
 
     private void OnCalculatorKeyUp(object? sender, KeyEventArgs e)
     {
-        if (_keyboardPressedButtons.Remove(e.Key, out var button))
+        if (_pressedShortcutIds.Remove(e.Key, out var shortcutId))
         {
-            button.Classes.Remove("keyboardPressed");
+            SetShortcutPressed(shortcutId, isPressed: false);
         }
     }
 
     private void OnWindowDeactivated(object? sender, EventArgs e)
     {
-        foreach (var button in _keyboardPressedButtons.Values)
+        foreach (var shortcutId in _pressedShortcutIds.Values)
         {
-            button.Classes.Remove("keyboardPressed");
+            SetShortcutPressed(shortcutId, isPressed: false);
         }
-        _keyboardPressedButtons.Clear();
+        _pressedShortcutIds.Clear();
     }
 
-    private void HistorySmoke_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    /// <summary>
+    /// Offers the shortcut to each control that owns keypad buttons, then falls
+    /// back to the buttons still declared in this window. As modes are
+    /// extracted, entries leave TryGetShortcutButton and the fallback shrinks.
+    /// </summary>
+    private bool SetShortcutPressed(string shortcutId, bool isPressed)
+    {
+        foreach (var target in _shortcutPressedTargets)
+        {
+            if (target.TrySetShortcutPressed(shortcutId, isPressed))
+            {
+                return true;
+            }
+        }
+
+        if (!TryGetShortcutButton(shortcutId, out var button))
+        {
+            return false;
+        }
+
+        button.Classes.Set("keyboardPressed", isPressed);
+        return true;
+    }
+
+    private void NarrowHistory_OnDismissRequested(object? sender, EventArgs e)
     {
         if (_viewModel.IsNarrowHistoryPaneVisible)
         {
             _viewModel.CloseHistoryCommand.Execute(null);
-            e.Handled = true;
         }
     }
 
@@ -516,138 +531,18 @@ public partial class MainWindow : Window
 
     private bool DispatchCalculatorShortcut(string shortcutId)
     {
-        CalculatorCommand? command = shortcutId switch
+        switch (CalculatorShortcutRouter.Dispatch(_viewModel, shortcutId))
         {
-            "clearButton" => CalculatorCommand.Clear,
-            "clearEntryButton" => CalculatorCommand.ClearEntry,
-            "decimalSeparatorButton" => CalculatorCommand.Decimal,
-            "divideButton" => CalculatorCommand.Divide,
-            "equalButton" => CalculatorCommand.Equals,
-            "minusButton" => CalculatorCommand.Subtract,
-            "negateButton" => CalculatorCommand.Sign,
-            "num0Button" => CalculatorCommand.Zero,
-            "num1Button" => CalculatorCommand.One,
-            "num2Button" => CalculatorCommand.Two,
-            "num3Button" => CalculatorCommand.Three,
-            "num4Button" => CalculatorCommand.Four,
-            "num5Button" => CalculatorCommand.Five,
-            "num6Button" => CalculatorCommand.Six,
-            "num7Button" => CalculatorCommand.Seven,
-            "num8Button" => CalculatorCommand.Eight,
-            "num9Button" => CalculatorCommand.Nine,
-            "percentButton" => CalculatorCommand.Percent,
-            "plusButton" => CalculatorCommand.Add,
-            "squareRootButton" => CalculatorCommand.SquareRoot,
-            "backSpaceButton" => CalculatorCommand.Backspace,
-            "multiplyButton" => CalculatorCommand.Multiply,
-            "modButton" => CalculatorCommand.Modulo,
-            "aButton" => CalculatorCommand.A,
-            "bButton" => CalculatorCommand.B,
-            "cButton" => CalculatorCommand.C,
-            "dButton" => CalculatorCommand.D,
-            "eButton" => CalculatorCommand.E,
-            "fButton" => CalculatorCommand.F,
-            "andButton" => CalculatorCommand.And,
-            "orButton" => CalculatorCommand.Or,
-            "notButton" => CalculatorCommand.Not,
-            "nandButton" => CalculatorCommand.Nand,
-            "norButton" => CalculatorCommand.Nor,
-            "xorButton" => CalculatorCommand.Xor,
-            "absButton" => CalculatorCommand.Absolute,
-            "ceilButton" => CalculatorCommand.Ceiling,
-            "closeParenthesisButton" => CalculatorCommand.CloseParenthesis,
-            "cosButton" => CalculatorCommand.Cos,
-            "coshButton" => CalculatorCommand.Cosh,
-            "cotButton" => CalculatorCommand.Cot,
-            "cothButton" => CalculatorCommand.Coth,
-            "cscButton" => CalculatorCommand.Csc,
-            "cschButton" => CalculatorCommand.Csch,
-            "cubeRootButton" => CalculatorCommand.CubeRoot,
-            "degreeButton" => CalculatorCommand.Degrees,
-            "dmsButton" => CalculatorCommand.Dms,
-            "eulerButton" => CalculatorCommand.Euler,
-            "expButton" => CalculatorCommand.Exp,
-            "factorialButton" => CalculatorCommand.Factorial,
-            "floorButton" => CalculatorCommand.Floor,
-            "invcosButton" => CalculatorCommand.InverseCos,
-            "invcoshButton" => CalculatorCommand.InverseCosh,
-            "invcotButton" => CalculatorCommand.InverseCot,
-            "invcothButton" => CalculatorCommand.InverseCoth,
-            "invcscButton" => CalculatorCommand.InverseCsc,
-            "invcschButton" => CalculatorCommand.InverseCsch,
-            "invertButton" => CalculatorCommand.Reciprocal,
-            "invsecButton" => CalculatorCommand.InverseSec,
-            "invsechButton" => CalculatorCommand.InverseSech,
-            "invsinButton" => CalculatorCommand.InverseSin,
-            "invsinhButton" => CalculatorCommand.InverseSinh,
-            "invtanButton" => CalculatorCommand.InverseTan,
-            "invtanhButton" => CalculatorCommand.InverseTanh,
-            "logBase10Button" => CalculatorCommand.LogBase10,
-            "logBaseEButton" => CalculatorCommand.NaturalLog,
-            "logBaseY" => CalculatorCommand.LogBaseY,
-            "openParenthesisButton" => CalculatorCommand.OpenParenthesis,
-            "piButton" => CalculatorCommand.Pi,
-            "powerButton" => CalculatorCommand.Power,
-            "powerOf10Button" => CalculatorCommand.TenPowerX,
-            "powerOfEButton" => CalculatorCommand.EPowerX,
-            "randButton" => CalculatorCommand.Random,
-            "secButton" => CalculatorCommand.Sec,
-            "sechButton" => CalculatorCommand.Sech,
-            "sinButton" => CalculatorCommand.Sin,
-            "sinhButton" => CalculatorCommand.Sinh,
-            "tanButton" => CalculatorCommand.Tan,
-            "tanhButton" => CalculatorCommand.Tanh,
-            "twoPowerXButton" => CalculatorCommand.TwoPowerX,
-            "xpower2Button" => CalculatorCommand.Square,
-            "xpower3Button" => CalculatorCommand.Cube,
-            "ySquareRootButton" => CalculatorCommand.Root,
-            _ => null,
-        };
-
-        if (command is not null)
-        {
-            if (_viewModel.IsScientificMode && _viewModel.IsError
-                && ScientificErrorDisabledCommands.Contains(command.Value))
-            {
+            case CalculatorShortcutOutcome.CopyDisplay:
+                _ = CopyDisplayToClipboardAsync();
                 return true;
-            }
-            _viewModel.ExecuteCalculatorCommand(command.Value);
-            return true;
-        }
-
-        switch (shortcutId)
-        {
-            case "lshButton":
-            case "lshLogicalButton":
-            case "rolButton":
-            case "rolCarryButton": _viewModel.ExecuteProgrammerLeftShiftCommand.Execute(null); return true;
-            case "rshButton":
-            case "rshLogicalButton":
-            case "rorButton":
-            case "rorCarryButton": _viewModel.ExecuteProgrammerRightShiftCommand.Execute(null); return true;
-            case "hexButton": _viewModel.SelectProgrammerRadixCommand.Execute("Hexadecimal"); return true;
-            case "decimalButton": _viewModel.SelectProgrammerRadixCommand.Execute("Decimal"); return true;
-            case "octButton": _viewModel.SelectProgrammerRadixCommand.Execute("Octal"); return true;
-            case "binaryButton": _viewModel.SelectProgrammerRadixCommand.Execute("Binary"); return true;
-            case "qwordButton": _viewModel.SelectProgrammerWordSizeCommand.Execute("Qword"); return true;
-            case "dwordButton": _viewModel.SelectProgrammerWordSizeCommand.Execute("Dword"); return true;
-            case "wordButton": _viewModel.SelectProgrammerWordSizeCommand.Execute("Word"); return true;
-            case "byteButton": _viewModel.SelectProgrammerWordSizeCommand.Execute("Byte"); return true;
-            case "HistoryButton": _viewModel.ToggleHistoryCommand.Execute(null); return true;
-            case "ClearHistory": _viewModel.ClearHistoryCommand.Execute(null); return true;
-            case "ClearMemoryButton": _viewModel.MemoryClearAllCommand.Execute(null); return true;
-            case "MemRecall": _viewModel.MemoryRecallCommand.Execute(null); return true;
-            case "MemPlus": _viewModel.MemoryAddCommand.Execute(null); return true;
-            case "MemMinus": _viewModel.MemorySubtractCommand.Execute(null); return true;
-            case "degButton": if (!_viewModel.IsError) _viewModel.ExecuteCalculatorCommand(CalculatorCommand.Degree); return true;
-            case "radButton": if (!_viewModel.IsError) _viewModel.ExecuteCalculatorCommand(CalculatorCommand.Radian); return true;
-            case "gradButton": if (!_viewModel.IsError) _viewModel.ExecuteCalculatorCommand(CalculatorCommand.Grads); return true;
-            case "ftoeButton": if (!_viewModel.IsError) _viewModel.ToggleScientificNotationCommand.Execute(null); return true;
-            case "copyButton":
-            case "copyButtonAlternate": _ = CopyDisplayToClipboardAsync(); return true;
-            case "pasteButton":
-            case "pasteButtonAlternate": _ = PasteFromClipboardAsync(); return true;
-            default: return false;
+            case CalculatorShortcutOutcome.PasteExpression:
+                _ = PasteFromClipboardAsync();
+                return true;
+            case CalculatorShortcutOutcome.Handled:
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -766,16 +661,14 @@ public partial class MainWindow : Window
             "degButton" or "radButton" or "gradButton" => ScientificAngleButton,
             "ftoeButton" => ScientificNotationButton,
             "HistoryButton" => HistoryButton,
-            "ClearMemoryButton" => MemoryClearButton,
-            "MemRecall" => MemoryRecallButton,
-            "MemPlus" => MemoryAddButton,
-            "MemMinus" => MemorySubtractButton,
+            // The memory buttons moved into MemoryPanel, which claims them
+            // through IShortcutPressedTarget before this fallback runs.
             _ => null!,
         };
         return button is not null;
     }
 
-    private void TitleBar_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    private void TitleBarChrome_OnDragRequested(object? sender, PointerPressedEventArgs e)
     {
         if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
         {
@@ -800,9 +693,18 @@ public partial class MainWindow : Window
     private void ResizeSouth_OnPointerPressed(object? sender, PointerPressedEventArgs e) => BeginResize(WindowEdge.South, e);
     private void ResizeSouthEast_OnPointerPressed(object? sender, PointerPressedEventArgs e) => BeginResize(WindowEdge.SouthEast, e);
 
-    private void Minimize_OnClick(object? sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+    private void TitleBarChrome_OnMinimizeRequested(object? sender, EventArgs e) =>
+        WindowState = WindowState.Minimized;
 
-    private void AlwaysOnTop_OnClick(object? sender, RoutedEventArgs e)
+    // Compact always-on-top has two entry points: the button in the mode header
+    // that enters it, and the title-bar button that leaves it again.
+    private void TitleBarChrome_OnAlwaysOnTopToggleRequested(object? sender, EventArgs e) =>
+        ToggleCompactAlwaysOnTop();
+
+    private void AlwaysOnTop_OnClick(object? sender, RoutedEventArgs e) =>
+        ToggleCompactAlwaysOnTop();
+
+    private void ToggleCompactAlwaysOnTop()
     {
         if (_viewModel.IsAlwaysOnTop)
         {
@@ -814,14 +716,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void MemoryFlyout_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (sender is Control)
-        {
-            MemoryPopup.IsOpen = !MemoryPopup.IsOpen;
-            e.Handled = true;
-        }
-    }
 
     private void EnterCompactAlwaysOnTop()
     {
@@ -868,10 +762,10 @@ public partial class MainWindow : Window
         }
     }
 
-    private void Maximize_OnClick(object? sender, RoutedEventArgs e) =>
+    private void TitleBarChrome_OnMaximizeRequested(object? sender, EventArgs e) =>
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
-    private void Close_OnClick(object? sender, RoutedEventArgs e) => Close();
+    private void TitleBarChrome_OnCloseRequested(object? sender, EventArgs e) => Close();
 
     private void OnThemePreferenceChanged(AppThemePreference preference)
     {

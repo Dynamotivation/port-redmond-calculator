@@ -1,0 +1,129 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:Calculator.Avalonia"
+        xmlns:managed="using:Calculator.Managed"
+        xmlns:ui="using:FluentAvalonia.UI.Controls">
+  <!-- Keypad button materials and their interaction states. -->
+    <Style Selector="Button.calcButton">
+    <Setter Property="Margin" Value="1.75" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="MinWidth" Value="24" />
+    <Setter Property="MinHeight" Value="12" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="VerticalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="CornerRadius" Value="5" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="FontSize" Value="22" />
+    <Setter Property="FontWeight" Value="Normal" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="CalcButtonSurface"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="{TemplateBinding CornerRadius}">
+          <ContentPresenter HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Content="{TemplateBinding Content}" />
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    </Style>
+    <Style Selector="Button.calcButton /template/ Border#CalcButtonSurface">
+    <Setter Property="BoxShadow" Value="{DynamicResource CalculatorButtonShadow}" />
+    </Style>
+    <Style Selector="Button.calcButton:pressed">
+    <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonPressedBorderBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton:pressed /template/ Border#CalcButtonSurface">
+    <Setter Property="BoxShadow" Value="{DynamicResource CalculatorButtonPressedShadow}" />
+    </Style>
+    <Style Selector="Button.calcButton.numeric">
+    <Setter Property="Background" Value="{DynamicResource NumericButtonBrush}" />
+    <Setter Property="FontSize" Value="26.4" />
+    <Setter Property="FontWeight" Value="Light" />
+    </Style>
+    <Style Selector="Button.calcButton.numeric:pointerover">
+    <Setter Property="Background" Value="{DynamicResource NumericButtonHoverBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton.numeric:pressed">
+    <Setter Property="Background" Value="{DynamicResource NumericButtonPressedBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton.numeric.keyboardPressed">
+    <Setter Property="Background" Value="{DynamicResource NumericButtonPressedBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonPressedBorderBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton.numeric.keyboardPressed /template/ Border#CalcButtonSurface">
+    <Setter Property="BoxShadow" Value="{DynamicResource CalculatorButtonPressedShadow}" />
+    </Style>
+    <Style Selector="Button.calcButton.operator">
+    <Setter Property="Background" Value="{DynamicResource OperatorButtonBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource OperatorButtonBorderBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton.operator:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OperatorButtonHoverBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton.operator:pressed">
+    <Setter Property="Background" Value="{DynamicResource OperatorButtonPressedBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource OperatorButtonPressedBorderBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton.operator.keyboardPressed">
+    <Setter Property="Background" Value="{DynamicResource OperatorButtonPressedBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource OperatorButtonPressedBorderBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton.operator.keyboardPressed /template/ Border#CalcButtonSurface">
+    <Setter Property="BoxShadow" Value="{DynamicResource OperatorButtonPressedShadow}" />
+    </Style>
+    <Style Selector="Button.calcButton.operator /template/ Border#CalcButtonSurface">
+    <Setter Property="BoxShadow" Value="{DynamicResource OperatorButtonShadow}" />
+    </Style>
+    <Style Selector="Button.calcButton.operator:pressed /template/ Border#CalcButtonSurface">
+    <Setter Property="BoxShadow" Value="{DynamicResource OperatorButtonPressedShadow}" />
+    </Style>
+    <Style Selector="Button.calcButton.symbolOperator">
+    <Setter Property="FontFamily" Value="{StaticResource CalculatorIconFont}" />
+    <Setter Property="FontSize" Value="16.94" />
+    <Setter Property="FontWeight" Value="Normal" />
+    </Style>
+    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator">
+    <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaqueBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonBorderBrush}" />
+    </Style>
+    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaqueHoverBrush}" />
+    </Style>
+    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator:pressed">
+    <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaquePressedBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonPressedBorderBrush}" />
+    </Style>
+    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator.keyboardPressed">
+    <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaquePressedBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonPressedBorderBrush}" />
+    </Style>
+    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator /template/ Border#CalcButtonSurface">
+    <Setter Property="BoxShadow" Value="{DynamicResource CalculatorButtonShadow}" />
+    </Style>
+    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator:pressed /template/ Border#CalcButtonSurface">
+    <Setter Property="BoxShadow" Value="{DynamicResource CalculatorButtonPressedShadow}" />
+    </Style>
+    <Style Selector="Button.calcButton.equalsButton">
+    <Setter Property="Background" Value="{DynamicResource AccentButtonBrush}" />
+    <Setter Property="Foreground" Value="#101010" />
+    <Setter Property="FontFamily" Value="{StaticResource CalculatorIconFont}" />
+    <Setter Property="FontSize" Value="16.94" />
+    <Setter Property="FontWeight" Value="Normal" />
+    </Style>
+    <Style Selector="Button.calcButton.equalsButton:pointerover">
+    <Setter Property="Background" Value="{DynamicResource AccentButtonHoverBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton.equalsButton:pressed">
+    <Setter Property="Background" Value="{DynamicResource AccentButtonPressedBrush}" />
+    </Style>
+    <Style Selector="Button.calcButton.equalsButton.keyboardPressed">
+    <Setter Property="Background" Value="{DynamicResource AccentButtonPressedBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonPressedBorderBrush}" />
+    </Style>
+</Styles>

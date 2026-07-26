@@ -1,0 +1,23 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:Calculator.Avalonia"
+        xmlns:managed="using:Calculator.Managed"
+        xmlns:ui="using:FluentAvalonia.UI.Controls">
+  <!-- Unit converter selectors and value displays. -->
+    <Style Selector="ComboBox.unitSelector">
+    <Setter Property="MinHeight" Value="36" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CalculatorBorderBrush}" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="FontSize" Value="15" />
+    </Style>
+    <Style Selector="TextBlock.unitDisplay">
+    <Setter Property="HorizontalAlignment" Value="Right" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="TextAlignment" Value="Right" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    <Setter Property="FontSize" Value="34" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+</Styles>

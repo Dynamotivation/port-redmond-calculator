@@ -1,0 +1,117 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:Calculator.Avalonia"
+        xmlns:managed="using:Calculator.Managed"
+        xmlns:ui="using:FluentAvalonia.UI.Controls">
+  <!-- Hamburger, navigation overlay, pane and mode list entries. -->
+    <Style Selector="Button.chromeButton.navigationToggle">
+    <Setter Property="Width" Value="53" />
+    <Setter Property="Height" Value="48" />
+    </Style>
+    <Style Selector="Button.chromeButton.navigationToggle:pointerover">
+    <Setter Property="Background" Value="{DynamicResource NavigationInteractionBrush}" />
+    </Style>
+    <Style Selector="Button.chromeButton.navigationToggle:pressed">
+    <Setter Property="Background" Value="{DynamicResource NavigationInteractionBrush}" />
+    </Style>
+    <Style Selector="Canvas.hamburgerGlyph">
+    <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+    <Setter Property="RenderTransform" Value="scale(1,1)" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.24">
+          <TransformOperationsTransition.Easing>
+            <SpringEasing Mass="1" Stiffness="180" Damping="18" />
+          </TransformOperationsTransition.Easing>
+        </TransformOperationsTransition>
+      </Transitions>
+    </Setter>
+    </Style>
+    <Style Selector="Button.navigationToggle:pressed Canvas.hamburgerGlyph">
+    <Setter Property="RenderTransform" Value="scale(0.6,1)" />
+    </Style>
+    <Style Selector="Grid.navigationOverlay">
+    <Setter Property="IsHitTestVisible" Value="False" />
+    </Style>
+    <Style Selector="Grid.navigationOverlay.open">
+    <Setter Property="IsHitTestVisible" Value="True" />
+    </Style>
+    <Style Selector="Button.navigationScrim">
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="Transparent" />
+      </ControlTemplate>
+    </Setter>
+    </Style>
+    <Style Selector="Border.navigationPane">
+    <Setter Property="Margin" Value="-320,0,320,0" />
+    </Style>
+    <Style Selector="Grid.navigationOverlay.open Border.navigationPane">
+    <Setter Property="Margin" Value="0" />
+    </Style>
+    <Style Selector="local|NavigationCulledGrid.calculatorPageContent">
+    <Setter Property="CulledWidth" Value="0" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <DoubleTransition Property="CulledWidth" Duration="0:0:0.22">
+          <DoubleTransition.Easing>
+            <CubicEaseOut />
+          </DoubleTransition.Easing>
+        </DoubleTransition>
+      </Transitions>
+    </Setter>
+    </Style>
+    <Style Selector="local|NavigationCulledGrid.calculatorPageContent.paneOpen">
+    <Setter Property="CulledWidth" Value="320" />
+    </Style>
+    <Style Selector="Button.navigationItem">
+    <Setter Property="Height" Value="40" />
+    <Setter Property="Margin" Value="4,2,8,2" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Grid>
+          <Border Background="{TemplateBinding Background}"
+                  CornerRadius="{TemplateBinding CornerRadius}" />
+          <Border Name="NavigationItemInteractionSurface"
+                  Background="Transparent"
+                  CornerRadius="{TemplateBinding CornerRadius}"
+                  IsHitTestVisible="False" />
+          <ContentPresenter Content="{TemplateBinding Content}"
+                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="Center" />
+        </Grid>
+      </ControlTemplate>
+    </Setter>
+    </Style>
+    <Style Selector="Button.navigationItem:pointerover">
+    <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.navigationItem:pressed">
+    <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.navigationItem:pointerover /template/ Border#NavigationItemInteractionSurface">
+    <Setter Property="Background" Value="{DynamicResource NavigationInteractionBrush}" />
+    </Style>
+    <Style Selector="Button.navigationItem:pressed /template/ Border#NavigationItemInteractionSurface">
+    <Setter Property="Background" Value="{DynamicResource NavigationInteractionBrush}" />
+    </Style>
+    <Style Selector="Button.navigationItem.selected:pointerover /template/ Border#NavigationItemInteractionSurface">
+    <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.navigationItem.selected:pressed /template/ Border#NavigationItemInteractionSurface">
+    <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.navigationItem.selected">
+    <Setter Property="Background" Value="{DynamicResource NavigationSelectedBrush}" />
+    </Style>
+    <Style Selector="Button.navigationItem:disabled">
+    <Setter Property="Opacity" Value="0.38" />
+    <Setter Property="Background" Value="Transparent" />
+    </Style>
+</Styles>

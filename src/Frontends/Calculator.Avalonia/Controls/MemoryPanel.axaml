@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:managed="using:Calculator.Managed"
+             x:Class="Calculator.Avalonia.Controls.MemoryPanel"
+             x:DataType="managed:CalculatorViewModel"
+             IsVisible="{Binding IsStandardOrScientificMode}">
+  <!-- MC, MR, M+, M−, MS and the memory flyout. The popup is owned here rather
+       than by the window: it belongs to the button that opens it. -->
+  <Grid Margin="3,0" ColumnDefinitions="*,*,*,*,*,*">
+    <Button x:Name="MemoryClearButton" Classes="memoryButton" Content="MC" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryClearAllCommand}"
+            ToolTip.Tip="{Binding ClearMemoryTooltip}" />
+    <Button x:Name="MemoryRecallButton" Grid.Column="1" Classes="memoryButton" Content="MR" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryRecallCommand}"
+            ToolTip.Tip="{Binding MemoryRecallTooltip}" />
+    <Button x:Name="MemoryAddButton" Grid.Column="2" Classes="memoryButton" Content="M+" Command="{Binding MemoryAddCommand}"
+            ToolTip.Tip="{Binding MemoryAddTooltip}" />
+    <Button x:Name="MemorySubtractButton" Grid.Column="3" Classes="memoryButton" Content="M−" Command="{Binding MemorySubtractCommand}"
+            ToolTip.Tip="{Binding MemorySubtractTooltip}" />
+    <Button x:Name="MemoryStoreButton" Grid.Column="4" Classes="memoryButton" Content="MS" Command="{Binding MemoryStoreCommand}"
+            ToolTip.Tip="{Binding MemoryStoreTooltip}" />
+    <Button x:Name="MemoryFlyoutButton" Grid.Column="5" Classes="memoryButton" Content="M⌄" IsEnabled="{Binding HasMemory}"
+            ToolTip.Tip="{Binding MemoryTooltip}" Click="MemoryFlyout_OnClick" />
+    <Popup x:Name="MemoryPopup" Grid.Column="5"
+           PlacementTarget="{Binding #MemoryFlyoutButton}"
+           Placement="Bottom" IsLightDismissEnabled="True">
+      <Border CornerRadius="8"
+              Background="{DynamicResource FlyoutPresenterBackground}"
+              BorderBrush="{DynamicResource CalculatorBorderBrush}"
+              BorderThickness="1"
+              BoxShadow="0 4 16 0 #30000000">
+        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource MemoryListTemplate}" />
+      </Border>
+    </Popup>
+  </Grid>
+</UserControl>

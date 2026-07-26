@@ -1,0 +1,75 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:Calculator.Avalonia"
+        xmlns:managed="using:Calculator.Managed"
+        xmlns:ui="using:FluentAvalonia.UI.Controls">
+  <!-- Caption buttons, title-bar controls and the always-on-top glyph. -->
+    <Style Selector="Button.titleButton">
+    <Setter Property="Width" Value="46" />
+    <Setter Property="Height" Value="42" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="CornerRadius" Value="0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{TemplateBinding Background}">
+          <ContentPresenter Content="{TemplateBinding Content}"
+                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+        </Border>
+      </ControlTemplate>
+    </Setter>
+    </Style>
+    <Style Selector="Button.titleButton.captionButton">
+    <Setter Property="Width" Value="60" />
+    <!-- The window's one-pixel frame sits outside the title-bar content
+         bounds. Extend caption backplates into that frame so full-bleed
+         hover colors do not leave the top edge exposed. -->
+    <Setter Property="Height" Value="43" />
+    <Setter Property="Margin" Value="0,-1,0,0" />
+    </Style>
+    <Style Selector="Button.titleButton.captionButton.windows10">
+    <!-- Preserve the source Windows 10 caption aspect ratio (46:42).
+         Height still extends one pixel into the outer frame. -->
+    <Setter Property="Width" Value="46" />
+    </Style>
+    <Style Selector="Button.titleButton.captionButton.close">
+    <Setter Property="Margin" Value="0,-1,-1,0" />
+    </Style>
+    <Style Selector="Button.titleButton:pointerover">
+    <Setter Property="Background" Value="{DynamicResource ChromeHoverBrush}" />
+    </Style>
+    <Style Selector="Button.titleButton.close:pointerover">
+    <Setter Property="Background" Value="#C42B1C" />
+    <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.chromeButton">
+    <Setter Property="Width" Value="41" />
+    <Setter Property="Height" Value="41" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="FontSize" Value="24" />
+    </Style>
+    <Style Selector="Button.chromeButton:pointerover">
+    <Setter Property="Background" Value="{DynamicResource ChromeHoverBrush}" />
+    </Style>
+    <Style Selector="Button.chromeButton.keyboardPressed">
+    <Setter Property="Background" Value="{DynamicResource ChromeHoverBrush}" />
+    </Style>
+    <Style Selector="TextBlock.alwaysOnTopGlyph">
+    <Setter Property="Width" Value="24" />
+    <Setter Property="Height" Value="24" />
+    <Setter Property="FontFamily" Value="{StaticResource CalculatorIconFont}" />
+    <Setter Property="FontSize" Value="22" />
+    <Setter Property="FontWeight" Value="Normal" />
+    <Setter Property="TextAlignment" Value="Center" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
+    </Style>
+</Styles>
