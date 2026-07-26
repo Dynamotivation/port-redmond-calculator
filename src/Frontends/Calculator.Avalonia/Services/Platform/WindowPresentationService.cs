@@ -131,7 +131,7 @@ internal sealed class WindowPresentationService : IWindowPresentationService
         _normalSize = _window.Bounds.Size;
         _hasNormalPlacement = true;
 
-        _viewModel.CloseHistoryCommand.Execute(null);
+        _viewModel.History.CloseCommand.Execute(null);
         _viewModel.CloseNavigationPaneCommand.Execute(null);
         _window.WindowState = WindowState.Normal;
         _window.MinWidth = 240;

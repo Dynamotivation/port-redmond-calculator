@@ -59,7 +59,7 @@ internal static class Scenarios
 
         // Narrow history is the overlay presentation below the dock threshold.
         new("standard-dark-history-narrow", 524, 773, ThemeVariant.Dark, Opaque,
-            vm => vm.ToggleHistoryCommand.Execute(null)),
+            vm => vm.History.ToggleCommand.Execute(null)),
 
         new("standard-dark-navigation-open", 524, 773, ThemeVariant.Dark, Opaque,
             vm => vm.ToggleNavigationPaneCommand.Execute(null)),

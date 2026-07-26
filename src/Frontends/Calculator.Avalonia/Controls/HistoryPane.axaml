@@ -8,7 +8,7 @@
     <!-- Docked: a bordered column beside the calculator. -->
     <Border IsVisible="{Binding $parent[controls:HistoryPane].IsDocked}"
             BorderBrush="{DynamicResource CalculatorBorderBrush}" BorderThickness="1,0,0,0">
-      <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HistoryPaneTemplate}" />
+      <ContentControl Content="{Binding History}" ContentTemplate="{StaticResource HistoryPaneTemplate}" />
     </Border>
 
     <!-- Overlay: UWP uses Flyout Placement="Full" with BackgroundSmokeFill.
@@ -26,7 +26,7 @@
       <Border Height="{Binding $parent[controls:HistoryPane].SheetHeight}"
               VerticalAlignment="Bottom"
               Background="{DynamicResource HistorySolidSurfaceBrush}">
-        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HistoryListTemplate}" />
+        <ContentControl Content="{Binding History}" ContentTemplate="{StaticResource HistoryListTemplate}" />
       </Border>
     </Grid>
   </Grid>

@@ -31,30 +31,15 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     public partial bool HasMemory { get; private set; }
 
-    public ObservableCollection<CalculatorHistoryEntry> History { get; } = [];
+    public HistoryViewModel History { get; }
+
     public ObservableCollection<CalculatorMemoryEntry> Memory { get; } = [];
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsHistoryPaneVisible))]
-    [NotifyPropertyChangedFor(nameof(IsNarrowHistoryPaneVisible))]
-    public partial bool IsHistoryOpen { get; private set; }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsHistoryPaneVisible))]
-    [NotifyPropertyChangedFor(nameof(IsDockedHistoryPaneVisible))]
-    [NotifyPropertyChangedFor(nameof(IsNarrowHistoryPaneVisible))]
-    [NotifyPropertyChangedFor(nameof(IsHistoryButtonVisible))]
-    [NotifyPropertyChangedFor(nameof(IsHistoryCloseButtonVisible))]
-    public partial bool IsHistoryDocked { get; private set; }
-
-    [ObservableProperty]
-    public partial bool HasHistory { get; private set; }
-
-    public bool IsHistoryPaneVisible => IsCalculatorMode && !IsAlwaysOnTop && (IsHistoryDocked || IsHistoryOpen);
-    public bool IsDockedHistoryPaneVisible => IsCalculatorMode && !IsAlwaysOnTop && IsHistoryDocked;
-    public bool IsNarrowHistoryPaneVisible => IsCalculatorMode && !IsAlwaysOnTop && !IsHistoryDocked && IsHistoryOpen;
-    public bool IsHistoryButtonVisible => IsStandardOrScientificMode && !IsAlwaysOnTop && !IsHistoryDocked;
-    public bool IsHistoryCloseButtonVisible => !IsHistoryDocked;
+    public bool IsHistoryPaneVisible => IsCalculatorMode && !IsAlwaysOnTop && (History.IsDocked || History.IsOpen);
+    public bool IsDockedHistoryPaneVisible => IsCalculatorMode && !IsAlwaysOnTop && History.IsDocked;
+    public bool IsNarrowHistoryPaneVisible => IsCalculatorMode && !IsAlwaysOnTop && !History.IsDocked && History.IsOpen;
+    public bool IsHistoryButtonVisible => IsStandardOrScientificMode && !IsAlwaysOnTop && !History.IsDocked;
     public string ApplicationName { get; } = "Redmond Calculator";
     public string TitleBarApplicationName { get; }
     public string DecimalSeparator { get; }
@@ -303,11 +288,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public string AboutPrivacyName { get; }
     public string FeedbackName { get; }
     public string AboutVersionText { get; } = "Redmond Calculator 0.1.0";
-    public string HistoryAutomationName { get; }
-    public string HistoryEmptyText { get; }
-    public string ClearHistoryTooltip { get; }
     public string MemoryTooltip { get; }
-    public string HistoryTooltip { get; }
     public string TrigonometryName { get; }
     public string FunctionName { get; }
     public string BitwiseName { get; }
@@ -325,7 +306,6 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public string ClearMemoryItemName { get; }
     public string AddToMemoryItemName { get; }
     public string SubtractFromMemoryItemName { get; }
-    public string DeleteHistoryItemName { get; }
     public string EnterAlwaysOnTopTooltip { get; }
     public string ExitAlwaysOnTopTooltip { get; }
     public string EnterAlwaysOnTopAutomationName { get; }
@@ -377,11 +357,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         AboutServicesName = appResources.GetString("AboutControlServicesAgreement.Text");
         AboutPrivacyName = appResources.GetString("AboutControlPrivacyStatement.Text");
         FeedbackName = appResources.GetString("FeedbackButton.Content");
-        HistoryAutomationName = appResources.GetString("HistoryLabel/Text");
-        HistoryEmptyText = appResources.GetString("HistoryEmpty/Text");
-        ClearHistoryTooltip = appResources.GetString("ClearHistory/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
         MemoryTooltip = appResources.GetString("MemoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
-        HistoryTooltip = appResources.GetString("HistoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
         TrigonometryName = appResources.GetString("trigButton.Text");
         FunctionName = appResources.GetString("funcButton.Text");
         BitwiseName = appResources.GetString("bitwiseButton.Text");
@@ -399,12 +375,22 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         ClearMemoryItemName = appResources.GetString("ClearMemoryItemButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
         AddToMemoryItemName = appResources.GetString("MemPlusItem/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
         SubtractFromMemoryItemName = appResources.GetString("MemMinusItem/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
-        DeleteHistoryItemName = appResources.GetString("DeleteHistoryMenuItem/Text");
         EnterAlwaysOnTopTooltip = appResources.GetString("EnterAlwaysOnTopButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
         ExitAlwaysOnTopTooltip = appResources.GetString("ExitAlwaysOnTopButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
         EnterAlwaysOnTopAutomationName = appResources.GetString("EnterAlwaysOnTopButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
         ExitAlwaysOnTopAutomationName = appResources.GetString("ExitAlwaysOnTopButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
         _calculator = new NativeCalculator(ResourceLoader.GetForViewIndependentUse("CEngineStrings"), numberFormat);
+        History = new HistoryViewModel(
+            _calculator,
+            () => IsScientificNotation,
+            Synchronize,
+            new HistoryStrings(
+                appResources.GetString("HistoryLabel/Text"),
+                appResources.GetString("HistoryEmpty/Text"),
+                appResources.GetString("ClearHistory/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                appResources.GetString("HistoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                appResources.GetString("DeleteHistoryMenuItem/Text")));
+        History.PropertyChanged += (_, _) => NotifyHistoryVisibilityChanged();
         BuildProgrammerBitGroups();
         var regionCode = GetCurrentRegionCode();
         _unitConverter = new NativeUnitConverter(appResources, regionCode, numberFormat);
@@ -900,61 +886,11 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         Synchronize();
     }
 
-    [RelayCommand]
-    private void ToggleHistory()
-    {
-        if (!IsHistoryDocked)
-        {
-            IsHistoryOpen = !IsHistoryOpen;
-        }
-    }
 
-    [RelayCommand]
-    private void CloseHistory() => IsHistoryOpen = false;
 
-    [RelayCommand]
-    private void ClearHistory()
-    {
-        _calculator.HistoryClear();
-        Synchronize();
-    }
 
-    [RelayCommand]
-    private void DeleteHistoryEntry(CalculatorHistoryEntry? entry)
-    {
-        if (entry is null)
-        {
-            return;
-        }
 
-        _calculator.HistoryRemove(entry.NativeIndex);
-        Synchronize();
-    }
 
-    [RelayCommand]
-    private void SelectHistoryEntry(CalculatorHistoryEntry? entry)
-    {
-        if (entry is null)
-        {
-            return;
-        }
-
-        _calculator.HistoryRecall(entry.NativeIndex, IsScientificNotation);
-        Synchronize();
-        if (!IsHistoryDocked)
-        {
-            IsHistoryOpen = false;
-        }
-    }
-
-    public void SetHistoryDocked(bool value)
-    {
-        IsHistoryDocked = value;
-        if (value)
-        {
-            IsHistoryOpen = false;
-        }
-    }
 
     [RelayCommand]
     private Task ToggleNavigationPane() => SetNavigationPaneOpenAsync(!IsNavigationPaneOpen);
@@ -995,7 +931,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         }
 
         CurrentViewMode = item.Mode;
-        IsHistoryOpen = false;
+        History.CloseOverlay();
         ModeDisplayName = item.Name;
         SetSelectedNavigationItem(item.Mode);
 
@@ -1063,6 +999,19 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// The combined visibility rules mix history state with mode and compact
+    /// overlay, so they live here and have to be re-raised whenever the child
+    /// changes on its own.
+    /// </summary>
+    private void NotifyHistoryVisibilityChanged()
+    {
+        OnPropertyChanged(nameof(IsHistoryPaneVisible));
+        OnPropertyChanged(nameof(IsDockedHistoryPaneVisible));
+        OnPropertyChanged(nameof(IsNarrowHistoryPaneVisible));
+        OnPropertyChanged(nameof(IsHistoryButtonVisible));
+    }
+
     private void Synchronize()
     {
         PrimaryDisplay = _calculator.PrimaryDisplay;
@@ -1071,8 +1020,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         IsInputEmpty = _calculator.IsInputEmpty;
         OpenParenthesisCount = _calculator.EventState.ParenthesisCount;
 
-        Replace(History, _calculator.History);
-        HasHistory = History.Count != 0;
+        History.Refresh(_calculator.History);
         Replace(Memory, _calculator.MemoryValues.Select((value, index) =>
             new CalculatorMemoryEntry(checked((nuint)index), value)));
         HasMemory = Memory.Count != 0;

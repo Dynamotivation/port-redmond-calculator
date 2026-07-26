@@ -187,8 +187,8 @@ public static class CalculatorShortcutRouter
             case "dwordButton": viewModel.SelectProgrammerWordSizeCommand.Execute("Dword"); break;
             case "wordButton": viewModel.SelectProgrammerWordSizeCommand.Execute("Word"); break;
             case "byteButton": viewModel.SelectProgrammerWordSizeCommand.Execute("Byte"); break;
-            case "HistoryButton": viewModel.ToggleHistoryCommand.Execute(null); break;
-            case "ClearHistory": viewModel.ClearHistoryCommand.Execute(null); break;
+            case "HistoryButton": viewModel.History.ToggleCommand.Execute(null); break;
+            case "ClearHistory": viewModel.History.ClearCommand.Execute(null); break;
             case "ClearMemoryButton": viewModel.MemoryClearAllCommand.Execute(null); break;
             case "MemRecall": viewModel.MemoryRecallCommand.Execute(null); break;
             case "MemPlus": viewModel.MemoryAddCommand.Execute(null); break;
