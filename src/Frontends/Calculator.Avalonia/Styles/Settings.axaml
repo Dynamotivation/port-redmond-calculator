@@ -1,0 +1,111 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:Calculator.Avalonia"
+        xmlns:managed="using:Calculator.Managed"
+        xmlns:ui="using:FluentAvalonia.UI.Controls">
+  <!-- Settings cards, links and the animated expander template. -->
+    <Style Selector="Button.settingsLink">
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+    <Setter Property="HorizontalContentAlignment" Value="Left" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentButtonBrush}" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <ContentPresenter Content="{TemplateBinding Content}"
+                          HorizontalContentAlignment="Left"
+                          VerticalContentAlignment="Center" />
+      </ControlTemplate>
+    </Setter>
+    </Style>
+    <Style Selector="Grid.settingsExpanderHeader">
+    <!-- Keep icon artwork roughly 24 px from the material bezel and align
+         header text with the expanded content's 50 px inset. -->
+    <Setter Property="Margin" Value="16,0" />
+    </Style>
+    <Style Selector="Path.settingsExpanderChevron">
+    <Setter Property="Width" Value="12" />
+    <Setter Property="Height" Value="7" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+    <Setter Property="RenderTransform" Value="rotate(0deg)" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.16">
+          <TransformOperationsTransition.Easing>
+            <CubicEaseInOut />
+          </TransformOperationsTransition.Easing>
+        </TransformOperationsTransition>
+      </Transitions>
+    </Setter>
+    </Style>
+    <Style Selector="Path.settingsExpanderChevron.expanded">
+    <Setter Property="RenderTransform" Value="rotate(180deg)" />
+    </Style>
+    <!-- Avalonia 12.1 binds ExpanderContent.IsVisible to IsExpanded with
+       Mode=TwoWay. AnimatedSettingsExpander must keep the content mounted,
+       so own this small template and deliberately leave IsVisible unbound. -->
+    <Style Selector="Expander.settingsExpander">
+    <Setter Property="Template">
+      <ControlTemplate>
+        <DockPanel MinWidth="{TemplateBinding MinWidth}"
+                   MaxWidth="{TemplateBinding MaxWidth}">
+          <ToggleButton Name="ExpanderHeader"
+                        DockPanel.Dock="Top"
+                        MinHeight="{TemplateBinding MinHeight}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        IsEnabled="{TemplateBinding IsEnabled}"
+                        Content="{TemplateBinding Header}"
+                        ContentTemplate="{TemplateBinding HeaderTemplate}"
+                        IsChecked="{TemplateBinding IsExpanded}" />
+          <Border Name="ExpanderContent"
+                  Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  MinHeight="{TemplateBinding MinHeight}"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  Padding="{TemplateBinding Padding}">
+            <ContentPresenter Name="PART_ContentPresenter"
+                              Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                              Foreground="{TemplateBinding Foreground}"
+                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+          </Border>
+        </DockPanel>
+      </ControlTemplate>
+    </Setter>
+    </Style>
+    <Style Selector="Expander.settingsExpander /template/ ToggleButton#ExpanderHeader">
+    <Setter Property="Panel.ZIndex" Value="2" />
+    <Setter Property="Height" Value="72" />
+    <Setter Property="Background" Value="{DynamicResource SettingsExpanderBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CalculatorBorderBrush}" />
+    <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Expander.settingsExpander /template/ ToggleButton#ExpanderHeader /template/ Border#ToggleButtonBackground">
+    <Setter Property="Background" Value="{DynamicResource SettingsExpanderBrush}" />
+    </Style>
+    <Style Selector="Expander.settingsExpander /template/ ToggleButton#ExpanderHeader:pointerover /template/ Border#ToggleButtonBackground">
+    <Setter Property="Background" Value="{DynamicResource SettingsExpanderHeaderHoverBrush}" />
+    </Style>
+    <Style Selector="Expander.settingsExpander /template/ ToggleButton#ExpanderHeader:pressed /template/ Border#ToggleButtonBackground">
+    <Setter Property="Background" Value="{DynamicResource SettingsExpanderBrush}" />
+    </Style>
+    <Style Selector="Expander.settingsExpander /template/ ToggleButton#ExpanderHeader:disabled /template/ Border#ToggleButtonBackground">
+    <Setter Property="Background" Value="{DynamicResource SettingsExpanderBrush}" />
+    </Style>
+    <Style Selector="Expander.settingsExpander /template/ Border#ExpanderContent">
+    <Setter Property="Panel.ZIndex" Value="1" />
+    <Setter Property="ClipToBounds" Value="True" />
+    <Setter Property="Background" Value="{DynamicResource SettingsExpanderBrush}" />
+    </Style>
+    <Style Selector="Border.settingsCard">
+    <Setter Property="BorderBrush" Value="{DynamicResource SettingsCardBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BoxShadow" Value="{DynamicResource SettingsCardBezelShadow}" />
+    </Style>
+</Styles>

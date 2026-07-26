@@ -1,0 +1,25 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:Calculator.Avalonia"
+        xmlns:managed="using:Calculator.Managed"
+        xmlns:ui="using:FluentAvalonia.UI.Controls">
+  <!-- The window surface border: backdrop, corners and frame. -->
+    <Style Selector="Border.windowSurface">
+    <Setter Property="Background" Value="{DynamicResource CalculatorBackgroundBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    <Style Selector="Border.windowSurface.noBackdrop">
+    <Setter Property="Background" Value="{DynamicResource SolidSurfaceBrush}" />
+    </Style>
+    <Style Selector="Border.windowSurface.inactive">
+    <Setter Property="Background" Value="{DynamicResource SolidSurfaceBrush}" />
+    </Style>
+    <Style Selector="Border.windowSurface.nativeFrame">
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="0" />
+    </Style>
+    <Style Selector="Border.windowSurface.squareCorners">
+    <Setter Property="CornerRadius" Value="0" />
+    </Style>
+</Styles>

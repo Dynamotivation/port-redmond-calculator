@@ -3,7 +3,27 @@
              xmlns:sty="using:FluentAvalonia.Styling"
              x:Class="Calculator.Avalonia.App"
              RequestedThemeVariant="Dark">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://Redmond Calculator/Styles/Theme.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+
+  <!-- Style order is significant: FluentAvaloniaTheme first so the calculator
+       dictionaries override control defaults, then the calculator dictionaries
+       in the order they occupied inside MainWindow.axaml. -->
   <Application.Styles>
     <sty:FluentAvaloniaTheme />
+    <StyleInclude Source="avares://Redmond Calculator/Styles/Shared.axaml" />
+    <StyleInclude Source="avares://Redmond Calculator/Styles/WindowChrome.axaml" />
+    <StyleInclude Source="avares://Redmond Calculator/Styles/Navigation.axaml" />
+    <StyleInclude Source="avares://Redmond Calculator/Styles/Settings.axaml" />
+    <StyleInclude Source="avares://Redmond Calculator/Styles/MemoryAndHistory.axaml" />
+    <StyleInclude Source="avares://Redmond Calculator/Styles/CalculatorButtons.axaml" />
+    <StyleInclude Source="avares://Redmond Calculator/Styles/ScientificLayout.axaml" />
+    <StyleInclude Source="avares://Redmond Calculator/Styles/Converter.axaml" />
+    <StyleInclude Source="avares://Redmond Calculator/Styles/WindowSurface.axaml" />
   </Application.Styles>
 </Application>

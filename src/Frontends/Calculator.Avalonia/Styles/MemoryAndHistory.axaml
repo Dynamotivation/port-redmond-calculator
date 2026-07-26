@@ -1,0 +1,87 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:Calculator.Avalonia"
+        xmlns:managed="using:Calculator.Managed"
+        xmlns:ui="using:FluentAvalonia.UI.Controls">
+  <!-- Memory row, memory entries and history entry rows. -->
+    <Style Selector="Button.memoryButton">
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="VerticalAlignment" Value="Stretch" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="Light" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Grid>
+          <Border Background="{TemplateBinding Background}" CornerRadius="4">
+            <ContentPresenter HorizontalContentAlignment="Center"
+                              VerticalContentAlignment="Center"
+                              Content="{TemplateBinding Content}" />
+          </Border>
+          <Border Name="MemoryButtonSelectionIndicator" Width="16" Height="3"
+                  Margin="0,0,0,1" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                  Background="Transparent" CornerRadius="1.5" />
+        </Grid>
+      </ControlTemplate>
+    </Setter>
+    </Style>
+    <Style Selector="Button.memoryButton.selected /template/ Border#MemoryButtonSelectionIndicator">
+    <Setter Property="Background" Value="{DynamicResource AccentButtonBrush}" />
+    </Style>
+    <Style Selector="Button.memoryButton.programmerRadix">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="Normal" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Grid>
+          <Border Background="{TemplateBinding Background}" CornerRadius="4">
+            <ContentPresenter HorizontalContentAlignment="Stretch"
+                              VerticalContentAlignment="Center"
+                              Content="{TemplateBinding Content}" />
+          </Border>
+          <Border Name="ProgrammerRadixSelectionIndicator" Width="3" Height="16"
+                  HorizontalAlignment="Left" VerticalAlignment="Center"
+                  Background="Transparent" CornerRadius="1.5" />
+        </Grid>
+      </ControlTemplate>
+    </Setter>
+    </Style>
+    <Style Selector="Button.memoryButton.programmerRadix.selected /template/ Border#ProgrammerRadixSelectionIndicator">
+    <Setter Property="Background" Value="{DynamicResource AccentButtonBrush}" />
+    </Style>
+    <Style Selector="Button.memoryButton:pointerover">
+    <Setter Property="Background" Value="{DynamicResource ChromeHoverBrush}" />
+    </Style>
+    <Style Selector="Button.memoryButton.keyboardPressed">
+    <Setter Property="Background" Value="{DynamicResource ChromeHoverBrush}" />
+    </Style>
+    <Style Selector="Button.memoryButton:disabled">
+    <Setter Property="Opacity" Value="0.35" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.memoryItemAction">
+    <Setter Property="MinWidth" Value="38" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="Padding" Value="6,0" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Border.memoryEntry StackPanel.memoryItemActions">
+    <Setter Property="Opacity" Value="0" />
+    </Style>
+    <Style Selector="Border.memoryEntry:pointerover StackPanel.memoryItemActions">
+    <Setter Property="Opacity" Value="1" />
+    </Style>
+    <Style Selector="Grid.historyEntry Button.historyEntryAction">
+    <Setter Property="Opacity" Value="0" />
+    </Style>
+    <Style Selector="Grid.historyEntry:pointerover Button.historyEntryAction">
+    <Setter Property="Opacity" Value="1" />
+    </Style>
+</Styles>

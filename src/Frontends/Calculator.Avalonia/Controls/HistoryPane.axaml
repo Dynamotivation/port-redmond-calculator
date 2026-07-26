@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:Calculator.Avalonia.Controls"
+             xmlns:managed="using:Calculator.Managed"
+             x:Class="Calculator.Avalonia.Controls.HistoryPane"
+             x:DataType="managed:CalculatorViewModel">
+  <Grid>
+    <!-- Docked: a bordered column beside the calculator. -->
+    <Border IsVisible="{Binding $parent[controls:HistoryPane].IsDocked}"
+            BorderBrush="{DynamicResource CalculatorBorderBrush}" BorderThickness="1,0,0,0">
+      <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HistoryPaneTemplate}" />
+    </Border>
+
+    <!-- Overlay: UWP uses Flyout Placement="Full" with BackgroundSmokeFill.
+         The smoke layer covers the calculator and HistoryList paints only its
+         numpad-height lower row with SolidBackgroundFillColorBase. This is
+         intentionally not host-backdrop transparency: the calculator remains
+         visible under the smoke while the bottom sheet is opaque. -->
+    <Grid IsVisible="{Binding !$parent[controls:HistoryPane].IsDocked}">
+      <Border Background="{DynamicResource HistorySmokeBrush}" />
+      <!-- Flyout is light-dismissible in UWP. Keep the dismiss target above
+           the smoke but below the opaque history sheet so only the covered
+           calculator region closes it. -->
+      <Border Background="Transparent"
+              PointerPressed="HistorySmoke_OnPointerPressed" />
+      <Border Height="{Binding $parent[controls:HistoryPane].SheetHeight}"
+              VerticalAlignment="Bottom"
+              Background="{DynamicResource HistorySolidSurfaceBrush}">
+        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource HistoryListTemplate}" />
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

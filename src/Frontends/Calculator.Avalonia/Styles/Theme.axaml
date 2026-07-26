@@ -1,0 +1,219 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:Calculator.Avalonia"
+        xmlns:managed="using:Calculator.Managed"
+        xmlns:ui="using:FluentAvalonia.UI.Controls">
+  <!-- Theme brushes, the icon font and the shared item templates.
+       These live at application scope so any control can resolve them
+       without being hosted inside MainWindow. -->
+    <ResourceDictionary.ThemeDictionaries>
+      <ResourceDictionary x:Key="Dark">
+        <SolidColorBrush x:Key="CalculatorBackgroundBrush" Color="#18383D40" />
+        <SolidColorBrush x:Key="SolidSurfaceBrush" Color="#202027" />
+        <SolidColorBrush x:Key="HistorySmokeBrush" Color="#6B000000" />
+        <SolidColorBrush x:Key="HistorySolidSurfaceBrush" Color="#202020" />
+        <SolidColorBrush x:Key="CardBrush" Color="#303139" />
+        <SolidColorBrush x:Key="SettingsExpanderBrush" Color="#80303139" />
+        <SolidColorBrush x:Key="NumericButtonBrush" Color="#3C3C3C" />
+        <LinearGradientBrush x:Key="CalculatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+          <GradientStop Color="#18FFFFFF" Offset="0" />
+          <GradientStop Color="#12FFFFFF" Offset="1" />
+        </LinearGradientBrush>
+        <SolidColorBrush x:Key="CalculatorButtonPressedBorderBrush" Color="#12FFFFFF" />
+        <BoxShadows x:Key="CalculatorButtonShadow">0 1 2 0 #50000000</BoxShadows>
+        <BoxShadows x:Key="CalculatorButtonPressedShadow">0 0 1 0 #30000000</BoxShadows>
+        <SolidColorBrush x:Key="NumericButtonHoverBrush" Color="#323232" />
+        <SolidColorBrush x:Key="NumericButtonPressedBrush" Color="#292827" />
+        <SolidColorBrush x:Key="OperatorButtonBrush" Color="#80323232" />
+        <SolidColorBrush x:Key="OperatorButtonHoverBrush" Color="#803C3C3C" />
+        <SolidColorBrush x:Key="OperatorButtonPressedBrush" Color="#80323232" />
+        <SolidColorBrush x:Key="OperatorButtonOpaqueBrush" Color="#323232" />
+        <SolidColorBrush x:Key="OperatorButtonOpaqueHoverBrush" Color="#3C3C3C" />
+        <SolidColorBrush x:Key="OperatorButtonOpaquePressedBrush" Color="#323232" />
+        <LinearGradientBrush x:Key="OperatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+          <GradientStop Color="#0CFFFFFF" Offset="0" />
+          <GradientStop Color="#09FFFFFF" Offset="1" />
+        </LinearGradientBrush>
+        <SolidColorBrush x:Key="OperatorButtonPressedBorderBrush" Color="#09FFFFFF" />
+        <BoxShadows x:Key="OperatorButtonShadow">0 1 2 0 #28000000</BoxShadows>
+        <BoxShadows x:Key="OperatorButtonPressedShadow">0 0 1 0 #18000000</BoxShadows>
+        <SolidColorBrush x:Key="ChromeHoverBrush" Color="#34343B" />
+        <SolidColorBrush x:Key="ChromeForegroundBrush" Color="#F5F5F5" />
+        <SolidColorBrush x:Key="SettingsSecondaryForegroundBrush" Color="#C7C7C7" />
+        <SolidColorBrush x:Key="CalculatorBorderBrush" Color="#505158" />
+        <SolidColorBrush x:Key="SettingsCardBorderBrush" Color="#80505158" />
+        <SolidColorBrush x:Key="SettingsExpanderHeaderHoverBrush" Color="#80383941" />
+        <BoxShadows x:Key="SettingsCardBezelShadow">inset 0 0 1 0 #20505158, 0 0 1 0 #20505158</BoxShadows>
+        <SolidColorBrush x:Key="NavigationSelectedBrush" Color="#09FFFFFF" />
+        <SolidColorBrush x:Key="NavigationPaneBrush" Color="#80202027" />
+        <SolidColorBrush x:Key="NavigationInteractionBrush" Color="#09FFFFFF" />
+        <SolidColorBrush x:Key="DividerBrush" Color="#35FFFFFF" />
+        <SolidColorBrush x:Key="AccentButtonBrush" Color="#4CC2FF" />
+        <SolidColorBrush x:Key="AccentButtonHoverBrush" Color="#65CAFA" />
+        <SolidColorBrush x:Key="AccentButtonPressedBrush" Color="#36A9E2" />
+      </ResourceDictionary>
+      <ResourceDictionary x:Key="Light">
+        <SolidColorBrush x:Key="CalculatorBackgroundBrush" Color="#18F3F3F3" />
+        <SolidColorBrush x:Key="SolidSurfaceBrush" Color="#F3F3F3" />
+        <SolidColorBrush x:Key="HistorySmokeBrush" Color="#4D000000" />
+        <SolidColorBrush x:Key="HistorySolidSurfaceBrush" Color="#F3F3F3" />
+        <SolidColorBrush x:Key="CardBrush" Color="#FBFBFB" />
+        <SolidColorBrush x:Key="SettingsExpanderBrush" Color="#80FBFBFB" />
+        <SolidColorBrush x:Key="NumericButtonBrush" Color="#FCFCFC" />
+        <LinearGradientBrush x:Key="CalculatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+          <GradientStop Color="#E5E5E5" Offset="0" />
+          <GradientStop Color="#E5E5E5" Offset="0.94" />
+          <GradientStop Color="#CCCCCC" Offset="1" />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="CalculatorButtonPressedBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+          <GradientStop Color="#E5E5E5" Offset="0" />
+          <GradientStop Color="#E5E5E5" Offset="0.94" />
+          <GradientStop Color="#CCCCCC" Offset="1" />
+        </LinearGradientBrush>
+        <BoxShadows x:Key="CalculatorButtonShadow">0 0 0 0 #00000000</BoxShadows>
+        <BoxShadows x:Key="CalculatorButtonPressedShadow">0 0 0 0 #00000000</BoxShadows>
+        <SolidColorBrush x:Key="NumericButtonHoverBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="NumericButtonPressedBrush" Color="#F4F4F4" />
+        <SolidColorBrush x:Key="OperatorButtonBrush" Color="#80FFFFFF" />
+        <SolidColorBrush x:Key="OperatorButtonHoverBrush" Color="#80F9F9F9" />
+        <SolidColorBrush x:Key="OperatorButtonPressedBrush" Color="#80E1E1E1" />
+        <SolidColorBrush x:Key="OperatorButtonOpaqueBrush" Color="#F9F9F9" />
+        <SolidColorBrush x:Key="OperatorButtonOpaqueHoverBrush" Color="#F6F6F6" />
+        <SolidColorBrush x:Key="OperatorButtonOpaquePressedBrush" Color="#EAEAEA" />
+        <LinearGradientBrush x:Key="OperatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+          <GradientStop Color="#80E5E5E5" Offset="0" />
+          <GradientStop Color="#80E5E5E5" Offset="0.94" />
+          <GradientStop Color="#80CCCCCC" Offset="1" />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="OperatorButtonPressedBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+          <GradientStop Color="#80E5E5E5" Offset="0" />
+          <GradientStop Color="#80E5E5E5" Offset="0.94" />
+          <GradientStop Color="#80CCCCCC" Offset="1" />
+        </LinearGradientBrush>
+        <BoxShadows x:Key="OperatorButtonShadow">0 0 0 0 #00000000</BoxShadows>
+        <BoxShadows x:Key="OperatorButtonPressedShadow">0 0 0 0 #00000000</BoxShadows>
+        <SolidColorBrush x:Key="ChromeHoverBrush" Color="#0F000000" />
+        <SolidColorBrush x:Key="ChromeForegroundBrush" Color="#1A1A1A" />
+        <SolidColorBrush x:Key="SettingsSecondaryForegroundBrush" Color="#5E5E5E" />
+        <SolidColorBrush x:Key="CalculatorBorderBrush" Color="#D0D0D0" />
+        <SolidColorBrush x:Key="SettingsCardBorderBrush" Color="#80CCCCCC" />
+        <SolidColorBrush x:Key="SettingsExpanderHeaderHoverBrush" Color="#80F6F6F6" />
+        <BoxShadows x:Key="SettingsCardBezelShadow">inset 0 0 1 0 #30CCCCCC, 0 0 1 0 #30CCCCCC</BoxShadows>
+        <SolidColorBrush x:Key="NavigationSelectedBrush" Color="#09000000" />
+        <SolidColorBrush x:Key="NavigationPaneBrush" Color="#80F9F9F9" />
+        <SolidColorBrush x:Key="NavigationInteractionBrush" Color="#09000000" />
+        <SolidColorBrush x:Key="DividerBrush" Color="#18000000" />
+        <SolidColorBrush x:Key="AccentButtonBrush" Color="#0067C0" />
+        <SolidColorBrush x:Key="AccentButtonHoverBrush" Color="#1975C5" />
+        <SolidColorBrush x:Key="AccentButtonPressedBrush" Color="#005A9E" />
+      </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+    <FontFamily x:Key="CalculatorIconFont">avares://Redmond%20Calculator/Assets/CalculatorIcons.ttf#Calculator Fluent Icons</FontFamily>
+    <DataTemplate x:Key="NavigationItemTemplate" x:DataType="managed:CalculatorNavigationItem" x:CompileBindings="False">
+    <Button Classes="navigationItem"
+            Classes.selected="{Binding IsSelected}"
+            IsEnabled="{Binding IsEnabled}"
+            AutomationProperties.Name="{Binding Name}"
+            Command="{Binding $parent[Window].DataContext.SelectNavigationItemCommand}"
+            CommandParameter="{Binding}">
+      <Grid ColumnDefinitions="4,38,*">
+        <Border Width="3" Height="18" CornerRadius="2" VerticalAlignment="Center"
+                Background="{DynamicResource AccentButtonBrush}"
+                IsVisible="{Binding IsSelected}" />
+        <TextBlock Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                   FontFamily="{StaticResource CalculatorIconFont}" FontSize="18" Text="{Binding Glyph}" />
+        <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="8,0,0,0"
+                   FontSize="14" Text="{Binding Name}" />
+      </Grid>
+    </Button>
+    </DataTemplate>
+    <DataTemplate x:Key="HistoryListTemplate" x:CompileBindings="False">
+    <Grid RowDefinitions="*,52" Background="Transparent">
+      <TextBlock Margin="18,18" HorizontalAlignment="Center" VerticalAlignment="Top"
+                 FontSize="14" Opacity="0.62" Text="{Binding HistoryEmptyText}"
+                 IsVisible="{Binding !HasHistory}" />
+      <ListBox Margin="8,0" Background="Transparent" BorderThickness="0"
+               ItemsSource="{Binding History}" IsVisible="{Binding HasHistory}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="managed:CalculatorHistoryEntry" x:CompileBindings="False">
+            <Grid Classes="historyEntry" ColumnDefinitions="*,36">
+              <Button Margin="0,2" Padding="12,9" HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Stretch" Background="Transparent" BorderThickness="0"
+                      Command="{Binding $parent[Window].DataContext.SelectHistoryEntryCommand}"
+                      CommandParameter="{Binding}">
+                <Grid RowDefinitions="Auto,Auto">
+                  <TextBlock HorizontalAlignment="Right" TextAlignment="Right" FontSize="13"
+                             Opacity="0.62" Text="{Binding Expression}" />
+                  <TextBlock Grid.Row="1" Margin="0,3,0,0" HorizontalAlignment="Right" TextAlignment="Right"
+                             FontSize="22" FontWeight="Medium" Text="{Binding Result}" />
+                </Grid>
+              </Button>
+              <Button Grid.Column="1" Classes="historyEntryAction" Width="32" Height="32" Padding="0"
+                      VerticalAlignment="Center" Background="Transparent" BorderThickness="0"
+                      FontFamily="{StaticResource CalculatorIconFont}" FontSize="15" Content="&#xE74D;"
+                      AutomationProperties.Name="{Binding $parent[Window].DataContext.DeleteHistoryItemName}"
+                      Command="{Binding $parent[Window].DataContext.DeleteHistoryEntryCommand}"
+                      CommandParameter="{Binding}" />
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+      <Button Grid.Row="1" Width="44" Height="40" Margin="0,0,8,6" Padding="0"
+              HorizontalAlignment="Right" Background="Transparent" BorderThickness="0"
+              IsVisible="{Binding HasHistory}" Command="{Binding ClearHistoryCommand}"
+              ToolTip.Tip="{Binding ClearHistoryTooltip}">
+        <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="17" Text="&#xE74D;" />
+      </Button>
+    </Grid>
+    </DataTemplate>
+    <DataTemplate x:Key="MemoryListTemplate" x:CompileBindings="False">
+    <Grid RowDefinitions="*,52" Width="300" MaxHeight="390">
+      <ScrollViewer MaxHeight="330" VerticalScrollBarVisibility="Auto">
+        <ItemsControl Margin="4,6" ItemsSource="{Binding Memory}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="managed:CalculatorMemoryEntry" x:CompileBindings="False">
+              <Border Classes="memoryEntry" Margin="0,2" Padding="10,7" CornerRadius="4"
+                      Background="Transparent">
+                <Grid RowDefinitions="Auto,Auto">
+                  <Button Padding="4,2" HorizontalAlignment="Stretch"
+                          HorizontalContentAlignment="Right" Background="Transparent" BorderThickness="0"
+                          FontSize="22" FontWeight="Medium" Content="{Binding Value}"
+                          Command="{Binding $parent[Window].DataContext.RecallMemoryEntryCommand}"
+                          CommandParameter="{Binding}" />
+                  <StackPanel Grid.Row="1" Classes="memoryItemActions" Margin="0,3,0,0"
+                              HorizontalAlignment="Right" Orientation="Horizontal">
+                    <Button Classes="memoryItemAction" Content="MC"
+                            AutomationProperties.Name="{Binding $parent[Window].DataContext.ClearMemoryItemName}"
+                            Command="{Binding $parent[Window].DataContext.ClearMemoryEntryCommand}"
+                            CommandParameter="{Binding}" />
+                    <Button Classes="memoryItemAction" Margin="2,0" Content="M+"
+                            AutomationProperties.Name="{Binding $parent[Window].DataContext.AddToMemoryItemName}"
+                            Command="{Binding $parent[Window].DataContext.AddToMemoryEntryCommand}"
+                            CommandParameter="{Binding}" />
+                    <Button Classes="memoryItemAction" Content="M−"
+                            AutomationProperties.Name="{Binding $parent[Window].DataContext.SubtractFromMemoryItemName}"
+                            Command="{Binding $parent[Window].DataContext.SubtractFromMemoryEntryCommand}"
+                            CommandParameter="{Binding}" />
+                  </StackPanel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+      <Button Grid.Row="1" Width="44" Height="40" Margin="0,0,8,6" Padding="0"
+              HorizontalAlignment="Right" Background="Transparent" BorderThickness="0"
+              Command="{Binding MemoryClearAllCommand}" ToolTip.Tip="{Binding ClearMemoryTooltip}">
+        <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="17" Text="&#xE74D;" />
+      </Button>
+    </Grid>
+    </DataTemplate>
+    <DataTemplate x:Key="HistoryPaneTemplate" x:CompileBindings="False">
+    <Grid RowDefinitions="58,*" Background="Transparent">
+      <TextBlock Margin="16,0" VerticalAlignment="Center" FontSize="20" FontWeight="Medium"
+                 Text="{Binding HistoryAutomationName}" />
+      <ContentControl Grid.Row="1" Content="{Binding}"
+                      ContentTemplate="{StaticResource HistoryListTemplate}" />
+    </Grid>
+    </DataTemplate>
+</ResourceDictionary>
