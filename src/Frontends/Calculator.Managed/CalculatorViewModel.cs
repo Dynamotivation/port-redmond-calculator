@@ -210,8 +210,6 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             _calculator,
             Synchronize,
             ExecuteCalculatorCommand,
-            () => IsError,
-            () => PrimaryDisplay,
             new ProgrammerStrings(
                 appResources.GetString("bitwiseButton.Text"),
                 appResources.GetString("bitShiftButton.Text"),
@@ -675,7 +673,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
         if (IsProgrammerMode)
         {
-            Programmer.Refresh();
+            Programmer.Refresh(IsError, PrimaryDisplay);
         }
     }
 
