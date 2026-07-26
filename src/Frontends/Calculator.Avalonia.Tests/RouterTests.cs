@@ -13,17 +13,10 @@ internal static class RouterTests
     private static readonly string[] CalculatorScopes = ["calculator", "scientific", "programmer"];
 
     /// <summary>
-    /// Catalog identifiers that the router deliberately does not handle today.
-    /// These are pre-existing gaps carried across the decomposition unchanged so
-    /// that the refactor stays a pure parity change; the entry is here to keep
-    /// the coverage test honest rather than to bless the behaviour.
+    /// Catalog identifiers the router deliberately does not handle. Empty: every
+    /// calculator-scope shortcut routes.
     /// </summary>
-    private static readonly Dictionary<string, string> KnownUnroutable = new(StringComparer.Ordinal)
-    {
-        // Ctrl+M. The MS keypad button works; the keyboard shortcut has never
-        // been wired to MemoryStoreCommand, so the key does nothing.
-        ["memButton"] = "memory store shortcut is not wired to the view model",
-    };
+    private static readonly Dictionary<string, string> KnownUnroutable = new(StringComparer.Ordinal);
 
     public static IReadOnlyList<(string Name, Action Run)> All =>
     [
@@ -33,6 +26,8 @@ internal static class RouterTests
         ("scientific error gating", ScientificErrorGating),
         ("programmer radix and word size", ProgrammerRadixAndWordSize),
         ("clipboard shortcuts defer to the host", ClipboardShortcutsDeferToHost),
+        ("memory shortcuts are safe when empty", MemoryShortcutsAreSafeWhenEmpty),
+        ("memory store shortcut stores", MemoryStoreShortcutStores),
     ];
 
     private static CalculatorViewModel CreateViewModel() => new();
@@ -61,11 +56,9 @@ internal static class RouterTests
             }
 
             // A fresh view model per identifier: dispatching mutates engine
-            // state, and a stale error state would change later outcomes. The
-            // seed matters because the memory shortcuts reach the engine with
-            // no HasMemory guard — see SeedMemory.
+            // state, and a stale error state would change later outcomes. No
+            // seeding — every shortcut has to be safe against empty memory.
             var viewModel = CreateViewModel();
-            SeedMemory(viewModel);
             var handled = CalculatorShortcutRouter.Dispatch(viewModel, definition.Id)
                 != CalculatorShortcutOutcome.NotHandled;
             var expectedUnroutable = KnownUnroutable.ContainsKey(definition.Id);
@@ -195,18 +188,38 @@ internal static class RouterTests
             "pasteButton should ask the host to paste");
     }
 
+
     /// <summary>
-    /// Stores a value in memory. The MemRecall/MemPlus/MemMinus shortcuts call
-    /// straight into the engine without checking HasMemory, and the engine
-    /// throws on an empty memory slot — the keypad buttons are disabled in that
-    /// state but the keyboard path is not. That is pre-existing behaviour and
-    /// this refactor preserves it, so the coverage test has to seed memory
-    /// rather than assert against the crash.
+    /// MC and MR are disabled on the keypad while memory is empty, and the
+    /// engine faults if they reach it anyway. Every memory shortcut has to be a
+    /// no-op rather than a crash in that state.
     /// </summary>
-    private static void SeedMemory(CalculatorViewModel viewModel)
+    private static void MemoryShortcutsAreSafeWhenEmpty()
     {
-        viewModel.ExecuteCalculatorCommand(CalculatorCommand.Five);
-        viewModel.Memory.StoreCommand.Execute(null);
+        foreach (var shortcutId in new[] { "MemRecall", "ClearMemoryButton", "MemPlus", "MemMinus" })
+        {
+            var viewModel = CreateViewModel();
+            Assert(!viewModel.Memory.HasEntries, "a fresh view model should have empty memory");
+            Assert(
+                CalculatorShortcutRouter.Dispatch(viewModel, shortcutId) == CalculatorShortcutOutcome.Handled,
+                $"{shortcutId} should be handled even with empty memory");
+        }
+    }
+
+    private static void MemoryStoreShortcutStores()
+    {
+        var viewModel = CreateViewModel();
+        CalculatorShortcutRouter.Dispatch(viewModel, "num8Button");
+        CalculatorShortcutRouter.Dispatch(viewModel, "memButton");
+
+        Assert(viewModel.Memory.HasEntries, "memButton should store the display into memory");
+
+        // And the recall that used to throw now round-trips.
+        CalculatorShortcutRouter.Dispatch(viewModel, "clearButton");
+        CalculatorShortcutRouter.Dispatch(viewModel, "MemRecall");
+        Assert(
+            viewModel.PrimaryDisplay.Contains('8'),
+            $"MemRecall should restore the stored value, display was '{viewModel.PrimaryDisplay}'");
     }
 
     private static void SwitchToScientific(CalculatorViewModel viewModel) =>
