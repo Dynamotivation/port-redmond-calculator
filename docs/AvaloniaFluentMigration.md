@@ -331,6 +331,34 @@ thickness as part of caption geometry and verify every DPI scale.
 | Compiled bindings | Add `x:DataType`. For a template that deliberately reaches an ancestor command, provide a typed path or disable compiled binding only for that small scope. |
 | Generated state | Computed visibility and selection properties must notify when every dependency changes. |
 
+## Porting mode-specific calculation surfaces
+
+Keep an existing portable calculation engine authoritative for values and
+operations. Expose narrowly scoped read APIs for presentation-only projections
+that the original view model obtained directly—for example, formatting one
+integer result in several radices. Continue sending the source command IDs for
+radix, word-size, bit-edit, and operator changes instead of duplicating those
+rules in the Avalonia layer.
+
+Some selection state belongs to the frontend even though the selected command
+changes engine behavior. Track that state explicitly so the view can reproduce
+checked indicators, key enablement, word-size labels, and keyboard feedback.
+After every engine mutation, refresh all dependent projections together; a
+single integer edit may change the primary display, every radix display, and a
+complete bit array.
+
+Adaptive thresholds declared inside a UWP user control are based on that
+control's available size, not necessarily the outer window. Re-evaluate them
+from the equivalent Avalonia control bounds. Preserve both the threshold and
+the source visual change—for example, replacing glyph-plus-text operator
+buttons with glyph-only buttons in a narrow state.
+
+When several calculator modes share shortcut IDs, pressed-state feedback must
+target the visible control for the active mode. Executing the right command
+while animating a hidden control is functionally correct but fails keyboard
+parity. Character handling must also remain mode-aware: punctuation that means
+a decimal separator in one mode may be a bitwise command in another.
+
 ## Reusable Avalonia patterns
 
 ### Own fidelity-critical surfaces

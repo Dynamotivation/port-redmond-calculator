@@ -216,6 +216,88 @@ int main()
         return 1;
     }
 
+    if (calculator_set_mode(handle, CALCULATOR_MODE_PROGRAMMER) != CALCULATOR_STATUS_OK
+        || calculator_send_command(handle, static_cast<int32_t>(Command::Command1)) != CALCULATOR_STATUS_OK
+        || calculator_send_command(handle, static_cast<int32_t>(Command::Command5)) != CALCULATOR_STATUS_OK)
+    {
+        std::cerr << "failed to enter a programmer-mode value\n";
+        calculator_destroy(handle);
+        return 1;
+    }
+    const auto hexadecimal = ReadString([&](char* buffer, size_t size, size_t* required) {
+        return calculator_get_result_for_radix(handle, 16, 64, 1, buffer, size, required);
+    });
+    const auto binary = ReadString([&](char* buffer, size_t size, size_t* required) {
+        return calculator_get_result_for_radix(handle, 2, 64, 0, buffer, size, required);
+    });
+    if (hexadecimal != "F" || binary != "1111")
+    {
+        std::cerr << "unexpected programmer radix values: " << hexadecimal << " / " << binary << '\n';
+        calculator_destroy(handle);
+        return 1;
+    }
+    if (calculator_send_command(handle, static_cast<int32_t>(Command::CommandBINPOS0)) != CALCULATOR_STATUS_OK)
+    {
+        std::cerr << "programmer bit edit failed\n";
+        calculator_destroy(handle);
+        return 1;
+    }
+    const auto flippedHexadecimal = ReadString([&](char* buffer, size_t size, size_t* required) {
+        return calculator_get_result_for_radix(handle, 16, 64, 1, buffer, size, required);
+    });
+    if (flippedHexadecimal != "E")
+    {
+        std::cerr << "programmer bit edit produced " << flippedHexadecimal << '\n';
+        calculator_destroy(handle);
+        return 1;
+    }
+
+    const Command programmerCommands[] = {
+        Command::CommandCLEAR, static_cast<Command>(313), Command::CommandF, Command::CommandAnd,
+        Command::Command3, Command::CommandEQU,
+    };
+    for (const auto command : programmerCommands)
+    {
+        if (calculator_send_command(handle, static_cast<int32_t>(command)) != CALCULATOR_STATUS_OK)
+        {
+            std::cerr << "programmer bitwise operation failed\n";
+            calculator_destroy(handle);
+            return 1;
+        }
+    }
+    const auto bitwiseHexadecimal = ReadString([&](char* buffer, size_t size, size_t* required) {
+        return calculator_get_result_for_radix(handle, 16, 64, 1, buffer, size, required);
+    });
+    if (bitwiseHexadecimal != "3")
+    {
+        std::cerr << "programmer AND produced " << bitwiseHexadecimal << '\n';
+        calculator_destroy(handle);
+        return 1;
+    }
+
+    const Command shiftCommands[] = {
+        Command::CommandCLEAR, Command::Command1, Command::CommandLSHF,
+        Command::Command1, Command::CommandEQU,
+    };
+    for (const auto command : shiftCommands)
+    {
+        if (calculator_send_command(handle, static_cast<int32_t>(command)) != CALCULATOR_STATUS_OK)
+        {
+            std::cerr << "programmer shift operation failed\n";
+            calculator_destroy(handle);
+            return 1;
+        }
+    }
+    const auto shiftedHexadecimal = ReadString([&](char* buffer, size_t size, size_t* required) {
+        return calculator_get_result_for_radix(handle, 16, 64, 1, buffer, size, required);
+    });
+    if (shiftedHexadecimal != "2")
+    {
+        std::cerr << "programmer left shift produced " << shiftedHexadecimal << '\n';
+        calculator_destroy(handle);
+        return 1;
+    }
+
     calculator_destroy(handle);
 
     const auto unitResourceValues = LoadResources("Resources.resw");

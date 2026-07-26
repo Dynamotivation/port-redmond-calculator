@@ -88,6 +88,12 @@ internal static unsafe partial class NativeMethods
     [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
     internal static partial NativeStatus GetExpressionDisplay(nint handle, byte* buffer, nuint bufferSize, out nuint requiredSize);
 
+    [LibraryImport(LibraryName, EntryPoint = "calculator_get_result_for_radix")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    internal static partial NativeStatus GetResultForRadix(
+        nint handle, uint radix, int precision, int groupDigitsPerRadix,
+        byte* buffer, nuint bufferSize, out nuint requiredSize);
+
     [LibraryImport(LibraryName, EntryPoint = "calculator_get_is_error")]
     [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
     internal static partial int IsError(nint handle);

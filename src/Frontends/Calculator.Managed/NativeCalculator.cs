@@ -56,6 +56,12 @@ public sealed unsafe class NativeCalculator : IDisposable
 
     public string PrimaryDisplay => ReadUtf8(NativeMethods.GetPrimaryDisplay);
     public string ExpressionDisplay => ReadUtf8(NativeMethods.GetExpressionDisplay);
+
+    public string GetResultForRadix(uint radix, int precision = 64, bool groupDigitsPerRadix = true) =>
+        ReadUtf8((nint handle, byte* buffer, nuint bufferSize, out nuint requiredSize) =>
+            NativeMethods.GetResultForRadix(
+                handle, radix, precision, groupDigitsPerRadix ? 1 : 0,
+                buffer, bufferSize, out requiredSize));
     public bool IsError => NativeMethods.IsError(Handle) != 0;
     public bool IsInputEmpty => NativeMethods.IsInputEmpty(Handle) != 0;
     public CalculatorEventState EventState

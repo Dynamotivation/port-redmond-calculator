@@ -30,6 +30,11 @@ public partial class MainWindow : Window
         "calculator",
         "scientific",
     };
+    private readonly IReadOnlySet<string> _programmerShortcutScope = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "calculator",
+        "programmer",
+    };
     private static readonly IReadOnlySet<CalculatorCommand> ScientificErrorDisabledCommands = new HashSet<CalculatorCommand>
     {
         CalculatorCommand.Divide, CalculatorCommand.Multiply, CalculatorCommand.Subtract,
@@ -94,9 +99,11 @@ public partial class MainWindow : Window
         Deactivated += OnWindowDeactivated;
         SizeChanged += (_, _) => UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
         ScientificNumpadPanel.SizeChanged += (_, _) => UpdateScientificControlSizeState();
+        ProgrammerNumpadPanel.SizeChanged += (_, _) => UpdateProgrammerControlSizeState();
         UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
         UpdateCalculatorModeLayout();
         UpdateScientificControlSizeState();
+        UpdateProgrammerControlSizeState();
         ApplyFontFamily(_viewModel.SelectedFontFamily);
         if (!string.Equals(_settings.FontFamily, _viewModel.SelectedFontFamily, StringComparison.Ordinal))
         {
@@ -159,7 +166,7 @@ public partial class MainWindow : Window
             CalculatorResultHost.MinHeight = 108;
             PrimaryResultText.FontSize = 72;
         }
-        else if (height >= (_viewModel.IsScientificMode ? 544 : 1))
+        else if (height >= (_viewModel.IsProgrammerMode ? 640 : _viewModel.IsScientificMode ? 544 : 1))
         {
             CalculatorResultHost.MinHeight = 72;
             PrimaryResultText.FontSize = 46;
@@ -183,10 +190,11 @@ public partial class MainWindow : Window
     private void UpdateCalculatorModeLayout()
     {
         var scientific = _viewModel.IsScientificMode;
+        var programmer = _viewModel.IsProgrammerMode;
         var displayControlsRow = CalculatorPageContent.RowDefinitions[3];
-        displayControlsRow.Height = scientific ? new GridLength(32, GridUnitType.Star) : new GridLength(0);
-        displayControlsRow.MinHeight = scientific ? 32 : 0;
-        CalculatorPageContent.RowDefinitions[5].Height = new GridLength(scientific ? 276 : 308, GridUnitType.Star);
+        displayControlsRow.Height = new GridLength(programmer ? 96 : scientific ? 32 : 0, programmer || scientific ? GridUnitType.Star : GridUnitType.Pixel);
+        displayControlsRow.MinHeight = programmer ? 96 : scientific ? 32 : 0;
+        CalculatorPageContent.RowDefinitions[5].Height = new GridLength(programmer ? 268 : scientific ? 276 : 308, GridUnitType.Star);
     }
 
     private void UpdateScientificControlSizeState()
@@ -226,6 +234,15 @@ public partial class MainWindow : Window
         }
     }
 
+    private void UpdateProgrammerControlSizeState()
+    {
+        // CalculatorProgrammerRadixOperators.xaml switches from glyph+text to
+        // glyph-only operator-panel buttons below its 630-DIP medium state.
+        var showLabels = ProgrammerNumpadPanel.Bounds.Width >= 630;
+        ProgrammerBitwiseLabel.IsVisible = showLabels;
+        ProgrammerBitShiftLabel.IsVisible = showLabels;
+    }
+
     private void OnCalculatorKeyDown(object? sender, KeyEventArgs e)
     {
         if (!_viewModel.IsCalculatorMode || _viewModel.IsSettingsOpen || _viewModel.IsNavigationPaneOpen)
@@ -240,7 +257,11 @@ public partial class MainWindow : Window
 
         var result = _shortcutService.Process(
             input,
-            _viewModel.IsScientificMode ? _scientificShortcutScope : _calculatorShortcutScope);
+            _viewModel.IsScientificMode
+                ? _scientificShortcutScope
+                : _viewModel.IsProgrammerMode
+                    ? _programmerShortcutScope
+                    : _calculatorShortcutScope);
         if (!result.WasMatched
             && OperatingSystem.IsMacOS()
             && input.Gesture.Modifiers.HasFlag(ShortcutModifiers.Command)
@@ -334,7 +355,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private static bool TryCreateShortcutInput(KeyEventArgs e, out ShortcutInput input)
+    private bool TryCreateShortcutInput(KeyEventArgs e, out ShortcutInput input)
     {
         var modifiers = ShortcutModifiers.None;
         if (e.KeyModifiers.HasFlag(KeyModifiers.Control)) modifiers |= ShortcutModifiers.Control;
@@ -344,7 +365,9 @@ public partial class MainWindow : Window
 
         ShortcutKey shortcutKey;
         var symbol = e.KeySymbol;
-        if ((symbol is "." or ",") && modifiers is ShortcutModifiers.None or ShortcutModifiers.Shift)
+        if (!_viewModel.IsProgrammerMode
+            && (symbol is "." or ",")
+            && modifiers is ShortcutModifiers.None or ShortcutModifiers.Shift)
         {
             shortcutKey = ShortcutKey.Named("DECIMAL");
             modifiers = ShortcutModifiers.None;
@@ -352,10 +375,15 @@ public partial class MainWindow : Window
         else if (symbol?.Length == 1 && !char.IsControl(symbol[0]))
         {
             var hasCommandModifier = (modifiers & (ShortcutModifiers.Control | ShortcutModifiers.Alt | ShortcutModifiers.Command)) != 0;
-            shortcutKey = hasCommandModifier
+            var isLetterKey = char.IsLetter(symbol[0]);
+            shortcutKey = hasCommandModifier || isLetterKey
                 ? ShortcutKey.Named(symbol)
                 : ShortcutKey.Character(symbol[0]);
-            if (!hasCommandModifier)
+            if (isLetterKey)
+            {
+                shortcutKey = ShortcutKey.Named(symbol.ToUpperInvariant());
+            }
+            if (!hasCommandModifier && !isLetterKey)
             {
                 // KeySymbol already contains the layout-resolved shifted glyph
                 // (for example '+' or '%'); UWP shortcut resources describe
@@ -409,8 +437,13 @@ public partial class MainWindow : Window
             (Key.D3, true) => '#',
             (Key.D5, true) => '%',
             (Key.D6, true) => '^',
+            (Key.D7, true) => '&',
             (Key.D8, true) => '*',
             (Key.OemPipe, true) => '|',
+            (Key.OemPipe, false) => '\\',
+            (Key.OemComma, true) => '<',
+            (Key.OemPeriod, true) => '>',
+            (Key.OemTilde, true) => '~',
             (Key.D0 or Key.NumPad0, _) => '0',
             (Key.D1 or Key.NumPad1, _) => '1',
             (Key.D2 or Key.NumPad2, _) => '2',
@@ -460,6 +493,19 @@ public partial class MainWindow : Window
             "squareRootButton" => CalculatorCommand.SquareRoot,
             "backSpaceButton" => CalculatorCommand.Backspace,
             "multiplyButton" => CalculatorCommand.Multiply,
+            "modButton" => CalculatorCommand.Modulo,
+            "aButton" => CalculatorCommand.A,
+            "bButton" => CalculatorCommand.B,
+            "cButton" => CalculatorCommand.C,
+            "dButton" => CalculatorCommand.D,
+            "eButton" => CalculatorCommand.E,
+            "fButton" => CalculatorCommand.F,
+            "andButton" => CalculatorCommand.And,
+            "orButton" => CalculatorCommand.Or,
+            "notButton" => CalculatorCommand.Not,
+            "nandButton" => CalculatorCommand.Nand,
+            "norButton" => CalculatorCommand.Nor,
+            "xorButton" => CalculatorCommand.Xor,
             "absButton" => CalculatorCommand.Absolute,
             "ceilButton" => CalculatorCommand.Ceiling,
             "closeParenthesisButton" => CalculatorCommand.CloseParenthesis,
@@ -524,6 +570,22 @@ public partial class MainWindow : Window
 
         switch (shortcutId)
         {
+            case "lshButton":
+            case "lshLogicalButton":
+            case "rolButton":
+            case "rolCarryButton": _viewModel.ExecuteProgrammerLeftShiftCommand.Execute(null); return true;
+            case "rshButton":
+            case "rshLogicalButton":
+            case "rorButton":
+            case "rorCarryButton": _viewModel.ExecuteProgrammerRightShiftCommand.Execute(null); return true;
+            case "hexButton": _viewModel.SelectProgrammerRadixCommand.Execute("Hexadecimal"); return true;
+            case "decimalButton": _viewModel.SelectProgrammerRadixCommand.Execute("Decimal"); return true;
+            case "octButton": _viewModel.SelectProgrammerRadixCommand.Execute("Octal"); return true;
+            case "binaryButton": _viewModel.SelectProgrammerRadixCommand.Execute("Binary"); return true;
+            case "qwordButton": _viewModel.SelectProgrammerWordSizeCommand.Execute("Qword"); return true;
+            case "dwordButton": _viewModel.SelectProgrammerWordSizeCommand.Execute("Dword"); return true;
+            case "wordButton": _viewModel.SelectProgrammerWordSizeCommand.Execute("Word"); return true;
+            case "byteButton": _viewModel.SelectProgrammerWordSizeCommand.Execute("Byte"); return true;
             case "HistoryButton": _viewModel.ToggleHistoryCommand.Execute(null); return true;
             case "ClearHistory": _viewModel.ClearHistoryCommand.Execute(null); return true;
             case "ClearMemoryButton": _viewModel.MemoryClearAllCommand.Execute(null); return true;
@@ -565,30 +627,47 @@ public partial class MainWindow : Window
 
     private bool TryGetShortcutButton(string shortcutId, out Button button)
     {
+        Button ModeButton(Button standard, Button scientific, Button programmer) =>
+            _viewModel.IsProgrammerMode ? programmer : _viewModel.IsScientificMode ? scientific : standard;
+
         button = shortcutId switch
         {
-            "clearButton" => _viewModel.IsScientificMode ? ScientificClearButton : ClearButton,
-            "clearEntryButton" => _viewModel.IsScientificMode ? ScientificClearEntryButton : ClearEntryButton,
+            "clearButton" => ModeButton(ClearButton, ScientificClearButton, ProgrammerClearButton),
+            "clearEntryButton" => ModeButton(ClearEntryButton, ScientificClearEntryButton, ProgrammerClearEntryButton),
             "decimalSeparatorButton" => _viewModel.IsScientificMode ? ScientificDecimalButton : DecimalButton,
-            "divideButton" => _viewModel.IsScientificMode ? ScientificDivideButton : DivideButton,
-            "equalButton" => _viewModel.IsScientificMode ? ScientificEqualsButton : EqualsButton,
-            "minusButton" => _viewModel.IsScientificMode ? ScientificSubtractButton : SubtractButton,
-            "negateButton" => _viewModel.IsScientificMode ? ScientificSignButton : SignButton,
-            "num0Button" => _viewModel.IsScientificMode ? ScientificZeroButton : ZeroButton,
-            "num1Button" => _viewModel.IsScientificMode ? ScientificOneButton : OneButton,
-            "num2Button" => _viewModel.IsScientificMode ? ScientificTwoButton : TwoButton,
-            "num3Button" => _viewModel.IsScientificMode ? ScientificThreeButton : ThreeButton,
-            "num4Button" => _viewModel.IsScientificMode ? ScientificFourButton : FourButton,
-            "num5Button" => _viewModel.IsScientificMode ? ScientificFiveButton : FiveButton,
-            "num6Button" => _viewModel.IsScientificMode ? ScientificSixButton : SixButton,
-            "num7Button" => _viewModel.IsScientificMode ? ScientificSevenButton : SevenButton,
-            "num8Button" => _viewModel.IsScientificMode ? ScientificEightButton : EightButton,
-            "num9Button" => _viewModel.IsScientificMode ? ScientificNineButton : NineButton,
+            "divideButton" => ModeButton(DivideButton, ScientificDivideButton, ProgrammerDivideButton),
+            "equalButton" => ModeButton(EqualsButton, ScientificEqualsButton, ProgrammerEqualsButton),
+            "minusButton" => ModeButton(SubtractButton, ScientificSubtractButton, ProgrammerSubtractButton),
+            "negateButton" => ModeButton(SignButton, ScientificSignButton, ProgrammerSignButton),
+            "num0Button" => ModeButton(ZeroButton, ScientificZeroButton, ProgrammerZeroButton),
+            "num1Button" => ModeButton(OneButton, ScientificOneButton, ProgrammerOneButton),
+            "num2Button" => ModeButton(TwoButton, ScientificTwoButton, ProgrammerTwoButton),
+            "num3Button" => ModeButton(ThreeButton, ScientificThreeButton, ProgrammerThreeButton),
+            "num4Button" => ModeButton(FourButton, ScientificFourButton, ProgrammerFourButton),
+            "num5Button" => ModeButton(FiveButton, ScientificFiveButton, ProgrammerFiveButton),
+            "num6Button" => ModeButton(SixButton, ScientificSixButton, ProgrammerSixButton),
+            "num7Button" => ModeButton(SevenButton, ScientificSevenButton, ProgrammerSevenButton),
+            "num8Button" => ModeButton(EightButton, ScientificEightButton, ProgrammerEightButton),
+            "num9Button" => ModeButton(NineButton, ScientificNineButton, ProgrammerNineButton),
             "percentButton" => PercentButton,
-            "plusButton" => _viewModel.IsScientificMode ? ScientificAddButton : AddButton,
+            "plusButton" => ModeButton(AddButton, ScientificAddButton, ProgrammerAddButton),
             "squareRootButton" => _viewModel.IsScientificMode ? ScientificSquareRootButton : SquareRootButton,
-            "backSpaceButton" => _viewModel.IsScientificMode ? ScientificBackspaceButton : BackspaceButton,
-            "multiplyButton" => _viewModel.IsScientificMode ? ScientificMultiplyButton : MultiplyButton,
+            "backSpaceButton" => ModeButton(BackspaceButton, ScientificBackspaceButton, ProgrammerBackspaceButton),
+            "multiplyButton" => ModeButton(MultiplyButton, ScientificMultiplyButton, ProgrammerMultiplyButton),
+            "modButton" => ProgrammerModuloButton,
+            "aButton" => ProgrammerAButton,
+            "bButton" => ProgrammerBButton,
+            "cButton" => ProgrammerCButton,
+            "dButton" => ProgrammerDButton,
+            "eButton" => ProgrammerEButton,
+            "fButton" => ProgrammerFButton,
+            "hexButton" => ProgrammerHexRadixButton,
+            "decimalButton" => ProgrammerDecimalRadixButton,
+            "octButton" => ProgrammerOctalRadixButton,
+            "binaryButton" => ProgrammerBinaryRadixButton,
+            "qwordButton" or "dwordButton" or "wordButton" or "byteButton" => ProgrammerWordSizeButton,
+            "lshButton" or "lshLogicalButton" or "rolButton" or "rolCarryButton" => ProgrammerLeftShiftButton,
+            "rshButton" or "rshLogicalButton" or "rorButton" or "rorCarryButton" => ProgrammerRightShiftButton,
             "absButton" => ScientificAbsoluteButton,
             "cubeRootButton" => ScientificCubeRootButton,
             "ceilButton" => ScientificCeilingButton,
@@ -620,8 +699,8 @@ public partial class MainWindow : Window
             "logBase10Button" => ScientificLogButton,
             "logBaseEButton" => ScientificNaturalLogButton,
             "logBaseY" => ScientificLogBaseYButton,
-            "openParenthesisButton" => ScientificOpenParenthesisButton,
-            "closeParenthesisButton" => ScientificCloseParenthesisButton,
+            "openParenthesisButton" => _viewModel.IsProgrammerMode ? ProgrammerOpenParenthesisButton : ScientificOpenParenthesisButton,
+            "closeParenthesisButton" => _viewModel.IsProgrammerMode ? ProgrammerCloseParenthesisButton : ScientificCloseParenthesisButton,
             "piButton" => ScientificPiButton,
             "powerButton" => ScientificPowerButton,
             "powerOf10Button" => ScientificTenPowerButton,

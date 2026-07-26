@@ -396,6 +396,29 @@ calculator_status calculator_get_expression_display(
     return handle == nullptr ? CALCULATOR_STATUS_INVALID_ARGUMENT : CopyString(handle->display->ExpressionDisplay(), buffer, bufferSize, requiredSize);
 }
 
+calculator_status calculator_get_result_for_radix(
+    const calculator_handle* handle,
+    uint32_t radix,
+    int32_t precision,
+    int32_t groupDigitsPerRadix,
+    char* buffer,
+    size_t bufferSize,
+    size_t* requiredSize)
+{
+    if (handle == nullptr || requiredSize == nullptr || radix < 2 || radix > 16 || precision <= 0)
+    {
+        return CALCULATOR_STATUS_INVALID_ARGUMENT;
+    }
+
+    calculator_status copyStatus = CALCULATOR_STATUS_OK;
+    const auto engineStatus = Protect([&]() {
+        const auto value = CalculatorNative::Utf8::FromWide(
+            handle->manager->GetResultForRadix(radix, precision, groupDigitsPerRadix != 0));
+        copyStatus = CopyString(value, buffer, bufferSize, requiredSize);
+    });
+    return engineStatus == CALCULATOR_STATUS_OK ? copyStatus : engineStatus;
+}
+
 int32_t calculator_get_is_error(const calculator_handle* handle)
 {
     return handle != nullptr && handle->display->IsError() ? 1 : 0;

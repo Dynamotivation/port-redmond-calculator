@@ -96,6 +96,15 @@ extern "C"
         size_t buffer_size,
         size_t* required_size);
 
+    CALCULATOR_API calculator_status calculator_get_result_for_radix(
+        const calculator_handle* handle,
+        uint32_t radix,
+        int32_t precision,
+        int32_t group_digits_per_radix,
+        char* buffer,
+        size_t buffer_size,
+        size_t* required_size);
+
     CALCULATOR_API int32_t calculator_get_is_error(const calculator_handle* handle);
     CALCULATOR_API int32_t calculator_get_is_input_empty(const calculator_handle* handle);
 
