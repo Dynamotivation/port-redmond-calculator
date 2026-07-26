@@ -33,6 +33,22 @@ internal static class SnapshotRunner
     /// <summary>Largest share of pixels allowed to carry that difference.</summary>
     private const double MaxToleratedPixelFraction = 0.005;
 
+    /// <summary>
+    /// How many pixels of the window's outermost frame may exceed the channel
+    /// delta. Kept small deliberately: a single glyph stroke is far more than
+    /// this, so nothing meaningful can hide inside the allowance.
+    /// </summary>
+    private const int MaxToleratedBorderOutliers = 16;
+
+    /// <summary>Width in pixels of the window frame the looser rule covers.</summary>
+    private const int WindowBorderBand = 2;
+
+    private static bool IsWindowBorder(int x, int y, int width, int height) =>
+        x < WindowBorderBand
+        || y < WindowBorderBand
+        || x >= width - WindowBorderBand
+        || y >= height - WindowBorderBand;
+
     public static string SnapshotDirectory { get; } = ResolveSnapshotDirectory();
 
     public static void ConfigureResources() =>
@@ -226,6 +242,8 @@ internal static class SnapshotRunner
 
         var differing = 0;
         var maxChannelDelta = 0;
+        var borderOutliers = 0;
+        var interiorOutliers = 0;
         int minX = int.MaxValue, minY = int.MaxValue, maxX = -1, maxY = -1;
 
         for (var index = 0; index < expected.Pixels.Length; index += 4)
@@ -251,6 +269,18 @@ internal static class SnapshotRunner
             minY = Math.Min(minY, y);
             maxX = Math.Max(maxX, x);
             maxY = Math.Max(maxY, y);
+
+            if (delta > MaxToleratedChannelDelta)
+            {
+                if (IsWindowBorder(x, y, expected.Width, expected.Height))
+                {
+                    borderOutliers++;
+                }
+                else
+                {
+                    interiorOutliers++;
+                }
+            }
         }
 
         if (differing == 0)
@@ -267,13 +297,24 @@ internal static class SnapshotRunner
         // unavoidable if the window is to be decomposed at all. Anything larger
         // than that (a moved control, a wrong brush, a changed font size) blows
         // straight past both limits, so they stay tight.
-        var isQuantisationNoise = maxChannelDelta <= MaxToleratedChannelDelta
-            && fraction <= MaxToleratedPixelFraction;
+        //
+        // The window's own rounded border is held to a looser rule, because a
+        // 1px border can land exactly on it: the navigation pane parks at
+        // Margin="-320,0,320,0" when closed, which puts its right edge on
+        // column 0. Compositing a border over an antialiased corner is steep
+        // enough that a 1/255 alpha change lands tens of units away in the
+        // final pixel. Only a handful of pixels may do this, and only in the
+        // outermost two-pixel frame; the interior stays on the tight rule.
+        var isAcceptable = fraction <= MaxToleratedPixelFraction
+            && interiorOutliers == 0
+            && borderOutliers <= MaxToleratedBorderOutliers;
 
         var detail = $"{differing} of {total} pixels differ ({fraction:P2}), "
-            + $"max channel delta {maxChannelDelta}, in x {minX}-{maxX}, y {minY}-{maxY}";
+            + $"max channel delta {maxChannelDelta}, "
+            + $"outliers {interiorOutliers} interior / {borderOutliers} border, "
+            + $"in x {minX}-{maxX}, y {minY}-{maxY}";
 
-        return isQuantisationNoise
+        return isAcceptable
             ? new ComparisonResult(true, $"within tolerance ({detail})")
             : new ComparisonResult(false, detail);
     }

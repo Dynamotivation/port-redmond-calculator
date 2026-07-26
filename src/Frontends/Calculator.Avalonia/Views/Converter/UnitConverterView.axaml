@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Calculator.Avalonia"
+             xmlns:managed="using:Calculator.Managed"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             x:Class="Calculator.Avalonia.Views.UnitConverterView"
+             x:DataType="managed:CalculatorViewModel"
+             IsVisible="{Binding IsUnitConverterMode}">
+  <!-- Unit converter: the controls are backed by CalcViewModel's native
+       UnitConverter and the original Microsoft conversion catalog. -->
+  <Grid Margin="12,2,12,12"
+        RowDefinitions="Auto,1.12*,Auto,1.12*,Auto,1.65*">
+    <ui:FAComboBox Grid.Row="0" Classes="unitSelector" Margin="0,0,0,7"
+                   Padding="12,0,0,0"
+                   VerticalContentAlignment="Center"
+                   ItemsSource="{Binding UnitCategories}"
+                   SelectedItem="{Binding SelectedUnitCategory}">
+      <ui:FAComboBox.ItemTemplate>
+        <DataTemplate x:DataType="managed:UnitConverterCategory">
+          <TextBlock Text="{Binding Name}" />
+        </DataTemplate>
+      </ui:FAComboBox.ItemTemplate>
+    </ui:FAComboBox>
+
+    <Grid Grid.Row="1" RowDefinitions="*,Auto" Margin="6,0">
+      <TextBlock Classes="unitDisplay" Text="{Binding UnitFromDisplay}" />
+      <ui:FAComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4"
+                     Padding="12,0,0,0"
+                     VerticalContentAlignment="Center"
+                     ItemsSource="{Binding UnitDefinitions}"
+                     SelectedItem="{Binding SelectedFromUnit}">
+        <ui:FAComboBox.ItemTemplate>
+          <DataTemplate x:DataType="managed:UnitConverterUnit">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Text="{Binding Name}" />
+              <TextBlock Grid.Column="1" Margin="16,0,0,0" Opacity="0.65" Text="{Binding Abbreviation}" />
+            </Grid>
+          </DataTemplate>
+        </ui:FAComboBox.ItemTemplate>
+      </ui:FAComboBox>
+    </Grid>
+
+    <Button Grid.Row="2" Width="42" Height="34" Padding="0" HorizontalAlignment="Right"
+            Margin="0,-1,6,-1" Background="Transparent" BorderThickness="0"
+            FontSize="19" Content="⇅" AutomationProperties.Name="Swap units"
+            Command="{Binding SwapUnitsCommand}" />
+
+    <Grid Grid.Row="3" RowDefinitions="*,Auto" Margin="6,0">
+      <TextBlock Classes="unitDisplay" Text="{Binding UnitToDisplay}" />
+      <ui:FAComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4"
+                     Padding="12,0,0,0"
+                     VerticalContentAlignment="Center"
+                     ItemsSource="{Binding UnitDefinitions}"
+                     SelectedItem="{Binding SelectedToUnit}">
+        <ui:FAComboBox.ItemTemplate>
+          <DataTemplate x:DataType="managed:UnitConverterUnit">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Text="{Binding Name}" />
+              <TextBlock Grid.Column="1" Margin="16,0,0,0" Opacity="0.65" Text="{Binding Abbreviation}" />
+            </Grid>
+          </DataTemplate>
+        </ui:FAComboBox.ItemTemplate>
+      </ui:FAComboBox>
+    </Grid>
+
+    <ItemsControl Grid.Row="4" Margin="6,5,6,8" ItemsSource="{Binding UnitSuggestions}">
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <WrapPanel Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Border Margin="0,0,6,4" Padding="8,3" CornerRadius="4" Background="{DynamicResource CardBrush}">
+            <TextBlock FontSize="13" Opacity="0.8" Text="{Binding}" />
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <Grid Grid.Row="5" Margin="-9,0,-9,-9" RowDefinitions="*,*,*,*" ColumnDefinitions="*,*,*">
+      <Button Classes="calcButton numeric" Content="7" Command="{Binding SendUnitCommandCommand}" CommandParameter="Seven" />
+      <Button Grid.Column="1" Classes="calcButton numeric" Content="8" Command="{Binding SendUnitCommandCommand}" CommandParameter="Eight" />
+      <Button Grid.Column="2" Classes="calcButton numeric" Content="9" Command="{Binding SendUnitCommandCommand}" CommandParameter="Nine" />
+
+      <Button Grid.Row="1" Classes="calcButton numeric" Content="4" Command="{Binding SendUnitCommandCommand}" CommandParameter="Four" />
+      <Button Grid.Row="1" Grid.Column="1" Classes="calcButton numeric" Content="5" Command="{Binding SendUnitCommandCommand}" CommandParameter="Five" />
+      <Button Grid.Row="1" Grid.Column="2" Classes="calcButton numeric" Content="6" Command="{Binding SendUnitCommandCommand}" CommandParameter="Six" />
+
+      <Button Grid.Row="2" Classes="calcButton numeric" Content="1" Command="{Binding SendUnitCommandCommand}" CommandParameter="One" />
+      <Button Grid.Row="2" Grid.Column="1" Classes="calcButton numeric" Content="2" Command="{Binding SendUnitCommandCommand}" CommandParameter="Two" />
+      <Button Grid.Row="2" Grid.Column="2" Classes="calcButton numeric" Content="3" Command="{Binding SendUnitCommandCommand}" CommandParameter="Three" />
+
+      <Button Grid.Row="3" Classes="calcButton numeric symbolOperator" Content="&#xF898;" FontSize="23.1" Command="{Binding SendUnitCommandCommand}" CommandParameter="Negate" />
+      <Button Grid.Row="3" Grid.Column="1" Classes="calcButton numeric" Content="0" Command="{Binding SendUnitCommandCommand}" CommandParameter="Zero" />
+      <Grid Grid.Row="3" Grid.Column="2" ColumnDefinitions="*,*">
+        <Button Classes="calcButton numeric" Content="{Binding DecimalSeparator}" FontSize="24.2" Command="{Binding SendUnitCommandCommand}" CommandParameter="Decimal" />
+        <Button Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xE94F;" FontSize="19.36" Command="{Binding SendUnitCommandCommand}" CommandParameter="Backspace" />
+      </Grid>
+    </Grid>
+  </Grid>
+</UserControl>

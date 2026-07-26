@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Calculator.Avalonia"
+             xmlns:managed="using:Calculator.Managed"
+             x:Class="Calculator.Avalonia.Shell.NavigationPane"
+             x:DataType="managed:CalculatorViewModel">
+  <!-- Source NavigationView replacement in its LeftMinimal mode: the pane
+       overlays page content and keeps the title bar unobstructed.
+
+       The header row is folded onto the overlay grid rather than wrapped in
+       another one. When closed, the pane sits at Margin="-320,0,320,0", which
+       puts its one-pixel right border exactly on the window's left edge; every
+       extra nesting level there changes how that border composites with the
+       window's antialiased rounded corner. -->
+  <Grid RowDefinitions="48,*" ColumnDefinitions="320,*"
+        Classes="navigationOverlay" Classes.open="{Binding IsNavigationPaneOpen}">
+    <Button Grid.RowSpan="2" Grid.ColumnSpan="2" Classes="navigationScrim" Padding="0" Background="Transparent" BorderThickness="0"
+            HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+            Command="{Binding CloseNavigationPaneCommand}" />
+    <Border Grid.RowSpan="2" Grid.Column="0" Classes="navigationPane" Background="{DynamicResource NavigationPaneBrush}"
+            BorderBrush="{DynamicResource CalculatorBorderBrush}" BorderThickness="0,0,1,0"
+            CornerRadius="0,8,8,0" ClipToBounds="True"
+            BoxShadow="8 0 18 0 #50000000">
+      <Border.Transitions>
+        <Transitions>
+          <ThicknessTransition Property="Margin" Duration="0:0:0.22">
+            <ThicknessTransition.Easing>
+              <CubicEaseOut />
+            </ThicknessTransition.Easing>
+          </ThicknessTransition>
+        </Transitions>
+      </Border.Transitions>
+      <Grid RowDefinitions="54,*,60">
+        <Grid Grid.Row="0" ColumnDefinitions="56,*">
+        </Grid>
+
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <StackPanel Margin="0,4,0,6">
+            <TextBlock Margin="16,11,8,5" FontSize="19" FontWeight="Medium" Opacity="0.62"
+                       Text="{Binding CalculatorGroupName}" />
+            <ItemsControl ItemsSource="{Binding CalculatorNavigationItems}"
+                          ItemTemplate="{StaticResource NavigationItemTemplate}" />
+
+            <TextBlock Margin="16,18,8,5" FontSize="19" FontWeight="Medium" Opacity="0.62"
+                       Text="{Binding ConverterGroupName}" />
+            <ItemsControl ItemsSource="{Binding ConverterNavigationItems}"
+                          ItemTemplate="{StaticResource NavigationItemTemplate}" />
+          </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="2" Height="1" Margin="0" VerticalAlignment="Top"
+                Background="{DynamicResource DividerBrush}" />
+        <Button Grid.Row="2" Classes="navigationItem" Margin="4,16,8,4"
+                AutomationProperties.Name="{Binding SettingsName}"
+                Command="{Binding OpenSettingsCommand}">
+          <Grid ColumnDefinitions="4,38,*">
+            <TextBlock Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                       FontFamily="{StaticResource CalculatorIconFont}" FontSize="18" Text="&#xE713;" />
+            <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="8,0,0,0"
+                       FontSize="14" Text="{Binding SettingsName}" />
+          </Grid>
+        </Button>
+      </Grid>
+    </Border>
+
+    <Button Classes="chromeButton navigationToggle" Margin="5,9,5,3"
+            AutomationProperties.Name="Switch calculator mode"
+            IsVisible="{Binding !IsAlwaysOnTop}"
+            IsHitTestVisible="{Binding CanInteractWithNavigationToggle}"
+            Command="{Binding ToggleNavigationPaneCommand}">
+      <Grid Width="24" Height="24">
+        <Canvas Classes="hamburgerGlyph" Width="24" Height="24">
+          <Path Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
+                Data="M 3,6 L 21,6 M 3,12 L 21,12 M 3,18 L 21,18" />
+        </Canvas>
+      </Grid>
+    </Button>
+  </Grid>
+</UserControl>

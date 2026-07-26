@@ -1,0 +1,291 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Calculator.Avalonia"
+             xmlns:managed="using:Calculator.Managed"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             x:Class="Calculator.Avalonia.Views.SettingsView"
+             x:DataType="managed:CalculatorViewModel"
+             IsVisible="{Binding IsSettingsOpen}">
+  <!-- Settings mirrors the source page's Appearance and About groups. The
+       control spans the same rows the page grid did and keeps its own 54/*
+       split, so the shared grid's row boundaries are unchanged. -->
+  <Grid Background="Transparent"
+        RowDefinitions="54,*">
+    <Grid.Resources>
+      <!-- The outer Settings card owns its fill, border, and radius. Do not
+           let Fluent draw a second inset ToggleButton surface inside it. -->
+      <Thickness x:Key="ExpanderHeaderPadding">0</Thickness>
+      <Thickness x:Key="ExpanderHeaderBorderThickness">0</Thickness>
+      <SolidColorBrush x:Key="ExpanderHeaderBackground" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderHeaderBackgroundPointerOver" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderHeaderBackgroundPressed" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderHeaderBackgroundDisabled" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderHeaderBorderBrush" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderHeaderBorderBrushPointerOver" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderHeaderBorderBrushPressed" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderHeaderBorderBrushDisabled" Color="Transparent" />
+      <Thickness x:Key="ExpanderContentPadding">0</Thickness>
+      <Thickness x:Key="ExpanderContentLeftBorderThickness">0</Thickness>
+      <Thickness x:Key="ExpanderContentUpBorderThickness">0</Thickness>
+      <Thickness x:Key="ExpanderContentRightBorderThickness">0</Thickness>
+      <Thickness x:Key="ExpanderContentDownBorderThickness">0</Thickness>
+      <SolidColorBrush x:Key="ExpanderContentBackground" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderContentBorderBrush" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronBackground" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronBackgroundPointerOver" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronBackgroundPressed" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronBackgroundDisabled" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronBorderBrush" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronBorderBrushPointerOver" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronBorderBrushPressed" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronBorderBrushDisabled" Color="Transparent" />
+      <x:Double x:Key="ExpanderChevronButtonSize">0</x:Double>
+      <Thickness x:Key="ExpanderChevronMargin">0</Thickness>
+      <SolidColorBrush x:Key="ExpanderChevronForeground" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronForegroundPointerOver" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronForegroundPressed" Color="Transparent" />
+      <SolidColorBrush x:Key="ExpanderChevronForegroundDisabled" Color="Transparent" />
+    </Grid.Resources>
+    <Grid Grid.Row="0" IsVisible="{Binding UsesWindowsWindowControls}">
+      <TextBlock Classes="pageHeading" Margin="24,0,0,0" VerticalAlignment="Center"
+                 Text="{Binding SettingsName}" />
+    </Grid>
+    <Grid Grid.Row="0" ColumnDefinitions="56,*" IsVisible="{Binding UsesMacOSWindowControls}">
+      <Button Classes="chromeButton" Margin="5,3" FontSize="18"
+              AutomationProperties.Name="{Binding BackAutomationName}"
+              ToolTip.Tip="{Binding SettingsBackTooltip}"
+              Command="{Binding CloseSettingsCommand}">
+        <Path Width="18" Height="18" Stretch="Uniform" Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.25"
+              Data="M 12.5,5.5 L 6,12 L 12.5,18.5 M 6,12 L 20,12" />
+      </Button>
+      <TextBlock Grid.Column="1" Classes="pageHeading" VerticalAlignment="Center"
+                 Text="{Binding SettingsName}" />
+    </Grid>
+
+    <ScrollViewer Grid.Row="1" Padding="24,0,24,16"
+                  HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+      <StackPanel Spacing="4">
+        <TextBlock Classes="sectionHeading" Margin="0,12,0,4"
+                   Text="{Binding SettingsAppearanceName}" />
+
+        <Border Classes="settingsCard" Background="Transparent"
+                CornerRadius="6" Padding="0" ClipToBounds="True">
+          <local:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                    Background="Transparent">
+            <Expander.Header>
+              <Grid Height="72">
+                <Grid Classes="settingsExpanderHeader" VerticalAlignment="Center"
+                      ColumnDefinitions="36,*,32" RowDefinitions="Auto,Auto">
+                  <TextBlock Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center"
+                             FontFamily="{StaticResource CalculatorIconFont}" FontSize="20" Text="&#xE790;" />
+                  <TextBlock Grid.Column="1" Margin="16,0,0,0" FontSize="15" FontWeight="Normal" Text="{Binding AppThemeName}" />
+                  <TextBlock Grid.Row="1" Grid.Column="1" Margin="16,2,0,0" FontSize="13"
+                             Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
+                             Text="{Binding AppThemeDescription}" />
+                  <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
+                        Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
+                        Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
+                        Data="M 1,1 L 6,6 L 11,1" />
+                </Grid>
+                <Border Height="1" VerticalAlignment="Bottom" ZIndex="3"
+                        Background="{DynamicResource SettingsCardBorderBrush}"
+                        IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" />
+              </Grid>
+            </Expander.Header>
+            <StackPanel Margin="68,14,16,14" Spacing="7">
+              <RadioButton GroupName="AppTheme" Content="{Binding LightThemeName}"
+                           IsChecked="{Binding IsLightThemeSelected, Mode=OneWay}"
+                           Command="{Binding SelectThemeCommand}" CommandParameter="Light" />
+              <RadioButton GroupName="AppTheme" Content="{Binding DarkThemeName}"
+                           IsChecked="{Binding IsDarkThemeSelected, Mode=OneWay}"
+                           Command="{Binding SelectThemeCommand}" CommandParameter="Dark" />
+              <RadioButton GroupName="AppTheme" Content="{Binding SystemThemeName}"
+                           IsChecked="{Binding IsSystemThemeSelected, Mode=OneWay}"
+                           Command="{Binding SelectThemeCommand}" CommandParameter="System" />
+            </StackPanel>
+          </local:AnimatedSettingsExpander>
+        </Border>
+
+        <Border Classes="settingsCard" Background="Transparent"
+                CornerRadius="6" Padding="0" ClipToBounds="True">
+          <local:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                    Background="Transparent">
+            <Expander.Header>
+              <Grid Height="72">
+                <Grid Classes="settingsExpanderHeader" VerticalAlignment="Center"
+                      ColumnDefinitions="36,*,32" RowDefinitions="Auto,Auto">
+                  <TextBlock Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center"
+                             FontSize="18" FontWeight="Normal" Text="Aa" />
+                  <TextBlock Grid.Column="1" Margin="16,0,0,0" FontSize="15" FontWeight="Normal"
+                             Text="{Binding AppFontName}" />
+                  <TextBlock Grid.Row="1" Grid.Column="1" Margin="16,2,0,0" FontSize="13"
+                             Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
+                             Text="{Binding AppFontDescription}" />
+                  <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
+                        Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
+                        Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
+                        Data="M 1,1 L 6,6 L 11,1" />
+                </Grid>
+                <Border Height="1" VerticalAlignment="Bottom" ZIndex="3"
+                        Background="{DynamicResource SettingsCardBorderBrush}"
+                        IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" />
+              </Grid>
+            </Expander.Header>
+            <ui:FAComboBox Margin="68,14,16,14"
+                           HorizontalAlignment="Stretch"
+                           Padding="12,0,0,0"
+                           VerticalContentAlignment="Center"
+                           MaxDropDownHeight="360"
+                           ItemsSource="{Binding AvailableFontFamilies}"
+                           SelectedItem="{Binding SelectedFontFamily, Mode=TwoWay}">
+              <ui:FAComboBox.ItemTemplate>
+                <DataTemplate x:CompileBindings="False">
+                  <!-- TODO: If a selected device font has unusual ascent or
+                       descent metrics, calculate a runtime per-font baseline
+                       adjustment instead of shifting every font globally. -->
+                  <TextBlock VerticalAlignment="Center"
+                             FontFamily="{Binding}" Text="{Binding}" />
+                </DataTemplate>
+              </ui:FAComboBox.ItemTemplate>
+            </ui:FAComboBox>
+          </local:AnimatedSettingsExpander>
+        </Border>
+
+        <StackPanel IsVisible="{Binding SupportsPlatformAppearanceSettings}">
+          <Border Classes="settingsCard" Background="{DynamicResource SettingsExpanderBrush}"
+                  CornerRadius="6" Padding="24,18">
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+              <TextBlock FontSize="14" FontWeight="Normal" Text="{Binding MicaEffectName}" />
+              <TextBlock Grid.Row="1" Margin="0,2,16,0" FontSize="12"
+                         Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
+                         Text="{Binding MicaEffectDescription}" TextWrapping="Wrap" />
+              <ToggleSwitch Grid.Column="1" Grid.RowSpan="2" VerticalAlignment="Center"
+                            IsChecked="{Binding UseMicaEffect}" />
+            </Grid>
+          </Border>
+
+          <Border Classes="settingsCard" Margin="0,4,0,0" Background="Transparent"
+                  CornerRadius="6" Padding="0" ClipToBounds="True">
+            <local:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
+                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                      Background="Transparent">
+              <Expander.Header>
+                <Grid Height="72">
+                  <Grid Classes="settingsExpanderHeader" VerticalAlignment="Center"
+                        ColumnDefinitions="36,*,32" RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center"
+                               FontSize="20" Text="⌜" />
+                    <TextBlock Grid.Column="1" Margin="16,0,0,0" FontSize="14" FontWeight="Normal" Text="{Binding WindowCornersName}" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Margin="16,2,0,0" FontSize="12"
+                               Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
+                               Text="{Binding WindowCornersDescription}" />
+                    <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
+                          Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
+                          Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
+                          Data="M 1,1 L 6,6 L 11,1" />
+                  </Grid>
+                  <Border Height="1" VerticalAlignment="Bottom" ZIndex="3"
+                          Background="{DynamicResource SettingsCardBorderBrush}"
+                          IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" />
+                </Grid>
+              </Expander.Header>
+              <StackPanel Margin="68,14,16,14" Spacing="7">
+                <RadioButton GroupName="WindowCorners" Content="{Binding Windows10CornersName}"
+                             IsChecked="{Binding IsWindows10CornerStyleSelected, Mode=OneWay}"
+                             Command="{Binding SelectWindowCornerStyleCommand}" CommandParameter="Windows10" />
+                <RadioButton GroupName="WindowCorners" Content="{Binding Windows11CornersName}"
+                             IsChecked="{Binding IsWindows11CornerStyleSelected, Mode=OneWay}"
+                             Command="{Binding SelectWindowCornerStyleCommand}" CommandParameter="Windows11" />
+                <RadioButton GroupName="WindowCorners" Content="{Binding MacOSCornersName}"
+                             IsChecked="{Binding IsMacOSCornerStyleSelected, Mode=OneWay}"
+                             Command="{Binding SelectWindowCornerStyleCommand}" CommandParameter="MacOS" />
+              </StackPanel>
+            </local:AnimatedSettingsExpander>
+          </Border>
+
+          <Border Classes="settingsCard" Margin="0,4,0,0" Background="Transparent"
+                  CornerRadius="6" Padding="0" ClipToBounds="True">
+            <local:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
+                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                      Background="Transparent">
+              <Expander.Header>
+                <Grid Height="72">
+                  <Grid Classes="settingsExpanderHeader" VerticalAlignment="Center"
+                        ColumnDefinitions="36,*,32" RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center"
+                               FontSize="18" Text="•••" />
+                    <TextBlock Grid.Column="1" Margin="16,0,0,0" FontSize="14" FontWeight="Normal" Text="{Binding WindowControlsName}" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Margin="16,2,0,0" FontSize="12"
+                               Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
+                               Text="{Binding WindowControlsDescription}" />
+                    <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
+                          Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
+                          Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
+                          Data="M 1,1 L 6,6 L 11,1" />
+                  </Grid>
+                  <Border Height="1" VerticalAlignment="Bottom" ZIndex="3"
+                          Background="{DynamicResource SettingsCardBorderBrush}"
+                          IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" />
+                </Grid>
+              </Expander.Header>
+              <StackPanel Margin="68,14,16,14" Spacing="7">
+                <RadioButton GroupName="WindowControls" Content="{Binding Windows10WindowControlsName}"
+                             IsChecked="{Binding IsWindows10WindowControlStyleSelected, Mode=OneWay}"
+                             Command="{Binding SelectWindowControlStyleCommand}" CommandParameter="Windows10" />
+                <RadioButton GroupName="WindowControls" Content="{Binding Windows11WindowControlsName}"
+                             IsChecked="{Binding IsWindows11WindowControlStyleSelected, Mode=OneWay}"
+                             Command="{Binding SelectWindowControlStyleCommand}" CommandParameter="Windows11" />
+                <RadioButton GroupName="WindowControls" Content="{Binding MacOSWindowControlsName}"
+                             IsChecked="{Binding IsMacOSWindowControlStyleSelected, Mode=OneWay}"
+                             Command="{Binding SelectWindowControlStyleCommand}" CommandParameter="MacOS" />
+              </StackPanel>
+            </local:AnimatedSettingsExpander>
+          </Border>
+        </StackPanel>
+
+        <TextBlock Classes="sectionHeading" Margin="0,26,0,4"
+                   Text="{Binding AboutGroupName}" />
+        <Border Classes="settingsCard" Background="Transparent"
+                CornerRadius="6" Padding="0" ClipToBounds="True">
+          <local:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                    Background="Transparent">
+            <Expander.Header>
+              <Grid Height="72">
+                <Grid Classes="settingsExpanderHeader" VerticalAlignment="Center" ColumnDefinitions="36,*,32">
+                  <Grid Width="24" Height="24">
+                    <Border CornerRadius="3" Background="#6EC7E8" />
+                    <Grid Margin="5" RowDefinitions="5,*" ColumnDefinitions="*,*" ColumnSpacing="2" RowSpacing="2">
+                      <Border Grid.ColumnSpan="2" Background="#E9F7FC" />
+                      <Border Grid.Row="1" Background="#315368" />
+                      <Border Grid.Row="1" Grid.Column="1" Background="#315368" />
+                    </Grid>
+                  </Grid>
+                  <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0"
+                             FontSize="14" Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
+                             Text="{Binding AboutVersionText}" />
+                  <Path Grid.Column="2" Classes="settingsExpanderChevron"
+                        Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
+                        Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
+                        Data="M 1,1 L 6,6 L 11,1" />
+                </Grid>
+                <Border Height="1" VerticalAlignment="Bottom" ZIndex="3"
+                        Background="{DynamicResource SettingsCardBorderBrush}"
+                        IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" />
+              </Grid>
+            </Expander.Header>
+            <StackPanel Margin="68,0,16,14" Spacing="12">
+              <Button Classes="settingsLink" Content="{Binding AboutLicenseName}" Click="License_OnClick" />
+              <Button Classes="settingsLink" Content="{Binding AboutServicesName}" Click="ServicesAgreement_OnClick" />
+              <Button Classes="settingsLink" Content="{Binding AboutPrivacyName}" Click="PrivacyStatement_OnClick" />
+            </StackPanel>
+          </local:AnimatedSettingsExpander>
+        </Border>
+
+        <Button Classes="settingsLink" Margin="0,10,0,0" Content="{Binding FeedbackName}" Click="Feedback_OnClick" />
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>
