@@ -18,9 +18,6 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public partial string ExpressionDisplay { get; private set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(AreProgrammerHexDigitsEnabled))]
-    [NotifyPropertyChangedFor(nameof(AreProgrammerEightAndNineEnabled))]
-    [NotifyPropertyChangedFor(nameof(AreProgrammerTwoThroughSevenEnabled))]
     public partial bool IsError { get; private set; }
 
     [ObservableProperty]
@@ -36,6 +33,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public SettingsViewModel Settings { get; }
 
     public ScientificViewModel Scientific { get; }
+
+    public ProgrammerViewModel Programmer { get; }
 
 
 
@@ -130,47 +129,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public partial uint OpenParenthesisCount { get; private set; }
 
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsProgrammerHexadecimal))]
-    [NotifyPropertyChangedFor(nameof(IsProgrammerDecimal))]
-    [NotifyPropertyChangedFor(nameof(IsProgrammerOctal))]
-    [NotifyPropertyChangedFor(nameof(IsProgrammerBinary))]
-    [NotifyPropertyChangedFor(nameof(AreProgrammerHexDigitsEnabled))]
-    [NotifyPropertyChangedFor(nameof(AreProgrammerEightAndNineEnabled))]
-    [NotifyPropertyChangedFor(nameof(AreProgrammerTwoThroughSevenEnabled))]
-    public partial CalculatorProgrammerRadix SelectedProgrammerRadix { get; private set; } = CalculatorProgrammerRadix.Decimal;
 
-    [ObservableProperty]
-    public partial CalculatorProgrammerWordSize SelectedProgrammerWordSize { get; private set; } = CalculatorProgrammerWordSize.Qword;
-
-    [ObservableProperty]
-    public partial bool IsProgrammerBitFlipMode { get; private set; }
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsProgrammerArithmeticShift))]
-    [NotifyPropertyChangedFor(nameof(IsProgrammerLogicalShift))]
-    [NotifyPropertyChangedFor(nameof(IsProgrammerRotateShift))]
-    [NotifyPropertyChangedFor(nameof(IsProgrammerRotateCarryShift))]
-    public partial CalculatorProgrammerShiftMode SelectedProgrammerShiftMode { get; private set; } = CalculatorProgrammerShiftMode.Arithmetic;
-
-    [ObservableProperty] public partial string ProgrammerHexDisplay { get; private set; } = "0";
-    [ObservableProperty] public partial string ProgrammerDecimalDisplay { get; private set; } = "0";
-    [ObservableProperty] public partial string ProgrammerOctalDisplay { get; private set; } = "0";
-    [ObservableProperty] public partial string ProgrammerBinaryDisplay { get; private set; } = "0";
-
-    public bool IsProgrammerHexadecimal => SelectedProgrammerRadix == CalculatorProgrammerRadix.Hexadecimal;
-    public bool IsProgrammerDecimal => SelectedProgrammerRadix == CalculatorProgrammerRadix.Decimal;
-    public bool IsProgrammerOctal => SelectedProgrammerRadix == CalculatorProgrammerRadix.Octal;
-    public bool IsProgrammerBinary => SelectedProgrammerRadix == CalculatorProgrammerRadix.Binary;
-    public bool IsProgrammerArithmeticShift => SelectedProgrammerShiftMode == CalculatorProgrammerShiftMode.Arithmetic;
-    public bool IsProgrammerLogicalShift => SelectedProgrammerShiftMode == CalculatorProgrammerShiftMode.Logical;
-    public bool IsProgrammerRotateShift => SelectedProgrammerShiftMode == CalculatorProgrammerShiftMode.Rotate;
-    public bool IsProgrammerRotateCarryShift => SelectedProgrammerShiftMode == CalculatorProgrammerShiftMode.RotateCarry;
-    public bool AreProgrammerHexDigitsEnabled => IsProgrammerHexadecimal && !IsError;
-    public bool AreProgrammerEightAndNineEnabled => SelectedProgrammerRadix is CalculatorProgrammerRadix.Decimal or CalculatorProgrammerRadix.Hexadecimal && !IsError;
-    public bool AreProgrammerTwoThroughSevenEnabled => SelectedProgrammerRadix != CalculatorProgrammerRadix.Binary && !IsError;
-    public string ProgrammerWordSizeLabel => SelectedProgrammerWordSize.ToString().ToUpperInvariant();
-    public ObservableCollection<CalculatorProgrammerBitGroup> ProgrammerBitGroups { get; } = [];
 
 
 
@@ -182,12 +141,6 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public string CalculatorGroupName { get; }
     public string SettingsName { get; }
     public string BackAutomationName { get; }
-    public string BitwiseName { get; }
-    public string BitShiftName { get; }
-    public string ArithmeticShiftName { get; }
-    public string LogicalShiftName { get; }
-    public string RotateCircularShiftName { get; }
-    public string RotateCarryShiftName { get; }
     public string SettingsBackTooltip { get; }
     public string EnterAlwaysOnTopTooltip { get; }
     public string ExitAlwaysOnTopTooltip { get; }
@@ -247,18 +200,25 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         CalculatorGroupName = appResources.GetString("CalculatorModeTextCaps");
         SettingsName = appResources.GetString("SettingsHeader.Text");
         BackAutomationName = appResources.GetString("TitleBarBackButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
-        BitwiseName = appResources.GetString("bitwiseButton.Text");
-        BitShiftName = appResources.GetString("bitShiftButton.Text");
-        ArithmeticShiftName = appResources.GetString("arithmeticShiftButton.Content");
-        LogicalShiftName = appResources.GetString("logicalShiftButton.Content");
-        RotateCircularShiftName = appResources.GetString("rotateCircularButton.Content");
-        RotateCarryShiftName = appResources.GetString("rotateCarryShiftButton.Content");
         SettingsBackTooltip = appResources.GetString("AboutControlBackButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
         EnterAlwaysOnTopTooltip = appResources.GetString("EnterAlwaysOnTopButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
         ExitAlwaysOnTopTooltip = appResources.GetString("ExitAlwaysOnTopButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
         EnterAlwaysOnTopAutomationName = appResources.GetString("EnterAlwaysOnTopButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
         ExitAlwaysOnTopAutomationName = appResources.GetString("ExitAlwaysOnTopButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
         _calculator = new NativeCalculator(ResourceLoader.GetForViewIndependentUse("CEngineStrings"), numberFormat);
+        Programmer = new ProgrammerViewModel(
+            _calculator,
+            Synchronize,
+            ExecuteCalculatorCommand,
+            () => IsError,
+            () => PrimaryDisplay,
+            new ProgrammerStrings(
+                appResources.GetString("bitwiseButton.Text"),
+                appResources.GetString("bitShiftButton.Text"),
+                appResources.GetString("arithmeticShiftButton.Content"),
+                appResources.GetString("logicalShiftButton.Content"),
+                appResources.GetString("rotateCircularButton.Content"),
+                appResources.GetString("rotateCarryShiftButton.Content")));
         Scientific = new ScientificViewModel(
             _calculator,
             Synchronize,
@@ -289,7 +249,6 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
                 appResources.GetString("HistoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
                 appResources.GetString("DeleteHistoryMenuItem/Text")));
         History.PropertyChanged += (_, _) => NotifyHistoryVisibilityChanged();
-        BuildProgrammerBitGroups();
         var regionCode = GetCurrentRegionCode();
         Converter = new UnitConverterViewModel(
             new NativeUnitConverter(appResources, regionCode, numberFormat),
@@ -362,88 +321,13 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             or CalculatorCommand.Decimal
             || (int)command is >= 700 and <= 763;
 
-    [RelayCommand]
-    private void SelectProgrammerRadix(string radixName)
-    {
-        var radix = Enum.Parse<CalculatorProgrammerRadix>(radixName, ignoreCase: false);
-        SelectedProgrammerRadix = radix;
-        _calculator.SendCommand(radix switch
-        {
-            CalculatorProgrammerRadix.Hexadecimal => CalculatorCommand.Hex,
-            CalculatorProgrammerRadix.Decimal => CalculatorCommand.Dec,
-            CalculatorProgrammerRadix.Octal => CalculatorCommand.Oct,
-            _ => CalculatorCommand.Bin,
-        });
-        Synchronize();
-    }
 
-    [RelayCommand]
-    private void CycleProgrammerWordSize()
-    {
-        SelectProgrammerWordSize((SelectedProgrammerWordSize switch
-        {
-            CalculatorProgrammerWordSize.Qword => CalculatorProgrammerWordSize.Dword,
-            CalculatorProgrammerWordSize.Dword => CalculatorProgrammerWordSize.Word,
-            CalculatorProgrammerWordSize.Word => CalculatorProgrammerWordSize.Byte,
-            _ => CalculatorProgrammerWordSize.Qword,
-        }).ToString());
-    }
 
-    [RelayCommand]
-    private void SelectProgrammerWordSize(string wordSizeName)
-    {
-        SelectedProgrammerWordSize = Enum.Parse<CalculatorProgrammerWordSize>(wordSizeName, ignoreCase: false);
-        _calculator.SendCommand(SelectedProgrammerWordSize switch
-        {
-            CalculatorProgrammerWordSize.Qword => CalculatorCommand.Qword,
-            CalculatorProgrammerWordSize.Dword => CalculatorCommand.Dword,
-            CalculatorProgrammerWordSize.Word => CalculatorCommand.Word,
-            _ => CalculatorCommand.Byte,
-        });
-        OnPropertyChanged(nameof(ProgrammerWordSizeLabel));
-        Synchronize();
-    }
 
-    [RelayCommand]
-    private void ToggleProgrammerBitFlip() => IsProgrammerBitFlipMode = !IsProgrammerBitFlipMode;
 
-    [RelayCommand]
-    private void SelectProgrammerShiftMode(string modeName) =>
-        SelectedProgrammerShiftMode = Enum.Parse<CalculatorProgrammerShiftMode>(modeName, ignoreCase: false);
 
-    [RelayCommand]
-    private void ExecuteProgrammerLeftShift()
-    {
-        ExecuteCalculatorCommand(SelectedProgrammerShiftMode switch
-        {
-            CalculatorProgrammerShiftMode.Rotate => CalculatorCommand.RotateLeft,
-            CalculatorProgrammerShiftMode.RotateCarry => CalculatorCommand.RotateLeftCarry,
-            _ => CalculatorCommand.LeftShift,
-        });
-    }
 
-    [RelayCommand]
-    private void ExecuteProgrammerRightShift()
-    {
-        ExecuteCalculatorCommand(SelectedProgrammerShiftMode switch
-        {
-            CalculatorProgrammerShiftMode.Logical => CalculatorCommand.LogicalRightShift,
-            CalculatorProgrammerShiftMode.Rotate => CalculatorCommand.RotateRight,
-            CalculatorProgrammerShiftMode.RotateCarry => CalculatorCommand.RotateRightCarry,
-            _ => CalculatorCommand.RightShift,
-        });
-    }
 
-    [RelayCommand]
-    private void FlipProgrammerBit(CalculatorProgrammerBit? bit)
-    {
-        if (bit is null || !bit.IsEnabled || IsError)
-        {
-            return;
-        }
-        _calculator.SendCommand((CalculatorCommand)(700 + bit.Index));
-        Synchronize();
-    }
 
 
 
@@ -520,20 +404,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         else if (isProgrammer)
         {
             _calculator.SetMode(CalculatorMode.Programmer);
-            _calculator.SendCommand(SelectedProgrammerRadix switch
-            {
-                CalculatorProgrammerRadix.Hexadecimal => CalculatorCommand.Hex,
-                CalculatorProgrammerRadix.Decimal => CalculatorCommand.Dec,
-                CalculatorProgrammerRadix.Octal => CalculatorCommand.Oct,
-                _ => CalculatorCommand.Bin,
-            });
-            _calculator.SendCommand(SelectedProgrammerWordSize switch
-            {
-                CalculatorProgrammerWordSize.Qword => CalculatorCommand.Qword,
-                CalculatorProgrammerWordSize.Dword => CalculatorCommand.Dword,
-                CalculatorProgrammerWordSize.Word => CalculatorCommand.Word,
-                _ => CalculatorCommand.Byte,
-            });
+            Programmer.ApplyRadixAndWordSize();
         }
 
         var isFirstLegalCharacter = true;
@@ -683,7 +554,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             >= 'A' and <= 'F' => character - 'A' + 10,
             _ => -1,
         };
-        return value >= 0 && value < (int)SelectedProgrammerRadix;
+        return value >= 0 && value < (int)Programmer.SelectedRadix;
     }
 
     [RelayCommand]
@@ -755,11 +626,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             });
             if (item.Mode == CalculatorViewMode.Programmer)
             {
-                SelectedProgrammerRadix = CalculatorProgrammerRadix.Decimal;
-                SelectedProgrammerWordSize = CalculatorProgrammerWordSize.Qword;
-                IsProgrammerBitFlipMode = false;
-                SelectedProgrammerShiftMode = CalculatorProgrammerShiftMode.Arithmetic;
-                OnPropertyChanged(nameof(ProgrammerWordSizeLabel));
+                Programmer.ResetForModeEntry();
             }
             Synchronize();
         }
@@ -808,59 +675,11 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
         if (IsProgrammerMode)
         {
-            SynchronizeProgrammer();
+            Programmer.Refresh();
         }
     }
 
-    private void SynchronizeProgrammer()
-    {
-        if (!IsError)
-        {
-            ProgrammerHexDisplay = _calculator.GetResultForRadix(16);
-            ProgrammerDecimalDisplay = _calculator.GetResultForRadix(10);
-            ProgrammerOctalDisplay = _calculator.GetResultForRadix(8);
-            ProgrammerBinaryDisplay = _calculator.GetResultForRadix(2);
-            if (IsProgrammerBinary && ProgrammerBinaryDisplay != "0")
-            {
-                var binaryDigitCount = ProgrammerBinaryDisplay.Count(character => character is '0' or '1');
-                var padding = (4 - binaryDigitCount % 4) % 4;
-                ProgrammerBinaryDisplay = new string('0', padding) + ProgrammerBinaryDisplay;
-            }
-        }
-        else
-        {
-            ProgrammerHexDisplay = ProgrammerDecimalDisplay = ProgrammerOctalDisplay = ProgrammerBinaryDisplay = PrimaryDisplay;
-        }
 
-        var rawBinary = IsError ? string.Empty : _calculator.GetResultForRadix(2, 64, false);
-        rawBinary = new string(rawBinary.Where(character => character is '0' or '1').ToArray());
-        var width = (int)SelectedProgrammerWordSize;
-        foreach (var group in ProgrammerBitGroups)
-        {
-            foreach (var bit in group.Bits)
-            {
-                bit.IsEnabled = bit.Index < width && !IsError;
-                var sourceIndex = rawBinary.Length - 1 - bit.Index;
-                bit.IsSet = sourceIndex >= 0 && rawBinary[sourceIndex] == '1';
-            }
-        }
-        OnPropertyChanged(nameof(AreProgrammerHexDigitsEnabled));
-        OnPropertyChanged(nameof(AreProgrammerEightAndNineEnabled));
-        OnPropertyChanged(nameof(AreProgrammerTwoThroughSevenEnabled));
-    }
-
-    private void BuildProgrammerBitGroups()
-    {
-        for (var highBit = 63; highBit >= 3; highBit -= 4)
-        {
-            var bits = new ObservableCollection<CalculatorProgrammerBit>();
-            for (var bit = highBit; bit > highBit - 4; bit--)
-            {
-                bits.Add(new CalculatorProgrammerBit(bit));
-            }
-            ProgrammerBitGroups.Add(new CalculatorProgrammerBitGroup((highBit - 3).ToString(CultureInfo.InvariantCulture), bits));
-        }
-    }
 
     private static void Replace(ObservableCollection<string> target, IEnumerable<string> values)
     {
