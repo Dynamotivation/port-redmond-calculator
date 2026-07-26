@@ -35,6 +35,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
     public SettingsViewModel Settings { get; }
 
+    public ScientificViewModel Scientific { get; }
+
 
 
     public bool IsHistoryPaneVisible => IsCalculatorMode && !IsAlwaysOnTop && (History.IsDocked || History.IsOpen);
@@ -125,42 +127,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public bool IsUnitConverterMode => CurrentViewMode is >= CalculatorViewMode.Volume and <= CalculatorViewMode.Angle;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ScientificAngleLabel))]
-    public partial CalculatorAngleMode SelectedScientificAngle { get; private set; } = CalculatorAngleMode.Degrees;
-
-    [ObservableProperty]
-    public partial bool IsScientificInverse { get; set; }
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowsRegularTrigFunctions))]
-    [NotifyPropertyChangedFor(nameof(ShowsInverseTrigFunctions))]
-    [NotifyPropertyChangedFor(nameof(ShowsHyperbolicTrigFunctions))]
-    [NotifyPropertyChangedFor(nameof(ShowsInverseHyperbolicTrigFunctions))]
-    public partial bool IsTrigInverse { get; set; }
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowsRegularTrigFunctions))]
-    [NotifyPropertyChangedFor(nameof(ShowsInverseTrigFunctions))]
-    [NotifyPropertyChangedFor(nameof(ShowsHyperbolicTrigFunctions))]
-    [NotifyPropertyChangedFor(nameof(ShowsInverseHyperbolicTrigFunctions))]
-    public partial bool IsTrigHyperbolic { get; set; }
-
-    [ObservableProperty]
-    public partial bool IsScientificNotation { get; private set; }
-
-    [ObservableProperty]
     public partial uint OpenParenthesisCount { get; private set; }
 
-    public string ScientificAngleLabel => SelectedScientificAngle switch
-    {
-        CalculatorAngleMode.Degrees => "DEG",
-        CalculatorAngleMode.Radians => "RAD",
-        _ => "GRAD",
-    };
-    public bool ShowsRegularTrigFunctions => !IsTrigInverse && !IsTrigHyperbolic;
-    public bool ShowsInverseTrigFunctions => IsTrigInverse && !IsTrigHyperbolic;
-    public bool ShowsHyperbolicTrigFunctions => !IsTrigInverse && IsTrigHyperbolic;
-    public bool ShowsInverseHyperbolicTrigFunctions => IsTrigInverse && IsTrigHyperbolic;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsProgrammerHexadecimal))]
@@ -214,8 +182,6 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public string CalculatorGroupName { get; }
     public string SettingsName { get; }
     public string BackAutomationName { get; }
-    public string TrigonometryName { get; }
-    public string FunctionName { get; }
     public string BitwiseName { get; }
     public string BitShiftName { get; }
     public string ArithmeticShiftName { get; }
@@ -281,8 +247,6 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         CalculatorGroupName = appResources.GetString("CalculatorModeTextCaps");
         SettingsName = appResources.GetString("SettingsHeader.Text");
         BackAutomationName = appResources.GetString("TitleBarBackButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
-        TrigonometryName = appResources.GetString("trigButton.Text");
-        FunctionName = appResources.GetString("funcButton.Text");
         BitwiseName = appResources.GetString("bitwiseButton.Text");
         BitShiftName = appResources.GetString("bitShiftButton.Text");
         ArithmeticShiftName = appResources.GetString("arithmeticShiftButton.Content");
@@ -295,6 +259,12 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         EnterAlwaysOnTopAutomationName = appResources.GetString("EnterAlwaysOnTopButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
         ExitAlwaysOnTopAutomationName = appResources.GetString("ExitAlwaysOnTopButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
         _calculator = new NativeCalculator(ResourceLoader.GetForViewIndependentUse("CEngineStrings"), numberFormat);
+        Scientific = new ScientificViewModel(
+            _calculator,
+            Synchronize,
+            new ScientificStrings(
+                appResources.GetString("trigButton.Text"),
+                appResources.GetString("funcButton.Text")));
         Memory = new MemoryViewModel(
             _calculator,
             Synchronize,
@@ -310,7 +280,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
                 appResources.GetString("MemMinusItem/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name")));
         History = new HistoryViewModel(
             _calculator,
-            () => IsScientificNotation,
+            () => Scientific.IsNotation,
             Synchronize,
             new HistoryStrings(
                 appResources.GetString("HistoryLabel/Text"),
@@ -355,7 +325,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             _calculator.SendCommand(CalculatorCommand.Clear);
             if (!IsErrorRecoverable(command))
             {
-                IsScientificNotation = false;
+                Scientific.ResetModifiers();
                 Synchronize();
                 return;
             }
@@ -364,13 +334,13 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         _calculator.SendCommand(command);
         if (command is CalculatorCommand.Clear or CalculatorCommand.ClearEntry)
         {
-            IsScientificNotation = false;
+            Scientific.ResetModifiers();
         }
-        if (IsScientificInverse && command is CalculatorCommand.Cube or CalculatorCommand.CubeRoot
+        if (Scientific.IsInverse && command is CalculatorCommand.Cube or CalculatorCommand.CubeRoot
             or CalculatorCommand.Root or CalculatorCommand.TwoPowerX
             or CalculatorCommand.LogBaseY or CalculatorCommand.EPowerX)
         {
-            IsScientificInverse = false;
+            Scientific.IsInverse = false;
         }
         if (command is CalculatorCommand.Sin or CalculatorCommand.Cos or CalculatorCommand.Tan
             or CalculatorCommand.Sinh or CalculatorCommand.Cosh or CalculatorCommand.Tanh
@@ -381,8 +351,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             or CalculatorCommand.InverseSec or CalculatorCommand.InverseCsc or CalculatorCommand.InverseCot
             or CalculatorCommand.InverseSech or CalculatorCommand.InverseCsch or CalculatorCommand.InverseCoth)
         {
-            IsTrigInverse = false;
-            IsTrigHyperbolic = false;
+            Scientific.IsTrigInverse = false;
+            Scientific.IsTrigHyperbolic = false;
         }
         Synchronize();
     }
@@ -475,40 +445,10 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         Synchronize();
     }
 
-    [RelayCommand]
-    private void CycleScientificAngle()
-    {
-        SelectedScientificAngle = SelectedScientificAngle switch
-        {
-            CalculatorAngleMode.Degrees => CalculatorAngleMode.Radians,
-            CalculatorAngleMode.Radians => CalculatorAngleMode.Grads,
-            _ => CalculatorAngleMode.Degrees,
-        };
-        _calculator.SendCommand(SelectedScientificAngle switch
-        {
-            CalculatorAngleMode.Degrees => CalculatorCommand.Degree,
-            CalculatorAngleMode.Radians => CalculatorCommand.Radian,
-            _ => CalculatorCommand.Grads,
-        });
-        Synchronize();
-    }
 
-    [RelayCommand]
-    private void ToggleScientificNotation()
-    {
-        _calculator.SendCommand(CalculatorCommand.ScientificNotation);
-        IsScientificNotation = !IsScientificNotation;
-        Synchronize();
-    }
 
-    [RelayCommand]
-    private void ToggleScientificInverse() => IsScientificInverse = !IsScientificInverse;
 
-    [RelayCommand]
-    private void ToggleTrigInverse() => IsTrigInverse = !IsTrigInverse;
 
-    [RelayCommand]
-    private void ToggleTrigHyperbolic() => IsTrigHyperbolic = !IsTrigHyperbolic;
 
     /// <summary>
     /// Cross-platform counterpart of StandardCalculatorViewModel::OnPaste.
@@ -566,13 +506,13 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         if (isScientific)
         {
             _calculator.SetMode(CalculatorMode.Scientific);
-            _calculator.SendCommand(SelectedScientificAngle switch
+            _calculator.SendCommand(Scientific.SelectedAngle switch
             {
                 CalculatorAngleMode.Degrees => CalculatorCommand.Degree,
                 CalculatorAngleMode.Radians => CalculatorCommand.Radian,
                 _ => CalculatorCommand.Grads,
             });
-            if (IsScientificNotation)
+            if (Scientific.IsNotation)
             {
                 _calculator.SendCommand(CalculatorCommand.ScientificNotation);
             }
@@ -805,10 +745,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         {
             if (item.Mode == CalculatorViewMode.Standard)
             {
-                IsScientificNotation = false;
-                IsScientificInverse = false;
-                IsTrigInverse = false;
-                IsTrigHyperbolic = false;
+                Scientific.ResetModifiers();
             }
             _calculator.SetMode(item.Mode switch
             {

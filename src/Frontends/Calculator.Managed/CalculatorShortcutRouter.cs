@@ -212,7 +212,7 @@ public static class CalculatorShortcutRouter
             case "degButton": if (!viewModel.IsError) viewModel.ExecuteCalculatorCommand(CalculatorCommand.Degree); break;
             case "radButton": if (!viewModel.IsError) viewModel.ExecuteCalculatorCommand(CalculatorCommand.Radian); break;
             case "gradButton": if (!viewModel.IsError) viewModel.ExecuteCalculatorCommand(CalculatorCommand.Grads); break;
-            case "ftoeButton": if (!viewModel.IsError) viewModel.ToggleScientificNotationCommand.Execute(null); break;
+            case "ftoeButton": if (!viewModel.IsError) viewModel.Scientific.ToggleNotationCommand.Execute(null); break;
             case "copyButton":
             case "copyButtonAlternate": return CalculatorShortcutOutcome.CopyDisplay;
             case "pasteButton":
