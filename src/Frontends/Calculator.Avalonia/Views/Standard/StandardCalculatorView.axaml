@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:managed="using:Calculator.Managed"
+             x:Class="Calculator.Avalonia.Views.StandardCalculatorView"
+             x:DataType="managed:CalculatorViewModel"
+             IsVisible="{Binding IsStandardMode}">
+  <!-- NumberPad.xaml plus CalculatorStandardOperators.xaml: six equal rows
+       across four equal columns. -->
+  <Grid Margin="3,0,3,3" RowDefinitions="*,*,*,*,*,*" ColumnDefinitions="*,*,*,*">
+    <Button x:Name="PercentButton" Classes="calcButton operator symbolOperator" Content="&#xE94C;" Command="{Binding SendCommandCommand}" CommandParameter="Percent" />
+    <Button x:Name="ClearEntryButton" Grid.Column="1" Classes="calcButton operator" Content="CE" FontSize="17.6" Command="{Binding SendCommandCommand}" CommandParameter="ClearEntry" />
+    <Button x:Name="ClearButton" Grid.Column="2" Classes="calcButton operator" Content="C" FontSize="17.6" Command="{Binding SendCommandCommand}" CommandParameter="Clear" />
+    <Button x:Name="BackspaceButton" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE94F;" FontSize="19.36" Command="{Binding SendCommandCommand}" CommandParameter="Backspace" />
+
+    <Button Grid.Row="1" Classes="calcButton operator symbolOperator" Content="&#xF7C9;" FontSize="21.78" Command="{Binding SendCommandCommand}" CommandParameter="Reciprocal" />
+    <Button Grid.Row="1" Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xF7C8;" FontSize="21.78" Command="{Binding SendCommandCommand}" CommandParameter="Square" />
+    <Button x:Name="SquareRootButton" Grid.Row="1" Grid.Column="2" Classes="calcButton operator symbolOperator" Content="&#xF899;" FontSize="21.78" Command="{Binding SendCommandCommand}" CommandParameter="SquareRoot" />
+    <Button x:Name="DivideButton" Grid.Row="1" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE94A;" Command="{Binding SendCommandCommand}" CommandParameter="Divide" />
+
+    <Button x:Name="SevenButton" Grid.Row="2" Classes="calcButton numeric" Content="7" Command="{Binding SendCommandCommand}" CommandParameter="Seven" />
+    <Button x:Name="EightButton" Grid.Row="2" Grid.Column="1" Classes="calcButton numeric" Content="8" Command="{Binding SendCommandCommand}" CommandParameter="Eight" />
+    <Button x:Name="NineButton" Grid.Row="2" Grid.Column="2" Classes="calcButton numeric" Content="9" Command="{Binding SendCommandCommand}" CommandParameter="Nine" />
+    <Button x:Name="MultiplyButton" Grid.Row="2" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE947;" Command="{Binding SendCommandCommand}" CommandParameter="Multiply" />
+
+    <Button x:Name="FourButton" Grid.Row="3" Classes="calcButton numeric" Content="4" Command="{Binding SendCommandCommand}" CommandParameter="Four" />
+    <Button x:Name="FiveButton" Grid.Row="3" Grid.Column="1" Classes="calcButton numeric" Content="5" Command="{Binding SendCommandCommand}" CommandParameter="Five" />
+    <Button x:Name="SixButton" Grid.Row="3" Grid.Column="2" Classes="calcButton numeric" Content="6" Command="{Binding SendCommandCommand}" CommandParameter="Six" />
+    <Button x:Name="SubtractButton" Grid.Row="3" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE949;" Command="{Binding SendCommandCommand}" CommandParameter="Subtract" />
+
+    <Button x:Name="OneButton" Grid.Row="4" Classes="calcButton numeric" Content="1" Command="{Binding SendCommandCommand}" CommandParameter="One" />
+    <Button x:Name="TwoButton" Grid.Row="4" Grid.Column="1" Classes="calcButton numeric" Content="2" Command="{Binding SendCommandCommand}" CommandParameter="Two" />
+    <Button x:Name="ThreeButton" Grid.Row="4" Grid.Column="2" Classes="calcButton numeric" Content="3" Command="{Binding SendCommandCommand}" CommandParameter="Three" />
+    <Button x:Name="AddButton" Grid.Row="4" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE948;" Command="{Binding SendCommandCommand}" CommandParameter="Add" />
+
+    <Button x:Name="SignButton" Grid.Row="5" Classes="calcButton numeric symbolOperator" Content="&#xF898;" FontSize="23.1" Command="{Binding SendCommandCommand}" CommandParameter="Sign" />
+    <Button x:Name="ZeroButton" Grid.Row="5" Grid.Column="1" Classes="calcButton numeric" Content="0" Command="{Binding SendCommandCommand}" CommandParameter="Zero" />
+    <Button x:Name="DecimalButton" Grid.Row="5" Grid.Column="2" Classes="calcButton numeric" Content="{Binding DecimalSeparator}" Command="{Binding SendCommandCommand}" CommandParameter="Decimal" />
+    <Button x:Name="EqualsButton" Grid.Row="5" Grid.Column="3" Classes="calcButton equalsButton" Content="&#xE94E;" Command="{Binding SendCommandCommand}" CommandParameter="Equals" />
+  </Grid>
+</UserControl>

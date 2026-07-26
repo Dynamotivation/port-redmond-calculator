@@ -79,24 +79,18 @@ public partial class MainWindow : Window
         _shortcutRegistrations = ShortcutCatalogLoader.LoadBuiltIn().RegisterAll(_shortcutService);
         AddHandler(KeyDownEvent, OnCalculatorKeyDown, RoutingStrategies.Tunnel);
         AddHandler(KeyUpEvent, OnCalculatorKeyUp, RoutingStrategies.Tunnel);
-        ScientificTrigFlyoutGrid.AddHandler(Button.ClickEvent, ScientificPopupCommand_OnClick);
-        ScientificFunctionFlyoutGrid.AddHandler(Button.ClickEvent, ScientificPopupCommand_OnClick);
-        ScientificInverseOperators.AddHandler(Button.ClickEvent, ScientificInverseCommand_OnClick);
         TitleBarChrome.DragRequested += TitleBarChrome_OnDragRequested;
         TitleBarChrome.MinimizeRequested += TitleBarChrome_OnMinimizeRequested;
         TitleBarChrome.MaximizeRequested += TitleBarChrome_OnMaximizeRequested;
         TitleBarChrome.CloseRequested += TitleBarChrome_OnCloseRequested;
         TitleBarChrome.AlwaysOnTopToggleRequested += TitleBarChrome_OnAlwaysOnTopToggleRequested;
-        _shortcutPressedTargets = [MemoryRow];
+        _shortcutPressedTargets =
+            [MemoryRow, StandardView, ScientificView, ScientificControls, ProgrammerView];
         NarrowHistory.DismissRequested += NarrowHistory_OnDismissRequested;
         Deactivated += OnWindowDeactivated;
         SizeChanged += (_, _) => UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
-        ScientificNumpadPanel.SizeChanged += (_, _) => UpdateScientificControlSizeState();
-        ProgrammerNumpadPanel.SizeChanged += (_, _) => UpdateProgrammerControlSizeState();
         UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
         UpdateCalculatorModeLayout();
-        UpdateScientificControlSizeState();
-        UpdateProgrammerControlSizeState();
         ApplyFontFamily(_viewModel.SelectedFontFamily);
         if (!string.Equals(_settings.FontFamily, _viewModel.SelectedFontFamily, StringComparison.Ordinal))
         {
@@ -222,51 +216,7 @@ public partial class MainWindow : Window
         CalculatorPageContent.RowDefinitions[5].Height = new GridLength(programmer ? 268 : scientific ? 276 : 308, GridUnitType.Star);
     }
 
-    private void UpdateScientificControlSizeState()
-    {
-        var width = ScientificNumpadPanel.Bounds.Width;
-        var height = ScientificNumpadPanel.Bounds.Height;
-        var state = width >= 878 && height >= 851
-            ? "scientificLarge"
-            : width >= 527 && height >= 523
-                ? "scientificMedium"
-                : "scientificSmall";
 
-        ScientificNumpadPanel.Classes.Set("scientificSmall", state == "scientificSmall");
-        ScientificNumpadPanel.Classes.Set("scientificMedium", state == "scientificMedium");
-        ScientificNumpadPanel.Classes.Set("scientificLarge", state == "scientificLarge");
-
-        if (state == "scientificLarge")
-        {
-            ScientificTrigFlyoutGrid.Width = 516;
-            ScientificTrigFlyoutGrid.Height = 192;
-            ScientificFunctionFlyoutGrid.Width = 387;
-            ScientificFunctionFlyoutGrid.Height = 192;
-        }
-        else if (state == "scientificMedium")
-        {
-            ScientificTrigFlyoutGrid.Width = 480;
-            ScientificTrigFlyoutGrid.Height = 144;
-            ScientificFunctionFlyoutGrid.Width = 360;
-            ScientificFunctionFlyoutGrid.Height = 144;
-        }
-        else
-        {
-            ScientificTrigFlyoutGrid.Width = 258;
-            ScientificTrigFlyoutGrid.Height = 96;
-            ScientificFunctionFlyoutGrid.Width = 194;
-            ScientificFunctionFlyoutGrid.Height = 96;
-        }
-    }
-
-    private void UpdateProgrammerControlSizeState()
-    {
-        // CalculatorProgrammerRadixOperators.xaml switches from glyph+text to
-        // glyph-only operator-panel buttons below its 630-DIP medium state.
-        var showLabels = ProgrammerNumpadPanel.Bounds.Width >= 630;
-        ProgrammerBitwiseLabel.IsVisible = showLabels;
-        ProgrammerBitShiftLabel.IsVisible = showLabels;
-    }
 
     private void OnCalculatorKeyDown(object? sender, KeyEventArgs e)
     {
@@ -354,6 +304,13 @@ public partial class MainWindow : Window
     {
         foreach (var target in _shortcutPressedTargets)
         {
+            // A hidden mode still has its buttons in the tree, so only the
+            // mode on screen may claim a shortcut.
+            if (target is Visual { IsEffectivelyVisible: false })
+            {
+                continue;
+            }
+
             if (target.TrySetShortcutPressed(shortcutId, isPressed))
             {
                 return true;
@@ -377,39 +334,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ScientificPopupCommand_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (e.Source is not Button button)
-        {
-            return;
-        }
 
-        // The 2nd/hyp controls alter the currently displayed trig group and do
-        // not invoke a calculator operation, so the source flyout stays open.
-        if (ReferenceEquals(button.Command, _viewModel.ToggleTrigInverseCommand)
-            || ReferenceEquals(button.Command, _viewModel.ToggleTrigHyperbolicCommand))
-        {
-            return;
-        }
-
-        Dispatcher.UIThread.Post(() =>
-        {
-            ScientificTrigButton.Flyout?.Hide();
-            ScientificFunctionButton.Flyout?.Hide();
-            _viewModel.IsTrigInverse = false;
-            _viewModel.IsTrigHyperbolic = false;
-        });
-    }
-
-    private void ScientificInverseCommand_OnClick(object? sender, RoutedEventArgs e)
-    {
-        // UWP unchecks 2nd after an inverse operator executes. Post the state
-        // change so the button's calculator command completes first.
-        if (e.Source is Button)
-        {
-            Dispatcher.UIThread.Post(() => _viewModel.IsScientificInverse = false);
-        }
-    }
 
     private bool TryCreateShortcutInput(KeyEventArgs e, out ShortcutInput input)
     {
@@ -567,104 +492,14 @@ public partial class MainWindow : Window
         _viewModel.TryPasteStandardExpression(text);
     }
 
+    /// <summary>
+    /// Pressed-state fallback for buttons still declared by this window. Every
+    /// keypad now claims its own through IShortcutPressedTarget; the history
+    /// toggle is the last one left in the shared mode header.
+    /// </summary>
     private bool TryGetShortcutButton(string shortcutId, out Button button)
     {
-        Button ModeButton(Button standard, Button scientific, Button programmer) =>
-            _viewModel.IsProgrammerMode ? programmer : _viewModel.IsScientificMode ? scientific : standard;
-
-        button = shortcutId switch
-        {
-            "clearButton" => ModeButton(ClearButton, ScientificClearButton, ProgrammerClearButton),
-            "clearEntryButton" => ModeButton(ClearEntryButton, ScientificClearEntryButton, ProgrammerClearEntryButton),
-            "decimalSeparatorButton" => _viewModel.IsScientificMode ? ScientificDecimalButton : DecimalButton,
-            "divideButton" => ModeButton(DivideButton, ScientificDivideButton, ProgrammerDivideButton),
-            "equalButton" => ModeButton(EqualsButton, ScientificEqualsButton, ProgrammerEqualsButton),
-            "minusButton" => ModeButton(SubtractButton, ScientificSubtractButton, ProgrammerSubtractButton),
-            "negateButton" => ModeButton(SignButton, ScientificSignButton, ProgrammerSignButton),
-            "num0Button" => ModeButton(ZeroButton, ScientificZeroButton, ProgrammerZeroButton),
-            "num1Button" => ModeButton(OneButton, ScientificOneButton, ProgrammerOneButton),
-            "num2Button" => ModeButton(TwoButton, ScientificTwoButton, ProgrammerTwoButton),
-            "num3Button" => ModeButton(ThreeButton, ScientificThreeButton, ProgrammerThreeButton),
-            "num4Button" => ModeButton(FourButton, ScientificFourButton, ProgrammerFourButton),
-            "num5Button" => ModeButton(FiveButton, ScientificFiveButton, ProgrammerFiveButton),
-            "num6Button" => ModeButton(SixButton, ScientificSixButton, ProgrammerSixButton),
-            "num7Button" => ModeButton(SevenButton, ScientificSevenButton, ProgrammerSevenButton),
-            "num8Button" => ModeButton(EightButton, ScientificEightButton, ProgrammerEightButton),
-            "num9Button" => ModeButton(NineButton, ScientificNineButton, ProgrammerNineButton),
-            "percentButton" => PercentButton,
-            "plusButton" => ModeButton(AddButton, ScientificAddButton, ProgrammerAddButton),
-            "squareRootButton" => _viewModel.IsScientificMode ? ScientificSquareRootButton : SquareRootButton,
-            "backSpaceButton" => ModeButton(BackspaceButton, ScientificBackspaceButton, ProgrammerBackspaceButton),
-            "multiplyButton" => ModeButton(MultiplyButton, ScientificMultiplyButton, ProgrammerMultiplyButton),
-            "modButton" => ProgrammerModuloButton,
-            "aButton" => ProgrammerAButton,
-            "bButton" => ProgrammerBButton,
-            "cButton" => ProgrammerCButton,
-            "dButton" => ProgrammerDButton,
-            "eButton" => ProgrammerEButton,
-            "fButton" => ProgrammerFButton,
-            "hexButton" => ProgrammerHexRadixButton,
-            "decimalButton" => ProgrammerDecimalRadixButton,
-            "octButton" => ProgrammerOctalRadixButton,
-            "binaryButton" => ProgrammerBinaryRadixButton,
-            "qwordButton" or "dwordButton" or "wordButton" or "byteButton" => ProgrammerWordSizeButton,
-            "lshButton" or "lshLogicalButton" or "rolButton" or "rolCarryButton" => ProgrammerLeftShiftButton,
-            "rshButton" or "rshLogicalButton" or "rorButton" or "rorCarryButton" => ProgrammerRightShiftButton,
-            "absButton" => ScientificAbsoluteButton,
-            "cubeRootButton" => ScientificCubeRootButton,
-            "ceilButton" => ScientificCeilingButton,
-            "cosButton" => ScientificCosButton,
-            "coshButton" => ScientificCoshButton,
-            "cotButton" => ScientificCotButton,
-            "cothButton" => ScientificCothButton,
-            "cscButton" => ScientificCscButton,
-            "cschButton" => ScientificCschButton,
-            "degreeButton" => ScientificDegreesButton,
-            "dmsButton" => ScientificDmsButton,
-            "eulerButton" => ScientificEulerButton,
-            "expButton" => ScientificExpButton,
-            "factorialButton" => ScientificFactorialButton,
-            "floorButton" => ScientificFloorButton,
-            "invcosButton" => ScientificInverseCosButton,
-            "invcoshButton" => ScientificInverseCoshButton,
-            "invcotButton" => ScientificInverseCotButton,
-            "invcothButton" => ScientificInverseCothButton,
-            "invcscButton" => ScientificInverseCscButton,
-            "invcschButton" => ScientificInverseCschButton,
-            "invsecButton" => ScientificInverseSecButton,
-            "invsechButton" => ScientificInverseSechButton,
-            "invsinButton" => ScientificInverseSinButton,
-            "invsinhButton" => ScientificInverseSinhButton,
-            "invtanButton" => ScientificInverseTanButton,
-            "invtanhButton" => ScientificInverseTanhButton,
-            "invertButton" => ScientificReciprocalButton,
-            "logBase10Button" => ScientificLogButton,
-            "logBaseEButton" => ScientificNaturalLogButton,
-            "logBaseY" => ScientificLogBaseYButton,
-            "openParenthesisButton" => _viewModel.IsProgrammerMode ? ProgrammerOpenParenthesisButton : ScientificOpenParenthesisButton,
-            "closeParenthesisButton" => _viewModel.IsProgrammerMode ? ProgrammerCloseParenthesisButton : ScientificCloseParenthesisButton,
-            "piButton" => ScientificPiButton,
-            "powerButton" => ScientificPowerButton,
-            "powerOf10Button" => ScientificTenPowerButton,
-            "powerOfEButton" => ScientificEPowerButton,
-            "randButton" => ScientificRandomButton,
-            "secButton" => ScientificSecButton,
-            "sechButton" => ScientificSechButton,
-            "sinButton" => ScientificSinButton,
-            "sinhButton" => ScientificSinhButton,
-            "tanButton" => ScientificTanButton,
-            "tanhButton" => ScientificTanhButton,
-            "twoPowerXButton" => ScientificTwoPowerButton,
-            "xpower2Button" => ScientificSquareButton,
-            "xpower3Button" => ScientificCubeButton,
-            "ySquareRootButton" => ScientificRootButton,
-            "degButton" or "radButton" or "gradButton" => ScientificAngleButton,
-            "ftoeButton" => ScientificNotationButton,
-            "HistoryButton" => HistoryButton,
-            // The memory buttons moved into MemoryPanel, which claims them
-            // through IShortcutPressedTarget before this fallback runs.
-            _ => null!,
-        };
+        button = shortcutId == "HistoryButton" ? HistoryButton : null!;
         return button is not null;
     }
 

@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:managed="using:Calculator.Managed"
+             x:Class="Calculator.Avalonia.Views.ScientificDisplayControls"
+             x:DataType="managed:CalculatorViewModel"
+             IsVisible="{Binding IsScientificMode}">
+  <!-- The angle and F-E controls occupy Calculator.xaml's extra Scientific
+       display-controls row. They are a separate control from the keypad so the
+       shell can keep placing each in its own row of the shared grid: spanning
+       the rows and subdividing them internally rounds to different pixel
+       boundaries and shifts the whole mode down. -->
+  <Grid Margin="3,0" ColumnDefinitions="80,80,*">
+  <Button x:Name="ScientificAngleButton" Classes="memoryButton" Content="{Binding ScientificAngleLabel}"
+          IsEnabled="{Binding !IsError}"
+          Command="{Binding CycleScientificAngleCommand}" />
+  <Button x:Name="ScientificNotationButton" Grid.Column="1" Classes="memoryButton"
+          Classes.selected="{Binding IsScientificNotation}"
+          IsEnabled="{Binding !IsError}"
+          Content="F-E" Command="{Binding ToggleScientificNotationCommand}" />
+  </Grid>
+</UserControl>
