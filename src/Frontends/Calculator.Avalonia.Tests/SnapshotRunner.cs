@@ -87,6 +87,15 @@ internal static class SnapshotRunner
                 ?? throw new InvalidOperationException("MainWindow has no CalculatorViewModel.");
             scenario.Arrange(viewModel);
 
+            if (scenario.ArrangeView is { } arrangeView)
+            {
+                // Let the mode change realise its subtree first. A control that
+                // has never been visible has no visual children yet, so looking
+                // one up before a layout pass finds nothing.
+                Settle(ticks: 10);
+                arrangeView(window, viewModel);
+            }
+
             // Arranging can resize the window (compact always-on-top does), so
             // restore the scenario geometry before the frame is measured.
             window.MinWidth = scenario.MinWidth ?? window.MinWidth;

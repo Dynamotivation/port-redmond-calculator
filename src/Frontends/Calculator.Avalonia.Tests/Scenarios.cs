@@ -1,4 +1,9 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Interactivity;
 using Avalonia.Styling;
+using Avalonia.VisualTree;
 using Calculator.Avalonia;
 using Calculator.Managed;
 
@@ -20,6 +25,13 @@ internal sealed record Scenario(
     public double? MinWidth { get; init; }
 
     public double? MinHeight { get; init; }
+
+    /// <summary>
+    /// Arrange step that needs the view, not just the view model — opening a
+    /// popup or a flyout is an interaction with a control, and those surfaces
+    /// are exactly the ones the view-model-only scenarios cannot reach.
+    /// </summary>
+    public Action<MainWindow, CalculatorViewModel>? ArrangeView { get; init; }
 }
 
 internal static class Scenarios
@@ -108,7 +120,93 @@ internal static class Scenarios
             }),
         new("standard-dark-error", 524, 773, ThemeVariant.Dark, Opaque,
             vm => EnterExpression(vm, CalculatorCommand.One, CalculatorCommand.Divide, CalculatorCommand.Zero)),
+
+        // Surfaces that only exist while a popup or flyout is open. Ownership of
+        // all of these moved during the decomposition -- the memory popup to
+        // MemoryPanel, the trig and function flyouts to ScientificCalculatorView
+        // -- so they need to be rendered, not merely compiled.
+        new("standard-dark-memory-popup", 524, 773, ThemeVariant.Dark, Opaque,
+            vm =>
+            {
+                vm.ExecuteCalculatorCommand(CalculatorCommand.Four);
+                vm.Memory.StoreCommand.Execute(null);
+                vm.ExecuteCalculatorCommand(CalculatorCommand.Nine);
+                vm.Memory.StoreCommand.Execute(null);
+            })
+        {
+            ArrangeView = (window, _) => Click(window, "MemoryFlyoutButton"),
+        },
+
+        new("scientific-dark-trig-flyout", 524, 773, ThemeVariant.Dark, Opaque,
+            vm => SwitchTo(vm, CalculatorViewMode.Scientific))
+        {
+            ArrangeView = (window, _) => OpenFlyout(FindByName<Button>(window, "ScientificTrigButton")),
+        },
+
+        // 2nd and hyp change which trig group the open flyout offers. This is
+        // the state behind the flyoutStateToggle marker class that replaced the
+        // command-reference comparison.
+        new("scientific-dark-trig-flyout-hyperbolic", 524, 773, ThemeVariant.Dark, Opaque,
+            vm =>
+            {
+                SwitchTo(vm, CalculatorViewMode.Scientific);
+                vm.Scientific.IsTrigInverse = true;
+                vm.Scientific.IsTrigHyperbolic = true;
+            })
+        {
+            ArrangeView = (window, _) => OpenFlyout(FindByName<Button>(window, "ScientificTrigButton")),
+        },
+
+        new("scientific-dark-function-flyout", 524, 773, ThemeVariant.Dark, Opaque,
+            vm => SwitchTo(vm, CalculatorViewMode.Scientific))
+        {
+            ArrangeView = (window, _) => OpenFlyout(FindByName<Button>(window, "ScientificFunctionButton")),
+        },
+
+        // The bit-flip surface replaces the programmer keypad entirely.
+        new("programmer-dark-bit-flip", 524, 773, ThemeVariant.Dark, Opaque,
+            vm =>
+            {
+                SwitchTo(vm, CalculatorViewMode.Programmer);
+                EnterExpression(vm, CalculatorCommand.Two, CalculatorCommand.Add, CalculatorCommand.Five);
+                vm.Programmer.ToggleBitFlipCommand.Execute(null);
+            }),
+
+        new("programmer-dark-bitwise-flyout", 524, 773, ThemeVariant.Dark, Opaque,
+            vm => SwitchTo(vm, CalculatorViewMode.Programmer))
+        {
+            ArrangeView = (window, _) => OpenFlyout(ButtonLabelled(window, "ProgrammerBitwiseLabel")),
+        },
+
+        new("programmer-dark-bit-shift-flyout", 524, 773, ThemeVariant.Dark, Opaque,
+            vm => SwitchTo(vm, CalculatorViewMode.Programmer))
+        {
+            ArrangeView = (window, _) => OpenFlyout(ButtonLabelled(window, "ProgrammerBitShiftLabel")),
+        },
     ];
+
+    private static T FindByName<T>(MainWindow window, string name)
+        where T : Control =>
+        window.GetVisualDescendants().OfType<T>().FirstOrDefault(control => control.Name == name)
+        ?? throw new InvalidOperationException($"No {typeof(T).Name} named '{name}' in the visual tree.");
+
+    /// <summary>
+    /// The programmer operator-panel buttons carry no name of their own, so they
+    /// are located through the label inside their content.
+    /// </summary>
+    private static Button ButtonLabelled(MainWindow window, string labelName) =>
+        FindByName<TextBlock>(window, labelName).GetVisualAncestors().OfType<Button>().FirstOrDefault()
+        ?? throw new InvalidOperationException($"'{labelName}' has no ancestor button.");
+
+    private static void Click(MainWindow window, string name) =>
+        FindByName<Button>(window, name).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+
+    /// <summary>
+    /// Opens a button's attached flyout directly. These buttons open their
+    /// flyout through the framework rather than through a command, so raising
+    /// Click would not show it.
+    /// </summary>
+    private static void OpenFlyout(Button button) => button.Flyout?.ShowAt(button);
 
     private static Scenario Standard(
         string name,

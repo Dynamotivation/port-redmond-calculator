@@ -14,8 +14,10 @@ namespace Calculator.Managed;
 /// <remarks>
 /// Which digits the keypad may accept follows from the radix, so those
 /// predicates live here rather than on the shell. Error state does not: it
-/// belongs to the shared session, so it is read through a callback and folded
-/// into the enablement rules.
+/// belongs to the shared session, so the owner pushes it in on each refresh.
+/// It is an observable input rather than a callback specifically so the
+/// enablement rules cannot go stale — a computed property over a delegate only
+/// updates when something remembers to raise it by hand.
 ///
 /// The shift commands go back through the shell's command path rather than
 /// straight to the engine, because a shift is an ordinary calculator command
@@ -26,22 +28,16 @@ public sealed partial class ProgrammerViewModel : ObservableObject
     private readonly NativeCalculator _calculator;
     private readonly Action _synchronize;
     private readonly Action<CalculatorCommand> _executeCommand;
-    private readonly Func<bool> _isError;
-    private readonly Func<string> _primaryDisplay;
 
     public ProgrammerViewModel(
         NativeCalculator calculator,
         Action synchronize,
         Action<CalculatorCommand> executeCommand,
-        Func<bool> isError,
-        Func<string> primaryDisplay,
         ProgrammerStrings strings)
     {
         _calculator = calculator;
         _synchronize = synchronize;
         _executeCommand = executeCommand;
-        _isError = isError;
-        _primaryDisplay = primaryDisplay;
         Strings = strings;
 
         BuildBitGroups();
@@ -66,6 +62,16 @@ public sealed partial class ProgrammerViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsBitFlipMode { get; private set; }
 
+    /// <summary>
+    /// Error state of the shared session, pushed in by its owner. Every digit
+    /// enablement rule depends on it.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AreHexDigitsEnabled))]
+    [NotifyPropertyChangedFor(nameof(AreEightAndNineEnabled))]
+    [NotifyPropertyChangedFor(nameof(AreTwoThroughSevenEnabled))]
+    public partial bool IsError { get; private set; }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsArithmeticShift))]
     [NotifyPropertyChangedFor(nameof(IsLogicalShift))]
@@ -89,10 +95,10 @@ public sealed partial class ProgrammerViewModel : ObservableObject
     public bool IsRotateShift => SelectedShiftMode == CalculatorProgrammerShiftMode.Rotate;
     public bool IsRotateCarryShift => SelectedShiftMode == CalculatorProgrammerShiftMode.RotateCarry;
 
-    public bool AreHexDigitsEnabled => IsHexadecimal && !_isError();
+    public bool AreHexDigitsEnabled => IsHexadecimal && !IsError;
     public bool AreEightAndNineEnabled =>
-        SelectedRadix is CalculatorProgrammerRadix.Decimal or CalculatorProgrammerRadix.Hexadecimal && !_isError();
-    public bool AreTwoThroughSevenEnabled => SelectedRadix != CalculatorProgrammerRadix.Binary && !_isError();
+        SelectedRadix is CalculatorProgrammerRadix.Decimal or CalculatorProgrammerRadix.Hexadecimal && !IsError;
+    public bool AreTwoThroughSevenEnabled => SelectedRadix != CalculatorProgrammerRadix.Binary && !IsError;
 
     public string WordSizeLabel => SelectedWordSize.ToString().ToUpperInvariant();
 
@@ -165,7 +171,7 @@ public sealed partial class ProgrammerViewModel : ObservableObject
     [RelayCommand]
     private void FlipBit(CalculatorProgrammerBit? bit)
     {
-        if (bit is null || !bit.IsEnabled || _isError())
+        if (bit is null || !bit.IsEnabled || IsError)
         {
             return;
         }
@@ -209,9 +215,9 @@ public sealed partial class ProgrammerViewModel : ObservableObject
         });
     }
 
-    internal void Refresh()
+    internal void Refresh(bool isError, string primaryDisplay)
     {
-        var isError = _isError();
+        IsError = isError;
 
         if (!isError)
         {
@@ -229,7 +235,7 @@ public sealed partial class ProgrammerViewModel : ObservableObject
         }
         else
         {
-            HexDisplay = DecimalDisplay = OctalDisplay = BinaryDisplay = _primaryDisplay();
+            HexDisplay = DecimalDisplay = OctalDisplay = BinaryDisplay = primaryDisplay;
         }
 
         var rawBinary = isError ? string.Empty : _calculator.GetResultForRadix(2, 64, false);
@@ -244,11 +250,6 @@ public sealed partial class ProgrammerViewModel : ObservableObject
                 bit.IsSet = sourceIndex >= 0 && rawBinary[sourceIndex] == '1';
             }
         }
-
-        // Digit enablement depends on error state, which this type does not own.
-        OnPropertyChanged(nameof(AreHexDigitsEnabled));
-        OnPropertyChanged(nameof(AreEightAndNineEnabled));
-        OnPropertyChanged(nameof(AreTwoThroughSevenEnabled));
     }
 
     private void BuildBitGroups()
