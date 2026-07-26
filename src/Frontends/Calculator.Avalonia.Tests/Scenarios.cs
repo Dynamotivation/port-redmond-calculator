@@ -74,7 +74,7 @@ internal static class Scenarios
             vm =>
             {
                 SwitchTo(vm, CalculatorViewMode.Scientific);
-                vm.IsScientificInverse = true;
+                vm.Scientific.IsInverse = true;
             }),
 
         Mode("programmer-dark-default", CalculatorViewMode.Programmer, 524, 773, ThemeVariant.Dark, Opaque),

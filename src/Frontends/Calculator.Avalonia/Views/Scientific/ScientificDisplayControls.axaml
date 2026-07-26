@@ -10,12 +10,12 @@
        the rows and subdividing them internally rounds to different pixel
        boundaries and shifts the whole mode down. -->
   <Grid Margin="3,0" ColumnDefinitions="80,80,*">
-  <Button x:Name="ScientificAngleButton" Classes="memoryButton" Content="{Binding ScientificAngleLabel}"
+  <Button x:Name="ScientificAngleButton" Classes="memoryButton" Content="{Binding Scientific.AngleLabel}"
           IsEnabled="{Binding !IsError}"
-          Command="{Binding CycleScientificAngleCommand}" />
+          Command="{Binding Scientific.CycleAngleCommand}" />
   <Button x:Name="ScientificNotationButton" Grid.Column="1" Classes="memoryButton"
-          Classes.selected="{Binding IsScientificNotation}"
+          Classes.selected="{Binding Scientific.IsNotation}"
           IsEnabled="{Binding !IsError}"
-          Content="F-E" Command="{Binding ToggleScientificNotationCommand}" />
+          Content="F-E" Command="{Binding Scientific.ToggleNotationCommand}" />
   </Grid>
 </UserControl>

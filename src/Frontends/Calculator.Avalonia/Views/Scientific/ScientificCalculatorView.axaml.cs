@@ -79,8 +79,8 @@ public partial class ScientificCalculatorView : UserControl, IShortcutPressedTar
 
             if (ViewModel is { } viewModel)
             {
-                viewModel.IsTrigInverse = false;
-                viewModel.IsTrigHyperbolic = false;
+                viewModel.Scientific.IsTrigInverse = false;
+                viewModel.Scientific.IsTrigHyperbolic = false;
             }
         });
     }
@@ -95,7 +95,7 @@ public partial class ScientificCalculatorView : UserControl, IShortcutPressedTar
             {
                 if (ViewModel is { } viewModel)
                 {
-                    viewModel.IsScientificInverse = false;
+                    viewModel.Scientific.IsInverse = false;
                 }
             });
         }
