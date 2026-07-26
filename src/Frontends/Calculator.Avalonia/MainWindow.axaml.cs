@@ -57,9 +57,9 @@ public partial class MainWindow : Window
             OperatingSystem.IsMacOS(),
             availableFontFamilies: GetInstalledFontFamilyNames(),
             initialFontFamily: settings.FontFamily);
-        _viewModel.ThemePreferenceChanged += OnThemePreferenceChanged;
-        _viewModel.FontPreferenceChanged += OnFontPreferenceChanged;
-        _viewModel.PlatformAppearancePreferencesChanged += OnAppearancePreferencesChanged;
+        _viewModel.Settings.ThemePreferenceChanged += OnThemePreferenceChanged;
+        _viewModel.Settings.FontPreferenceChanged += OnFontPreferenceChanged;
+        _viewModel.Settings.PlatformAppearanceChanged += OnAppearancePreferencesChanged;
         DataContext = _viewModel;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         var shortcutPlatform = OperatingSystem.IsWindows()
@@ -85,10 +85,10 @@ public partial class MainWindow : Window
         SizeChanged += (_, _) => UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
         UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
         UpdateCalculatorModeLayout();
-        ApplyFontFamily(_viewModel.SelectedFontFamily);
-        if (!string.Equals(_settings.FontFamily, _viewModel.SelectedFontFamily, StringComparison.Ordinal))
+        ApplyFontFamily(_viewModel.Settings.SelectedFontFamily);
+        if (!string.Equals(_settings.FontFamily, _viewModel.Settings.SelectedFontFamily, StringComparison.Ordinal))
         {
-            _settings = _settings with { FontFamily = _viewModel.SelectedFontFamily };
+            _settings = _settings with { FontFamily = _viewModel.Settings.SelectedFontFamily };
             AppSettingsStore.Save(_settings);
         }
         var presentation = new WindowPresentationService(
@@ -99,9 +99,9 @@ public partial class MainWindow : Window
         Closed += (_, _) =>
         {
             _presentation.Dispose();
-            _viewModel.ThemePreferenceChanged -= OnThemePreferenceChanged;
-            _viewModel.FontPreferenceChanged -= OnFontPreferenceChanged;
-            _viewModel.PlatformAppearancePreferencesChanged -= OnAppearancePreferencesChanged;
+            _viewModel.Settings.ThemePreferenceChanged -= OnThemePreferenceChanged;
+            _viewModel.Settings.FontPreferenceChanged -= OnFontPreferenceChanged;
+            _viewModel.Settings.PlatformAppearanceChanged -= OnAppearancePreferencesChanged;
             _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
             RemoveHandler(KeyDownEvent, OnCalculatorKeyDown);
             RemoveHandler(KeyUpEvent, OnCalculatorKeyUp);
