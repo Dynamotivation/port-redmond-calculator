@@ -66,7 +66,7 @@
                   HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
       <StackPanel Spacing="4">
         <TextBlock Classes="sectionHeading" Margin="0,12,0,4"
-                   Text="{Binding SettingsAppearanceName}" />
+                   Text="{Binding Settings.Strings.AppearanceName}" />
 
         <Border Classes="settingsCard" Background="Transparent"
                 CornerRadius="6" Padding="0" ClipToBounds="True">
@@ -79,10 +79,10 @@
                       ColumnDefinitions="36,*,32" RowDefinitions="Auto,Auto">
                   <TextBlock Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center"
                              FontFamily="{StaticResource CalculatorIconFont}" FontSize="20" Text="&#xE790;" />
-                  <TextBlock Grid.Column="1" Margin="16,0,0,0" FontSize="15" FontWeight="Normal" Text="{Binding AppThemeName}" />
+                  <TextBlock Grid.Column="1" Margin="16,0,0,0" FontSize="15" FontWeight="Normal" Text="{Binding Settings.Strings.AppThemeName}" />
                   <TextBlock Grid.Row="1" Grid.Column="1" Margin="16,2,0,0" FontSize="13"
                              Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
-                             Text="{Binding AppThemeDescription}" />
+                             Text="{Binding Settings.Strings.AppThemeDescription}" />
                   <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
                         Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
                         Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
@@ -94,15 +94,15 @@
               </Grid>
             </Expander.Header>
             <StackPanel Margin="68,14,16,14" Spacing="7">
-              <RadioButton GroupName="AppTheme" Content="{Binding LightThemeName}"
-                           IsChecked="{Binding IsLightThemeSelected, Mode=OneWay}"
-                           Command="{Binding SelectThemeCommand}" CommandParameter="Light" />
-              <RadioButton GroupName="AppTheme" Content="{Binding DarkThemeName}"
-                           IsChecked="{Binding IsDarkThemeSelected, Mode=OneWay}"
-                           Command="{Binding SelectThemeCommand}" CommandParameter="Dark" />
-              <RadioButton GroupName="AppTheme" Content="{Binding SystemThemeName}"
-                           IsChecked="{Binding IsSystemThemeSelected, Mode=OneWay}"
-                           Command="{Binding SelectThemeCommand}" CommandParameter="System" />
+              <RadioButton GroupName="AppTheme" Content="{Binding Settings.Strings.LightThemeName}"
+                           IsChecked="{Binding Settings.IsLightThemeSelected, Mode=OneWay}"
+                           Command="{Binding Settings.SelectThemeCommand}" CommandParameter="Light" />
+              <RadioButton GroupName="AppTheme" Content="{Binding Settings.Strings.DarkThemeName}"
+                           IsChecked="{Binding Settings.IsDarkThemeSelected, Mode=OneWay}"
+                           Command="{Binding Settings.SelectThemeCommand}" CommandParameter="Dark" />
+              <RadioButton GroupName="AppTheme" Content="{Binding Settings.Strings.SystemThemeName}"
+                           IsChecked="{Binding Settings.IsSystemThemeSelected, Mode=OneWay}"
+                           Command="{Binding Settings.SelectThemeCommand}" CommandParameter="System" />
             </StackPanel>
           </local:AnimatedSettingsExpander>
         </Border>
@@ -119,10 +119,10 @@
                   <TextBlock Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center"
                              FontSize="18" FontWeight="Normal" Text="Aa" />
                   <TextBlock Grid.Column="1" Margin="16,0,0,0" FontSize="15" FontWeight="Normal"
-                             Text="{Binding AppFontName}" />
+                             Text="{Binding Settings.Strings.AppFontName}" />
                   <TextBlock Grid.Row="1" Grid.Column="1" Margin="16,2,0,0" FontSize="13"
                              Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
-                             Text="{Binding AppFontDescription}" />
+                             Text="{Binding Settings.Strings.AppFontDescription}" />
                   <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
                         Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
                         Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
@@ -138,8 +138,8 @@
                            Padding="12,0,0,0"
                            VerticalContentAlignment="Center"
                            MaxDropDownHeight="360"
-                           ItemsSource="{Binding AvailableFontFamilies}"
-                           SelectedItem="{Binding SelectedFontFamily, Mode=TwoWay}">
+                           ItemsSource="{Binding Settings.AvailableFontFamilies}"
+                           SelectedItem="{Binding Settings.SelectedFontFamily, Mode=TwoWay}">
               <ui:FAComboBox.ItemTemplate>
                 <DataTemplate x:CompileBindings="False">
                   <!-- TODO: If a selected device font has unusual ascent or
@@ -153,16 +153,16 @@
           </local:AnimatedSettingsExpander>
         </Border>
 
-        <StackPanel IsVisible="{Binding SupportsPlatformAppearanceSettings}">
+        <StackPanel IsVisible="{Binding Settings.SupportsPlatformAppearanceSettings}">
           <Border Classes="settingsCard" Background="{DynamicResource SettingsExpanderBrush}"
                   CornerRadius="6" Padding="24,18">
             <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-              <TextBlock FontSize="14" FontWeight="Normal" Text="{Binding MicaEffectName}" />
+              <TextBlock FontSize="14" FontWeight="Normal" Text="{Binding Settings.Strings.MicaEffectName}" />
               <TextBlock Grid.Row="1" Margin="0,2,16,0" FontSize="12"
                          Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
-                         Text="{Binding MicaEffectDescription}" TextWrapping="Wrap" />
+                         Text="{Binding Settings.Strings.MicaEffectDescription}" TextWrapping="Wrap" />
               <ToggleSwitch Grid.Column="1" Grid.RowSpan="2" VerticalAlignment="Center"
-                            IsChecked="{Binding UseMicaEffect}" />
+                            IsChecked="{Binding Settings.UseMicaEffect}" />
             </Grid>
           </Border>
 
@@ -193,14 +193,14 @@
               </Expander.Header>
               <StackPanel Margin="68,14,16,14" Spacing="7">
                 <RadioButton GroupName="WindowCorners" Content="{Binding Windows10CornersName}"
-                             IsChecked="{Binding IsWindows10CornerStyleSelected, Mode=OneWay}"
-                             Command="{Binding SelectWindowCornerStyleCommand}" CommandParameter="Windows10" />
+                             IsChecked="{Binding Settings.IsWindows10CornerStyleSelected, Mode=OneWay}"
+                             Command="{Binding Settings.SelectWindowCornerStyleCommand}" CommandParameter="Windows10" />
                 <RadioButton GroupName="WindowCorners" Content="{Binding Windows11CornersName}"
-                             IsChecked="{Binding IsWindows11CornerStyleSelected, Mode=OneWay}"
-                             Command="{Binding SelectWindowCornerStyleCommand}" CommandParameter="Windows11" />
+                             IsChecked="{Binding Settings.IsWindows11CornerStyleSelected, Mode=OneWay}"
+                             Command="{Binding Settings.SelectWindowCornerStyleCommand}" CommandParameter="Windows11" />
                 <RadioButton GroupName="WindowCorners" Content="{Binding MacOSCornersName}"
-                             IsChecked="{Binding IsMacOSCornerStyleSelected, Mode=OneWay}"
-                             Command="{Binding SelectWindowCornerStyleCommand}" CommandParameter="MacOS" />
+                             IsChecked="{Binding Settings.IsMacOSCornerStyleSelected, Mode=OneWay}"
+                             Command="{Binding Settings.SelectWindowCornerStyleCommand}" CommandParameter="MacOS" />
               </StackPanel>
             </local:AnimatedSettingsExpander>
           </Border>
@@ -232,21 +232,21 @@
               </Expander.Header>
               <StackPanel Margin="68,14,16,14" Spacing="7">
                 <RadioButton GroupName="WindowControls" Content="{Binding Windows10WindowControlsName}"
-                             IsChecked="{Binding IsWindows10WindowControlStyleSelected, Mode=OneWay}"
-                             Command="{Binding SelectWindowControlStyleCommand}" CommandParameter="Windows10" />
+                             IsChecked="{Binding Settings.IsWindows10WindowControlStyleSelected, Mode=OneWay}"
+                             Command="{Binding Settings.SelectWindowControlStyleCommand}" CommandParameter="Windows10" />
                 <RadioButton GroupName="WindowControls" Content="{Binding Windows11WindowControlsName}"
-                             IsChecked="{Binding IsWindows11WindowControlStyleSelected, Mode=OneWay}"
-                             Command="{Binding SelectWindowControlStyleCommand}" CommandParameter="Windows11" />
+                             IsChecked="{Binding Settings.IsWindows11WindowControlStyleSelected, Mode=OneWay}"
+                             Command="{Binding Settings.SelectWindowControlStyleCommand}" CommandParameter="Windows11" />
                 <RadioButton GroupName="WindowControls" Content="{Binding MacOSWindowControlsName}"
-                             IsChecked="{Binding IsMacOSWindowControlStyleSelected, Mode=OneWay}"
-                             Command="{Binding SelectWindowControlStyleCommand}" CommandParameter="MacOS" />
+                             IsChecked="{Binding Settings.IsMacOSWindowControlStyleSelected, Mode=OneWay}"
+                             Command="{Binding Settings.SelectWindowControlStyleCommand}" CommandParameter="MacOS" />
               </StackPanel>
             </local:AnimatedSettingsExpander>
           </Border>
         </StackPanel>
 
         <TextBlock Classes="sectionHeading" Margin="0,26,0,4"
-                   Text="{Binding AboutGroupName}" />
+                   Text="{Binding Settings.Strings.AboutGroupName}" />
         <Border Classes="settingsCard" Background="Transparent"
                 CornerRadius="6" Padding="0" ClipToBounds="True">
           <local:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
@@ -265,7 +265,7 @@
                   </Grid>
                   <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0"
                              FontSize="14" Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
-                             Text="{Binding AboutVersionText}" />
+                             Text="{Binding Settings.Strings.AboutVersionText}" />
                   <Path Grid.Column="2" Classes="settingsExpanderChevron"
                         Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
                         Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
@@ -277,14 +277,14 @@
               </Grid>
             </Expander.Header>
             <StackPanel Margin="68,0,16,14" Spacing="12">
-              <Button Classes="settingsLink" Content="{Binding AboutLicenseName}" Click="License_OnClick" />
-              <Button Classes="settingsLink" Content="{Binding AboutServicesName}" Click="ServicesAgreement_OnClick" />
-              <Button Classes="settingsLink" Content="{Binding AboutPrivacyName}" Click="PrivacyStatement_OnClick" />
+              <Button Classes="settingsLink" Content="{Binding Settings.Strings.AboutLicenseName}" Click="License_OnClick" />
+              <Button Classes="settingsLink" Content="{Binding Settings.Strings.AboutServicesName}" Click="ServicesAgreement_OnClick" />
+              <Button Classes="settingsLink" Content="{Binding Settings.Strings.AboutPrivacyName}" Click="PrivacyStatement_OnClick" />
             </StackPanel>
           </local:AnimatedSettingsExpander>
         </Border>
 
-        <Button Classes="settingsLink" Margin="0,10,0,0" Content="{Binding FeedbackName}" Click="Feedback_OnClick" />
+        <Button Classes="settingsLink" Margin="0,10,0,0" Content="{Binding Settings.Strings.FeedbackName}" Click="Feedback_OnClick" />
       </StackPanel>
     </ScrollViewer>
   </Grid>

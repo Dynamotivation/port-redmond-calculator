@@ -20,7 +20,7 @@
 
   <Grid>
     <Border Classes="windowSurface"
-            Classes.noBackdrop="{Binding !UseMicaEffect}"
+            Classes.noBackdrop="{Binding !Settings.UseMicaEffect}"
             Classes.inactive="{Binding !IsActive, RelativeSource={RelativeSource AncestorType=Window}}"
             Classes.nativeFrame="{Binding UsesNativeWindowGeometry}"
             Classes.squareCorners="{Binding UsesSquareWindowCorners}"

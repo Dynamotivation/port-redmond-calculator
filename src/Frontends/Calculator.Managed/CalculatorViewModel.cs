@@ -33,6 +33,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
     public UnitConverterViewModel Converter { get; }
 
+    public SettingsViewModel Settings { get; }
+
 
 
     public bool IsHistoryPaneVisible => IsCalculatorMode && !IsAlwaysOnTop && (History.IsDocked || History.IsOpen);
@@ -86,29 +88,11 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
     public bool CanInteractWithNavigationToggle => !IsNavigationPaneTransitioning;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsLightThemeSelected))]
-    [NotifyPropertyChangedFor(nameof(IsDarkThemeSelected))]
-    [NotifyPropertyChangedFor(nameof(IsSystemThemeSelected))]
-    public partial AppThemePreference SelectedThemePreference { get; private set; } = AppThemePreference.Dark;
 
-    public bool IsLightThemeSelected => SelectedThemePreference == AppThemePreference.Light;
-    public bool IsDarkThemeSelected => SelectedThemePreference == AppThemePreference.Dark;
-    public bool IsSystemThemeSelected => SelectedThemePreference == AppThemePreference.System;
-    public event Action<AppThemePreference>? ThemePreferenceChanged;
 
-    public ObservableCollection<string> AvailableFontFamilies { get; } = [];
 
-    [ObservableProperty]
-    public partial string SelectedFontFamily { get; set; } = "Inter";
 
-    public event Action<string>? FontPreferenceChanged;
 
-    public bool SupportsPlatformAppearanceSettings { get; }
-    public string AppFontName { get; } = "App font";
-    public string AppFontDescription { get; } = "Choose the font used for text and numbers";
-    public string MicaEffectName { get; } = "Translucent background";
-    public string MicaEffectDescription { get; } = "Blur the desktop behind the calculator window";
     public string WindowCornersName { get; } = "Window corners";
     public string WindowCornersDescription { get; } = "Choose the outer window shape";
     public string Windows10CornersName { get; } = "Windows 10 — square";
@@ -120,48 +104,17 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public string Windows11WindowControlsName { get; } = "Windows 11";
     public string MacOSWindowControlsName { get; } = "macOS";
 
-    [ObservableProperty]
-    public partial bool UseMicaEffect { get; set; } = true;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(WindowCornerRadius))]
-    [NotifyPropertyChangedFor(nameof(UsesCustomResizeHandles))]
-    [NotifyPropertyChangedFor(nameof(UsesNativeWindowGeometry))]
-    [NotifyPropertyChangedFor(nameof(UsesSquareWindowCorners))]
-    [NotifyPropertyChangedFor(nameof(IsWindows10CornerStyleSelected))]
-    [NotifyPropertyChangedFor(nameof(IsWindows11CornerStyleSelected))]
-    [NotifyPropertyChangedFor(nameof(IsMacOSCornerStyleSelected))]
-    public partial WindowCornerStyle SelectedWindowCornerStyle { get; private set; } = WindowCornerStyle.Windows11;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(UsesWindowsWindowControls))]
-    [NotifyPropertyChangedFor(nameof(UsesMacOSWindowControls))]
-    [NotifyPropertyChangedFor(nameof(ShowsSettingsBackInTitleBar))]
-    [NotifyPropertyChangedFor(nameof(ShowsWindowsAlwaysOnTopExit))]
-    [NotifyPropertyChangedFor(nameof(ShowsMacOSAlwaysOnTopExit))]
-    [NotifyPropertyChangedFor(nameof(ShowsWindowsMaximizeButton))]
-    [NotifyPropertyChangedFor(nameof(IsWindows10WindowControlStyleSelected))]
-    [NotifyPropertyChangedFor(nameof(IsWindows11WindowControlStyleSelected))]
-    [NotifyPropertyChangedFor(nameof(IsMacOSWindowControlStyleSelected))]
-    public partial WindowControlStyle SelectedWindowControlStyle { get; private set; } = WindowControlStyle.Windows11;
-
-    public bool IsWindows10CornerStyleSelected => SelectedWindowCornerStyle == WindowCornerStyle.Windows10;
-    public bool IsWindows11CornerStyleSelected => SelectedWindowCornerStyle == WindowCornerStyle.Windows11;
-    public bool IsMacOSCornerStyleSelected => SelectedWindowCornerStyle == WindowCornerStyle.MacOS;
-    public bool IsWindows10WindowControlStyleSelected => SelectedWindowControlStyle == WindowControlStyle.Windows10;
-    public bool IsWindows11WindowControlStyleSelected => SelectedWindowControlStyle == WindowControlStyle.Windows11;
-    public bool IsMacOSWindowControlStyleSelected => SelectedWindowControlStyle == WindowControlStyle.MacOS;
-    public bool UsesNativeWindowGeometry => SelectedWindowCornerStyle == WindowCornerStyle.MacOS;
-    public bool UsesSquareWindowCorners => SelectedWindowCornerStyle == WindowCornerStyle.Windows10;
-    public bool UsesWindowsWindowControls => SelectedWindowControlStyle != WindowControlStyle.MacOS;
-    public bool UsesMacOSWindowControls => SelectedWindowControlStyle == WindowControlStyle.MacOS;
+    public bool UsesNativeWindowGeometry => Settings.SelectedWindowCornerStyle == WindowCornerStyle.MacOS;
+    public bool UsesSquareWindowCorners => Settings.SelectedWindowCornerStyle == WindowCornerStyle.Windows10;
+    public bool UsesWindowsWindowControls => Settings.SelectedWindowControlStyle != WindowControlStyle.MacOS;
+    public bool UsesMacOSWindowControls => Settings.SelectedWindowControlStyle == WindowControlStyle.MacOS;
     public bool ShowsSettingsBackInTitleBar => IsSettingsOpen && UsesWindowsWindowControls;
     public bool ShowsWindowsAlwaysOnTopExit => IsAlwaysOnTop && UsesWindowsWindowControls;
     public bool ShowsMacOSAlwaysOnTopExit => IsAlwaysOnTop && UsesMacOSWindowControls;
     public bool ShowsWindowsMaximizeButton => !IsAlwaysOnTop && UsesWindowsWindowControls;
-    public double WindowCornerRadius => SelectedWindowCornerStyle == WindowCornerStyle.Windows11 ? 8 : 0;
+    public double WindowCornerRadius => Settings.SelectedWindowCornerStyle == WindowCornerStyle.Windows11 ? 8 : 0;
     public bool UsesCustomResizeHandles => !UsesNativeWindowGeometry;
-    public event Action<PlatformAppearancePreferences>? PlatformAppearancePreferencesChanged;
 
     public bool IsStandardMode => CurrentViewMode == CalculatorViewMode.Standard;
     public bool CanEnterAlwaysOnTop => IsStandardMode && !IsAlwaysOnTop;
@@ -260,19 +213,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public ObservableCollection<CalculatorNavigationItem> ConverterNavigationItems { get; } = [];
     public string CalculatorGroupName { get; }
     public string SettingsName { get; }
-    public string SettingsAppearanceName { get; }
-    public string AppThemeName { get; }
-    public string AppThemeDescription { get; }
-    public string LightThemeName { get; }
-    public string DarkThemeName { get; }
-    public string SystemThemeName { get; }
     public string BackAutomationName { get; }
-    public string AboutGroupName { get; }
-    public string AboutLicenseName { get; }
-    public string AboutServicesName { get; }
-    public string AboutPrivacyName { get; }
-    public string FeedbackName { get; }
-    public string AboutVersionText { get; } = "Redmond Calculator 0.1.0";
     public string TrigonometryName { get; }
     public string FunctionName { get; }
     public string BitwiseName { get; }
@@ -301,37 +242,45 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         var platformAppearance = initialPlatformAppearance ?? new PlatformAppearancePreferences();
         var numberFormat = CalculatorNumberFormat.FromCulture(numberCulture);
         DecimalSeparator = numberFormat.DecimalSeparator;
-        SelectedThemePreference = initialThemePreference;
-        var fontFamilies = (availableFontFamilies ?? [])
-            .Where(name => !string.IsNullOrWhiteSpace(name))
-            .Append("Inter")
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(name => name.Equals("Inter", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
-            .ThenBy(name => name, StringComparer.CurrentCultureIgnoreCase);
-        Replace(AvailableFontFamilies, fontFamilies);
-        SelectedFontFamily = AvailableFontFamilies.FirstOrDefault(
-            name => name.Equals(initialFontFamily, StringComparison.OrdinalIgnoreCase)) ?? "Inter";
-        UseMicaEffect = platformAppearance.UseMicaEffect;
-        SelectedWindowCornerStyle = platformAppearance.WindowCornerStyle;
-        SelectedWindowControlStyle = platformAppearance.WindowControlStyle;
-        SupportsPlatformAppearanceSettings = supportsPlatformAppearanceSettings;
         var appResources = ResourceLoader.GetForViewIndependentUse();
+        Settings = new SettingsViewModel(
+            initialThemePreference,
+            platformAppearance,
+            supportsPlatformAppearanceSettings,
+            availableFontFamilies ?? [],
+            initialFontFamily,
+            new SettingsStrings(
+                appResources.GetString("SettingsAppearance.Text"),
+                appResources.GetString("AppThemeExpander.Header"),
+                appResources.GetString("AppThemeExpander.Description"),
+                appResources.GetString("LightThemeRadioButton.Content"),
+                appResources.GetString("DarkThemeRadioButton.Content"),
+                appResources.GetString("SystemThemeRadioButton.Content"),
+                appResources.GetString("AboutGroupTitle.Text"),
+                appResources.GetString("AboutEULA.Text"),
+                appResources.GetString("AboutControlServicesAgreement.Text"),
+                appResources.GetString("AboutControlPrivacyStatement.Text"),
+                appResources.GetString("FeedbackButton.Content")));
+        Settings.PropertyChanged += (_, _) =>
+        {
+            // The window chrome predicates below are derived from settings, so
+            // they have to be re-raised when a preference changes.
+            OnPropertyChanged(nameof(UsesNativeWindowGeometry));
+            OnPropertyChanged(nameof(UsesSquareWindowCorners));
+            OnPropertyChanged(nameof(UsesWindowsWindowControls));
+            OnPropertyChanged(nameof(UsesMacOSWindowControls));
+            OnPropertyChanged(nameof(UsesCustomResizeHandles));
+            OnPropertyChanged(nameof(ShowsSettingsBackInTitleBar));
+            OnPropertyChanged(nameof(ShowsWindowsAlwaysOnTopExit));
+            OnPropertyChanged(nameof(ShowsMacOSAlwaysOnTopExit));
+            OnPropertyChanged(nameof(ShowsWindowsMaximizeButton));
+            OnPropertyChanged(nameof(WindowCornerRadius));
+        };
         TitleBarApplicationName = appResources.GetString("AppName");
         ModeDisplayName = appResources.GetString("StandardModeText");
         CalculatorGroupName = appResources.GetString("CalculatorModeTextCaps");
         SettingsName = appResources.GetString("SettingsHeader.Text");
-        SettingsAppearanceName = appResources.GetString("SettingsAppearance.Text");
-        AppThemeName = appResources.GetString("AppThemeExpander.Header");
-        AppThemeDescription = appResources.GetString("AppThemeExpander.Description");
-        LightThemeName = appResources.GetString("LightThemeRadioButton.Content");
-        DarkThemeName = appResources.GetString("DarkThemeRadioButton.Content");
-        SystemThemeName = appResources.GetString("SystemThemeRadioButton.Content");
         BackAutomationName = appResources.GetString("TitleBarBackButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
-        AboutGroupName = appResources.GetString("AboutGroupTitle.Text");
-        AboutLicenseName = appResources.GetString("AboutEULA.Text");
-        AboutServicesName = appResources.GetString("AboutControlServicesAgreement.Text");
-        AboutPrivacyName = appResources.GetString("AboutControlPrivacyStatement.Text");
-        FeedbackName = appResources.GetString("FeedbackButton.Content");
         TrigonometryName = appResources.GetString("trigButton.Text");
         FunctionName = appResources.GetString("funcButton.Text");
         BitwiseName = appResources.GetString("bitwiseButton.Text");
@@ -836,19 +785,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void CloseSettings() => IsSettingsOpen = false;
 
-    [RelayCommand]
-    private void SelectTheme(string preference)
-    {
-        SelectedThemePreference = Enum.Parse<AppThemePreference>(preference, ignoreCase: false);
-    }
 
-    [RelayCommand]
-    private void SelectWindowCornerStyle(string style) =>
-        SelectedWindowCornerStyle = Enum.Parse<WindowCornerStyle>(style, ignoreCase: false);
 
-    [RelayCommand]
-    private void SelectWindowControlStyle(string style) =>
-        SelectedWindowControlStyle = Enum.Parse<WindowControlStyle>(style, ignoreCase: false);
 
     [RelayCommand]
     private async Task SelectNavigationItem(CalculatorNavigationItem? item)
@@ -1007,22 +945,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
 
 
-    partial void OnUseMicaEffectChanged(bool value) => NotifyPlatformAppearanceChanged();
-    partial void OnSelectedFontFamilyChanged(string value)
-    {
-        if (AvailableFontFamilies.Contains(value, StringComparer.OrdinalIgnoreCase))
-        {
-            FontPreferenceChanged?.Invoke(value);
-        }
-    }
-    partial void OnSelectedWindowCornerStyleChanged(WindowCornerStyle value) => NotifyPlatformAppearanceChanged();
-    partial void OnSelectedWindowControlStyleChanged(WindowControlStyle value) => NotifyPlatformAppearanceChanged();
 
-    private void NotifyPlatformAppearanceChanged() => PlatformAppearancePreferencesChanged?.Invoke(
-        new PlatformAppearancePreferences(
-            UseMicaEffect,
-            SelectedWindowCornerStyle,
-            SelectedWindowControlStyle));
 
 
 
@@ -1099,5 +1022,4 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         IsNavigationPaneTransitioning = false;
     }
 
-    partial void OnSelectedThemePreferenceChanged(AppThemePreference value) => ThemePreferenceChanged?.Invoke(value);
 }
