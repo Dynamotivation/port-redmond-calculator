@@ -206,7 +206,7 @@ internal static class RouterTests
     private static void SeedMemory(CalculatorViewModel viewModel)
     {
         viewModel.ExecuteCalculatorCommand(CalculatorCommand.Five);
-        viewModel.MemoryStoreCommand.Execute(null);
+        viewModel.Memory.StoreCommand.Execute(null);
     }
 
     private static void SwitchToScientific(CalculatorViewModel viewModel) =>
