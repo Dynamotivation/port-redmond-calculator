@@ -104,7 +104,7 @@ internal static class Scenarios
             {
                 EnterExpression(vm, CalculatorCommand.One, CalculatorCommand.Add, CalculatorCommand.Two);
                 EnterExpression(vm, CalculatorCommand.Nine, CalculatorCommand.Multiply, CalculatorCommand.Eight);
-                vm.MemoryStoreCommand.Execute(null);
+                vm.Memory.StoreCommand.Execute(null);
             }),
         new("standard-dark-error", 524, 773, ThemeVariant.Dark, Opaque,
             vm => EnterExpression(vm, CalculatorCommand.One, CalculatorCommand.Divide, CalculatorCommand.Zero)),

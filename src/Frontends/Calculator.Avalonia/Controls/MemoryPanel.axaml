@@ -7,18 +7,18 @@
   <!-- MC, MR, M+, M−, MS and the memory flyout. The popup is owned here rather
        than by the window: it belongs to the button that opens it. -->
   <Grid Margin="3,0" ColumnDefinitions="*,*,*,*,*,*">
-    <Button x:Name="MemoryClearButton" Classes="memoryButton" Content="MC" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryClearAllCommand}"
-            ToolTip.Tip="{Binding ClearMemoryTooltip}" />
-    <Button x:Name="MemoryRecallButton" Grid.Column="1" Classes="memoryButton" Content="MR" IsEnabled="{Binding HasMemory}" Command="{Binding MemoryRecallCommand}"
-            ToolTip.Tip="{Binding MemoryRecallTooltip}" />
-    <Button x:Name="MemoryAddButton" Grid.Column="2" Classes="memoryButton" Content="M+" Command="{Binding MemoryAddCommand}"
-            ToolTip.Tip="{Binding MemoryAddTooltip}" />
-    <Button x:Name="MemorySubtractButton" Grid.Column="3" Classes="memoryButton" Content="M−" Command="{Binding MemorySubtractCommand}"
-            ToolTip.Tip="{Binding MemorySubtractTooltip}" />
-    <Button x:Name="MemoryStoreButton" Grid.Column="4" Classes="memoryButton" Content="MS" Command="{Binding MemoryStoreCommand}"
-            ToolTip.Tip="{Binding MemoryStoreTooltip}" />
-    <Button x:Name="MemoryFlyoutButton" Grid.Column="5" Classes="memoryButton" Content="M⌄" IsEnabled="{Binding HasMemory}"
-            ToolTip.Tip="{Binding MemoryTooltip}" Click="MemoryFlyout_OnClick" />
+    <Button x:Name="MemoryClearButton" Classes="memoryButton" Content="MC" IsEnabled="{Binding Memory.HasEntries}" Command="{Binding Memory.ClearAllCommand}"
+            ToolTip.Tip="{Binding Memory.Strings.ClearTooltip}" />
+    <Button x:Name="MemoryRecallButton" Grid.Column="1" Classes="memoryButton" Content="MR" IsEnabled="{Binding Memory.HasEntries}" Command="{Binding Memory.RecallCommand}"
+            ToolTip.Tip="{Binding Memory.Strings.RecallTooltip}" />
+    <Button x:Name="MemoryAddButton" Grid.Column="2" Classes="memoryButton" Content="M+" Command="{Binding Memory.AddCommand}"
+            ToolTip.Tip="{Binding Memory.Strings.AddTooltip}" />
+    <Button x:Name="MemorySubtractButton" Grid.Column="3" Classes="memoryButton" Content="M−" Command="{Binding Memory.SubtractCommand}"
+            ToolTip.Tip="{Binding Memory.Strings.SubtractTooltip}" />
+    <Button x:Name="MemoryStoreButton" Grid.Column="4" Classes="memoryButton" Content="MS" Command="{Binding Memory.StoreCommand}"
+            ToolTip.Tip="{Binding Memory.Strings.StoreTooltip}" />
+    <Button x:Name="MemoryFlyoutButton" Grid.Column="5" Classes="memoryButton" Content="M⌄" IsEnabled="{Binding Memory.HasEntries}"
+            ToolTip.Tip="{Binding Memory.Strings.PopupTooltip}" Click="MemoryFlyout_OnClick" />
     <Popup x:Name="MemoryPopup" Grid.Column="5"
            PlacementTarget="{Binding #MemoryFlyoutButton}"
            Placement="Bottom" IsLightDismissEnabled="True">
@@ -27,7 +27,7 @@
               BorderBrush="{DynamicResource CalculatorBorderBrush}"
               BorderThickness="1"
               BoxShadow="0 4 16 0 #30000000">
-        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource MemoryListTemplate}" />
+        <ContentControl Content="{Binding Memory}" ContentTemplate="{StaticResource MemoryListTemplate}" />
       </Border>
     </Popup>
   </Grid>

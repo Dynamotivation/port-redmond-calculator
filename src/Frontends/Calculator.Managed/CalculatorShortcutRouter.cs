@@ -189,10 +189,10 @@ public static class CalculatorShortcutRouter
             case "byteButton": viewModel.SelectProgrammerWordSizeCommand.Execute("Byte"); break;
             case "HistoryButton": viewModel.History.ToggleCommand.Execute(null); break;
             case "ClearHistory": viewModel.History.ClearCommand.Execute(null); break;
-            case "ClearMemoryButton": viewModel.MemoryClearAllCommand.Execute(null); break;
-            case "MemRecall": viewModel.MemoryRecallCommand.Execute(null); break;
-            case "MemPlus": viewModel.MemoryAddCommand.Execute(null); break;
-            case "MemMinus": viewModel.MemorySubtractCommand.Execute(null); break;
+            case "ClearMemoryButton": viewModel.Memory.ClearAllCommand.Execute(null); break;
+            case "MemRecall": viewModel.Memory.RecallCommand.Execute(null); break;
+            case "MemPlus": viewModel.Memory.AddCommand.Execute(null); break;
+            case "MemMinus": viewModel.Memory.SubtractCommand.Execute(null); break;
             case "degButton": if (!viewModel.IsError) viewModel.ExecuteCalculatorCommand(CalculatorCommand.Degree); break;
             case "radButton": if (!viewModel.IsError) viewModel.ExecuteCalculatorCommand(CalculatorCommand.Radian); break;
             case "gradButton": if (!viewModel.IsError) viewModel.ExecuteCalculatorCommand(CalculatorCommand.Grads); break;

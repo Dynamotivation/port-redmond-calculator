@@ -28,12 +28,11 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     public partial bool IsInputEmpty { get; private set; }
 
-    [ObservableProperty]
-    public partial bool HasMemory { get; private set; }
 
     public HistoryViewModel History { get; }
 
-    public ObservableCollection<CalculatorMemoryEntry> Memory { get; } = [];
+    public MemoryViewModel Memory { get; }
+
 
 
     public bool IsHistoryPaneVisible => IsCalculatorMode && !IsAlwaysOnTop && (History.IsDocked || History.IsOpen);
@@ -288,7 +287,6 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public string AboutPrivacyName { get; }
     public string FeedbackName { get; }
     public string AboutVersionText { get; } = "Redmond Calculator 0.1.0";
-    public string MemoryTooltip { get; }
     public string TrigonometryName { get; }
     public string FunctionName { get; }
     public string BitwiseName { get; }
@@ -298,14 +296,6 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public string RotateCircularShiftName { get; }
     public string RotateCarryShiftName { get; }
     public string SettingsBackTooltip { get; }
-    public string ClearMemoryTooltip { get; }
-    public string MemoryStoreTooltip { get; }
-    public string MemoryRecallTooltip { get; }
-    public string MemoryAddTooltip { get; }
-    public string MemorySubtractTooltip { get; }
-    public string ClearMemoryItemName { get; }
-    public string AddToMemoryItemName { get; }
-    public string SubtractFromMemoryItemName { get; }
     public string EnterAlwaysOnTopTooltip { get; }
     public string ExitAlwaysOnTopTooltip { get; }
     public string EnterAlwaysOnTopAutomationName { get; }
@@ -357,7 +347,6 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         AboutServicesName = appResources.GetString("AboutControlServicesAgreement.Text");
         AboutPrivacyName = appResources.GetString("AboutControlPrivacyStatement.Text");
         FeedbackName = appResources.GetString("FeedbackButton.Content");
-        MemoryTooltip = appResources.GetString("MemoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
         TrigonometryName = appResources.GetString("trigButton.Text");
         FunctionName = appResources.GetString("funcButton.Text");
         BitwiseName = appResources.GetString("bitwiseButton.Text");
@@ -367,19 +356,24 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         RotateCircularShiftName = appResources.GetString("rotateCircularButton.Content");
         RotateCarryShiftName = appResources.GetString("rotateCarryShiftButton.Content");
         SettingsBackTooltip = appResources.GetString("AboutControlBackButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
-        ClearMemoryTooltip = appResources.GetString("ClearMemoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
-        MemoryStoreTooltip = appResources.GetString("memButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
-        MemoryRecallTooltip = appResources.GetString("MemRecall/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
-        MemoryAddTooltip = appResources.GetString("MemPlus/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
-        MemorySubtractTooltip = appResources.GetString("MemMinus/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
-        ClearMemoryItemName = appResources.GetString("ClearMemoryItemButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
-        AddToMemoryItemName = appResources.GetString("MemPlusItem/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
-        SubtractFromMemoryItemName = appResources.GetString("MemMinusItem/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
         EnterAlwaysOnTopTooltip = appResources.GetString("EnterAlwaysOnTopButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
         ExitAlwaysOnTopTooltip = appResources.GetString("ExitAlwaysOnTopButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
         EnterAlwaysOnTopAutomationName = appResources.GetString("EnterAlwaysOnTopButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
         ExitAlwaysOnTopAutomationName = appResources.GetString("ExitAlwaysOnTopButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
         _calculator = new NativeCalculator(ResourceLoader.GetForViewIndependentUse("CEngineStrings"), numberFormat);
+        Memory = new MemoryViewModel(
+            _calculator,
+            Synchronize,
+            new MemoryStrings(
+                appResources.GetString("MemoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                appResources.GetString("ClearMemoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                appResources.GetString("memButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                appResources.GetString("MemRecall/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                appResources.GetString("MemPlus/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                appResources.GetString("MemMinus/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                appResources.GetString("ClearMemoryItemButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name"),
+                appResources.GetString("MemPlusItem/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name"),
+                appResources.GetString("MemMinusItem/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name")));
         History = new HistoryViewModel(
             _calculator,
             () => IsScientificNotation,
@@ -824,67 +818,15 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         Synchronize();
     }
 
-    [RelayCommand]
-    private void MemoryStore() { _calculator.MemoryStore(); Synchronize(); }
 
-    [RelayCommand]
-    private void MemoryRecall() { _calculator.MemoryRecall(); Synchronize(); }
 
-    [RelayCommand]
-    private void MemoryAdd() { _calculator.MemoryAdd(); Synchronize(); }
 
-    [RelayCommand]
-    private void MemorySubtract() { _calculator.MemorySubtract(); Synchronize(); }
 
-    [RelayCommand]
-    private void MemoryClear() { _calculator.MemoryClear(); Synchronize(); }
 
-    [RelayCommand]
-    private void MemoryClearAll() { _calculator.MemoryClearAll(); Synchronize(); }
 
-    [RelayCommand]
-    private void RecallMemoryEntry(CalculatorMemoryEntry? entry)
-    {
-        if (entry is null)
-        {
-            return;
-        }
-        _calculator.MemoryRecall(entry.Index);
-        Synchronize();
-    }
 
-    [RelayCommand]
-    private void AddToMemoryEntry(CalculatorMemoryEntry? entry)
-    {
-        if (entry is null)
-        {
-            return;
-        }
-        _calculator.MemoryAdd(entry.Index);
-        Synchronize();
-    }
 
-    [RelayCommand]
-    private void SubtractFromMemoryEntry(CalculatorMemoryEntry? entry)
-    {
-        if (entry is null)
-        {
-            return;
-        }
-        _calculator.MemorySubtract(entry.Index);
-        Synchronize();
-    }
 
-    [RelayCommand]
-    private void ClearMemoryEntry(CalculatorMemoryEntry? entry)
-    {
-        if (entry is null)
-        {
-            return;
-        }
-        _calculator.MemoryClear(entry.Index);
-        Synchronize();
-    }
 
 
 
@@ -1021,9 +963,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         OpenParenthesisCount = _calculator.EventState.ParenthesisCount;
 
         History.Refresh(_calculator.History);
-        Replace(Memory, _calculator.MemoryValues.Select((value, index) =>
+        Memory.Refresh(_calculator.MemoryValues.Select((value, index) =>
             new CalculatorMemoryEntry(checked((nuint)index), value)));
-        HasMemory = Memory.Count != 0;
 
         if (IsProgrammerMode)
         {

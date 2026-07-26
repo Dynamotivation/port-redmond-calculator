@@ -169,7 +169,7 @@
     <DataTemplate x:Key="MemoryListTemplate" x:CompileBindings="False">
     <Grid RowDefinitions="*,52" Width="300" MaxHeight="390">
       <ScrollViewer MaxHeight="330" VerticalScrollBarVisibility="Auto">
-        <ItemsControl Margin="4,6" ItemsSource="{Binding Memory}">
+        <ItemsControl Margin="4,6" ItemsSource="{Binding Entries}">
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="managed:CalculatorMemoryEntry" x:CompileBindings="False">
               <Border Classes="memoryEntry" Margin="0,2" Padding="10,7" CornerRadius="4"
@@ -178,21 +178,21 @@
                   <Button Padding="4,2" HorizontalAlignment="Stretch"
                           HorizontalContentAlignment="Right" Background="Transparent" BorderThickness="0"
                           FontSize="22" FontWeight="Medium" Content="{Binding Value}"
-                          Command="{Binding $parent[Window].DataContext.RecallMemoryEntryCommand}"
+                          Command="{Binding $parent[ItemsControl].DataContext.RecallEntryCommand}"
                           CommandParameter="{Binding}" />
                   <StackPanel Grid.Row="1" Classes="memoryItemActions" Margin="0,3,0,0"
                               HorizontalAlignment="Right" Orientation="Horizontal">
                     <Button Classes="memoryItemAction" Content="MC"
-                            AutomationProperties.Name="{Binding $parent[Window].DataContext.ClearMemoryItemName}"
-                            Command="{Binding $parent[Window].DataContext.ClearMemoryEntryCommand}"
+                            AutomationProperties.Name="{Binding $parent[ItemsControl].DataContext.Strings.ClearItemName}"
+                            Command="{Binding $parent[ItemsControl].DataContext.ClearEntryCommand}"
                             CommandParameter="{Binding}" />
                     <Button Classes="memoryItemAction" Margin="2,0" Content="M+"
-                            AutomationProperties.Name="{Binding $parent[Window].DataContext.AddToMemoryItemName}"
-                            Command="{Binding $parent[Window].DataContext.AddToMemoryEntryCommand}"
+                            AutomationProperties.Name="{Binding $parent[ItemsControl].DataContext.Strings.AddToItemName}"
+                            Command="{Binding $parent[ItemsControl].DataContext.AddToEntryCommand}"
                             CommandParameter="{Binding}" />
                     <Button Classes="memoryItemAction" Content="M−"
-                            AutomationProperties.Name="{Binding $parent[Window].DataContext.SubtractFromMemoryItemName}"
-                            Command="{Binding $parent[Window].DataContext.SubtractFromMemoryEntryCommand}"
+                            AutomationProperties.Name="{Binding $parent[ItemsControl].DataContext.Strings.SubtractFromItemName}"
+                            Command="{Binding $parent[ItemsControl].DataContext.SubtractFromEntryCommand}"
                             CommandParameter="{Binding}" />
                   </StackPanel>
                 </Grid>
@@ -203,7 +203,7 @@
       </ScrollViewer>
       <Button Grid.Row="1" Width="44" Height="40" Margin="0,0,8,6" Padding="0"
               HorizontalAlignment="Right" Background="Transparent" BorderThickness="0"
-              Command="{Binding MemoryClearAllCommand}" ToolTip.Tip="{Binding ClearMemoryTooltip}">
+              Command="{Binding ClearAllCommand}" ToolTip.Tip="{Binding Strings.ClearTooltip}">
         <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="17" Text="&#xE74D;" />
       </Button>
     </Grid>
