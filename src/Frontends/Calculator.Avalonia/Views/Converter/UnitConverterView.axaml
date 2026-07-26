@@ -13,8 +13,8 @@
     <ui:FAComboBox Grid.Row="0" Classes="unitSelector" Margin="0,0,0,7"
                    Padding="12,0,0,0"
                    VerticalContentAlignment="Center"
-                   ItemsSource="{Binding UnitCategories}"
-                   SelectedItem="{Binding SelectedUnitCategory}">
+                   ItemsSource="{Binding Converter.Categories}"
+                   SelectedItem="{Binding Converter.SelectedCategory}">
       <ui:FAComboBox.ItemTemplate>
         <DataTemplate x:DataType="managed:UnitConverterCategory">
           <TextBlock Text="{Binding Name}" />
@@ -23,12 +23,12 @@
     </ui:FAComboBox>
 
     <Grid Grid.Row="1" RowDefinitions="*,Auto" Margin="6,0">
-      <TextBlock Classes="unitDisplay" Text="{Binding UnitFromDisplay}" />
+      <TextBlock Classes="unitDisplay" Text="{Binding Converter.FromDisplay}" />
       <ui:FAComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4"
                      Padding="12,0,0,0"
                      VerticalContentAlignment="Center"
-                     ItemsSource="{Binding UnitDefinitions}"
-                     SelectedItem="{Binding SelectedFromUnit}">
+                     ItemsSource="{Binding Converter.Definitions}"
+                     SelectedItem="{Binding Converter.SelectedFromUnit}">
         <ui:FAComboBox.ItemTemplate>
           <DataTemplate x:DataType="managed:UnitConverterUnit">
             <Grid ColumnDefinitions="*,Auto">
@@ -43,15 +43,15 @@
     <Button Grid.Row="2" Width="42" Height="34" Padding="0" HorizontalAlignment="Right"
             Margin="0,-1,6,-1" Background="Transparent" BorderThickness="0"
             FontSize="19" Content="⇅" AutomationProperties.Name="Swap units"
-            Command="{Binding SwapUnitsCommand}" />
+            Command="{Binding Converter.SwapCommand}" />
 
     <Grid Grid.Row="3" RowDefinitions="*,Auto" Margin="6,0">
-      <TextBlock Classes="unitDisplay" Text="{Binding UnitToDisplay}" />
+      <TextBlock Classes="unitDisplay" Text="{Binding Converter.ToDisplay}" />
       <ui:FAComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4"
                      Padding="12,0,0,0"
                      VerticalContentAlignment="Center"
-                     ItemsSource="{Binding UnitDefinitions}"
-                     SelectedItem="{Binding SelectedToUnit}">
+                     ItemsSource="{Binding Converter.Definitions}"
+                     SelectedItem="{Binding Converter.SelectedToUnit}">
         <ui:FAComboBox.ItemTemplate>
           <DataTemplate x:DataType="managed:UnitConverterUnit">
             <Grid ColumnDefinitions="*,Auto">
@@ -63,7 +63,7 @@
       </ui:FAComboBox>
     </Grid>
 
-    <ItemsControl Grid.Row="4" Margin="6,5,6,8" ItemsSource="{Binding UnitSuggestions}">
+    <ItemsControl Grid.Row="4" Margin="6,5,6,8" ItemsSource="{Binding Converter.Suggestions}">
       <ItemsControl.ItemsPanel>
         <ItemsPanelTemplate>
           <WrapPanel Orientation="Horizontal" />
@@ -79,23 +79,23 @@
     </ItemsControl>
 
     <Grid Grid.Row="5" Margin="-9,0,-9,-9" RowDefinitions="*,*,*,*" ColumnDefinitions="*,*,*">
-      <Button Classes="calcButton numeric" Content="7" Command="{Binding SendUnitCommandCommand}" CommandParameter="Seven" />
-      <Button Grid.Column="1" Classes="calcButton numeric" Content="8" Command="{Binding SendUnitCommandCommand}" CommandParameter="Eight" />
-      <Button Grid.Column="2" Classes="calcButton numeric" Content="9" Command="{Binding SendUnitCommandCommand}" CommandParameter="Nine" />
+      <Button Classes="calcButton numeric" Content="7" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Seven" />
+      <Button Grid.Column="1" Classes="calcButton numeric" Content="8" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Eight" />
+      <Button Grid.Column="2" Classes="calcButton numeric" Content="9" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Nine" />
 
-      <Button Grid.Row="1" Classes="calcButton numeric" Content="4" Command="{Binding SendUnitCommandCommand}" CommandParameter="Four" />
-      <Button Grid.Row="1" Grid.Column="1" Classes="calcButton numeric" Content="5" Command="{Binding SendUnitCommandCommand}" CommandParameter="Five" />
-      <Button Grid.Row="1" Grid.Column="2" Classes="calcButton numeric" Content="6" Command="{Binding SendUnitCommandCommand}" CommandParameter="Six" />
+      <Button Grid.Row="1" Classes="calcButton numeric" Content="4" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Four" />
+      <Button Grid.Row="1" Grid.Column="1" Classes="calcButton numeric" Content="5" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Five" />
+      <Button Grid.Row="1" Grid.Column="2" Classes="calcButton numeric" Content="6" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Six" />
 
-      <Button Grid.Row="2" Classes="calcButton numeric" Content="1" Command="{Binding SendUnitCommandCommand}" CommandParameter="One" />
-      <Button Grid.Row="2" Grid.Column="1" Classes="calcButton numeric" Content="2" Command="{Binding SendUnitCommandCommand}" CommandParameter="Two" />
-      <Button Grid.Row="2" Grid.Column="2" Classes="calcButton numeric" Content="3" Command="{Binding SendUnitCommandCommand}" CommandParameter="Three" />
+      <Button Grid.Row="2" Classes="calcButton numeric" Content="1" Command="{Binding Converter.SendCommandCommand}" CommandParameter="One" />
+      <Button Grid.Row="2" Grid.Column="1" Classes="calcButton numeric" Content="2" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Two" />
+      <Button Grid.Row="2" Grid.Column="2" Classes="calcButton numeric" Content="3" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Three" />
 
-      <Button Grid.Row="3" Classes="calcButton numeric symbolOperator" Content="&#xF898;" FontSize="23.1" Command="{Binding SendUnitCommandCommand}" CommandParameter="Negate" />
-      <Button Grid.Row="3" Grid.Column="1" Classes="calcButton numeric" Content="0" Command="{Binding SendUnitCommandCommand}" CommandParameter="Zero" />
+      <Button Grid.Row="3" Classes="calcButton numeric symbolOperator" Content="&#xF898;" FontSize="23.1" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Negate" />
+      <Button Grid.Row="3" Grid.Column="1" Classes="calcButton numeric" Content="0" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Zero" />
       <Grid Grid.Row="3" Grid.Column="2" ColumnDefinitions="*,*">
-        <Button Classes="calcButton numeric" Content="{Binding DecimalSeparator}" FontSize="24.2" Command="{Binding SendUnitCommandCommand}" CommandParameter="Decimal" />
-        <Button Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xE94F;" FontSize="19.36" Command="{Binding SendUnitCommandCommand}" CommandParameter="Backspace" />
+        <Button Classes="calcButton numeric" Content="{Binding DecimalSeparator}" FontSize="24.2" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Decimal" />
+        <Button Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xE94F;" FontSize="19.36" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Backspace" />
       </Grid>
     </Grid>
   </Grid>
