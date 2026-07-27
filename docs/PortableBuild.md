@@ -123,7 +123,7 @@ Windows HTTP/cache implementation is replaced with a real cross-platform loader.
 ## Cross-platform UWP resources
 
 `Calculator.ResourceLoader` implements the `Windows.ApplicationModel.Resources.ResourceLoader`
-surface used by Calculator without depending on UWP, WinUI, or Uno. It reads the
+surface used by Calculator without depending on a Windows UI framework. It reads the
 repository's `.resw` files directly and supports:
 
 - default and named maps, including `CEngineStrings`
@@ -144,8 +144,8 @@ UTF-8 buffers, and status codes. C++ exceptions do not cross the ABI boundary.
 Engine resources are supplied as UTF-8 key/value entries and copied when a
 calculator instance is created.
 
-The ABI is intentionally independent of a UI framework. A Uno Platform,
-Avalonia, Flutter, Qt, or command-line frontend can call the same native library.
+The ABI is intentionally independent of a UI framework. A desktop, mobile, or
+command-line frontend can call the same native library.
 In addition to arithmetic, history, and memory, it exposes an opaque Unit
 Converter handle with category/unit enumeration, regional selection, input
 commands, active-unit switching, display values, suggestions, and max-digit
