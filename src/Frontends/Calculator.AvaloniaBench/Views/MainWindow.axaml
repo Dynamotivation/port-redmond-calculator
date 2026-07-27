@@ -1,0 +1,152 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:managed="using:Calculator.Managed"
+        x:Class="Calculator.AvaloniaBench.Views.MainWindow"
+        x:DataType="managed:CalculatorViewModel"
+        Width="960" Height="760" MinWidth="760" MinHeight="620"
+        Title="Fluent Component Gallery — Avalonia">
+
+  <Window.Styles>
+    <Style Selector="Border.card">
+      <Setter Property="Padding" Value="20" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
+      <Setter Property="Background" Value="{DynamicResource ThemeControlLowBrush}" />
+    </Style>
+    <Style Selector="TextBlock.sectionTitle">
+      <Setter Property="FontSize" Value="20" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,0,0,14" />
+    </Style>
+    <Style Selector="Button.calc">
+      <Setter Property="MinHeight" Value="44" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="#0067C0" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.primary:pointerover">
+      <Setter Property="Background" Value="#1975C5" />
+    </Style>
+    <Style Selector="Button.primary:pressed">
+      <Setter Property="Background" Value="#005A9E" />
+    </Style>
+  </Window.Styles>
+
+  <ScrollViewer>
+    <Grid Margin="28" RowDefinitions="Auto,Auto" RowSpacing="22">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="24">
+        <StackPanel Spacing="5">
+          <TextBlock FontSize="30" FontWeight="SemiBold" Text="Fluent Component Gallery" />
+          <TextBlock Opacity="0.68" Text="Avalonia · native desktop target" />
+        </StackPanel>
+        <ToggleSwitch x:Name="ThemeToggle" Grid.Column="1" VerticalAlignment="Center"
+                      OnContent="Dark mode" OffContent="Light mode"
+                      IsCheckedChanged="ThemeToggle_OnIsCheckedChanged" />
+      </Grid>
+
+      <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="22">
+        <StackPanel Spacing="22">
+          <Border Classes="card">
+            <StackPanel Spacing="14">
+              <TextBlock Classes="sectionTitle" Text="Actions" />
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Classes="primary" Content="Primary action" />
+                <Button Content="Standard" />
+                <Button Content="Disabled" IsEnabled="False" />
+              </StackPanel>
+              <StackPanel Spacing="5">
+                <TextBlock Text="Notifications" />
+                <ToggleSwitch OnContent="On" OffContent="Off" IsChecked="True" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <Border Classes="card">
+            <StackPanel Spacing="12">
+              <TextBlock Classes="sectionTitle" Text="Inputs" />
+              <StackPanel Spacing="5">
+                <TextBlock Text="Name" />
+                <TextBox PlaceholderText="Type something" Text="Fluent user" />
+              </StackPanel>
+              <StackPanel Spacing="5">
+                <TextBlock Text="Calculation mode" />
+                <ComboBox SelectedIndex="0">
+                  <ComboBoxItem Content="Standard" />
+                  <ComboBoxItem Content="Scientific" />
+                  <ComboBoxItem Content="Programmer" />
+                </ComboBox>
+              </StackPanel>
+              <TextBlock Text="Precision" />
+              <Slider Minimum="0" Maximum="100" Value="65" TickFrequency="5" />
+            </StackPanel>
+          </Border>
+
+          <Border Classes="card">
+            <StackPanel Spacing="12">
+              <TextBlock Classes="sectionTitle" Text="Selection &amp; feedback" />
+              <CheckBox Content="Save calculation history" IsChecked="True" />
+              <StackPanel Orientation="Horizontal" Spacing="18">
+                <RadioButton GroupName="Angle" Content="Degrees" IsChecked="True" />
+                <RadioButton GroupName="Angle" Content="Radians" />
+              </StackPanel>
+              <ProgressBar Minimum="0" Maximum="100" Value="65" Height="4" />
+              <TextBlock Opacity="0.68" Text="65% complete" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <StackPanel Grid.Column="1" Spacing="22">
+          <Border Classes="card">
+            <StackPanel Spacing="12">
+              <TextBlock Classes="sectionTitle" Text="Calculator controls" />
+              <Border Padding="14" CornerRadius="6" Background="{DynamicResource ThemeControlMidBrush}">
+                <StackPanel HorizontalAlignment="Stretch" Spacing="4">
+                  <TextBlock HorizontalAlignment="Right" Opacity="0.62" MinHeight="18"
+                             Text="{Binding ExpressionDisplay}" />
+                  <TextBlock x:Name="CalculatorDisplay" FontSize="30" FontWeight="SemiBold"
+                             HorizontalAlignment="Right" Text="{Binding PrimaryDisplay}" />
+                </StackPanel>
+              </Border>
+              <Grid ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                    ColumnSpacing="8" RowSpacing="8">
+                <Button Grid.Row="0" Grid.Column="0" Classes="calc" Content="7" Command="{Binding SendCommandCommand}" CommandParameter="Seven" />
+                <Button Grid.Row="0" Grid.Column="1" Classes="calc" Content="8" Command="{Binding SendCommandCommand}" CommandParameter="Eight" />
+                <Button Grid.Row="0" Grid.Column="2" Classes="calc" Content="9" Command="{Binding SendCommandCommand}" CommandParameter="Nine" />
+                <Button Grid.Row="0" Grid.Column="3" Classes="calc" Content="÷" Command="{Binding SendCommandCommand}" CommandParameter="Divide" />
+                <Button Grid.Row="1" Grid.Column="0" Classes="calc" Content="4" Command="{Binding SendCommandCommand}" CommandParameter="Four" />
+                <Button Grid.Row="1" Grid.Column="1" Classes="calc" Content="5" Command="{Binding SendCommandCommand}" CommandParameter="Five" />
+                <Button Grid.Row="1" Grid.Column="2" Classes="calc" Content="6" Command="{Binding SendCommandCommand}" CommandParameter="Six" />
+                <Button Grid.Row="1" Grid.Column="3" Classes="calc" Content="×" Command="{Binding SendCommandCommand}" CommandParameter="Multiply" />
+                <Button Grid.Row="2" Grid.Column="0" Classes="calc" Content="1" Command="{Binding SendCommandCommand}" CommandParameter="One" />
+                <Button Grid.Row="2" Grid.Column="1" Classes="calc" Content="2" Command="{Binding SendCommandCommand}" CommandParameter="Two" />
+                <Button Grid.Row="2" Grid.Column="2" Classes="calc" Content="3" Command="{Binding SendCommandCommand}" CommandParameter="Three" />
+                <Button Grid.Row="2" Grid.Column="3" Classes="calc" Content="−" Command="{Binding SendCommandCommand}" CommandParameter="Subtract" />
+                <Button Grid.Row="3" Grid.Column="0" Classes="calc" Content="C" Command="{Binding SendCommandCommand}" CommandParameter="Clear" />
+                <Button Grid.Row="3" Grid.Column="1" Classes="calc" Content="0" Command="{Binding SendCommandCommand}" CommandParameter="Zero" />
+                <Button Grid.Row="3" Grid.Column="2" Classes="calc" Content="." Command="{Binding SendCommandCommand}" CommandParameter="Decimal" />
+                <Button Grid.Row="3" Grid.Column="3" Classes="calc" Content="+" Command="{Binding SendCommandCommand}" CommandParameter="Add" />
+                <Button Grid.Row="4" Grid.Column="0" Classes="calc" Content="±" Command="{Binding SendCommandCommand}" CommandParameter="Sign" />
+                <Button Grid.Row="4" Grid.Column="1" Classes="calc" Content="%" Command="{Binding SendCommandCommand}" CommandParameter="Percent" />
+                <Button Grid.Row="4" Grid.Column="2" Classes="calc" Content="⌫" Command="{Binding SendCommandCommand}" CommandParameter="Backspace" />
+                <Button Grid.Row="4" Grid.Column="3" Classes="calc primary" Content="="
+                        Command="{Binding SendCommandCommand}" CommandParameter="Equals" />
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <Border Classes="card">
+            <StackPanel Spacing="8">
+              <TextBlock Classes="sectionTitle" Text="Recent calculations" />
+              <ListBox Height="150" ItemsSource="{Binding History}" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Grid>
+    </Grid>
+  </ScrollViewer>
+</Window>
