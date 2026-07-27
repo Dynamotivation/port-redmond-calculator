@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Calculator.Avalonia/Calculator.Avalonia.csproj" />
+    <ProjectReference Include="../../../redmond-commons/Redmond.Shortcuts/Redmond.Shortcuts.csproj" />
     <Content Include="../../Calculator/Resources/**/*.resw"
              Link="Resources/%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />

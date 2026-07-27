@@ -1,4 +1,5 @@
 using Calculator.Shortcuts;
+using Redmond.Shortcuts;
 using System.Text;
 
 var tests = new (string Name, Action Run)[]

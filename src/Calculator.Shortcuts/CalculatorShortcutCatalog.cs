@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
+using Redmond.Shortcuts;
 
 namespace Calculator.Shortcuts;
 
