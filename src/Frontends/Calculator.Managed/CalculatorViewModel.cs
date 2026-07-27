@@ -30,6 +30,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
     public UnitConverterViewModel Converter { get; }
 
+    public DateCalculatorViewModel DateCalculator { get; }
+
     public SettingsViewModel Settings { get; }
 
     public ScientificViewModel Scientific { get; }
@@ -55,6 +57,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(IsCalculatorMode))]
     [NotifyPropertyChangedFor(nameof(IsStandardOrScientificMode))]
     [NotifyPropertyChangedFor(nameof(IsUnitConverterMode))]
+    [NotifyPropertyChangedFor(nameof(IsDateCalculatorMode))]
     [NotifyPropertyChangedFor(nameof(IsHistoryPaneVisible))]
     [NotifyPropertyChangedFor(nameof(IsDockedHistoryPaneVisible))]
     [NotifyPropertyChangedFor(nameof(IsNarrowHistoryPaneVisible))]
@@ -124,6 +127,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public bool IsCalculatorMode => IsStandardMode || IsScientificMode || IsProgrammerMode;
     public bool IsStandardOrScientificMode => IsStandardMode || IsScientificMode;
     public bool IsUnitConverterMode => CurrentViewMode is >= CalculatorViewMode.Volume and <= CalculatorViewMode.Angle;
+    public bool IsDateCalculatorMode => CurrentViewMode == CalculatorViewMode.Date;
 
     [ObservableProperty]
     public partial uint OpenParenthesisCount { get; private set; }
@@ -247,6 +251,34 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
                 appResources.GetString("HistoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
                 appResources.GetString("DeleteHistoryMenuItem/Text")));
         History.PropertyChanged += (_, _) => NotifyHistoryVisibilityChanged();
+        DateCalculator = new DateCalculatorViewModel(
+            new DateCalculatorStrings(
+                appResources.GetString("Date_DifferenceOption.Content"),
+                appResources.GetString("Date_AddSubtractOption.Content"),
+                appResources.GetString("DateCalculationOption.[using:Windows.UI.Xaml.Automation]AutomationProperties.Name"),
+                appResources.GetString("DateDiff_FromHeader.Header"),
+                appResources.GetString("DateDiff_ToHeader.Header"),
+                appResources.GetString("Date_DifferenceLabel.Text"),
+                appResources.GetString("AddOption.Content"),
+                appResources.GetString("SubtractOption.Content"),
+                appResources.GetString("YearsLabel.Text"),
+                appResources.GetString("MonthsLabel.Text"),
+                appResources.GetString("DaysLabel.Text"),
+                appResources.GetString("DateLabel.Text"),
+                appResources.GetString("Date_SameDates"),
+                appResources.GetString("Date_Day"),
+                appResources.GetString("Date_Days"),
+                appResources.GetString("Date_Week"),
+                appResources.GetString("Date_Weeks"),
+                appResources.GetString("Date_Month"),
+                appResources.GetString("Date_Months"),
+                appResources.GetString("Date_Year"),
+                appResources.GetString("Date_Years"),
+                appResources.GetString("Date_OutOfBoundMessage"),
+                appResources.GetString("CalculationFailed"),
+                appResources.GetString("Date_DifferenceResultAutomationName"),
+                appResources.GetString("Date_ResultingDateAutomationName")),
+            numberCulture);
         var regionCode = GetCurrentRegionCode();
         Converter = new UnitConverterViewModel(
             new NativeUnitConverter(appResources, regionCode, numberFormat),
@@ -747,7 +779,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         CalculatorNavigationItems.Add(new(CalculatorViewMode.Programmer, CalculatorNavigationGroup.Calculator,
             resources.GetString("ProgrammerModeText"), "\uECCE", true));
         CalculatorNavigationItems.Add(new(CalculatorViewMode.Date, CalculatorNavigationGroup.Calculator,
-            resources.GetString("DateCalculationModeText"), "\uE787", false));
+            resources.GetString("DateCalculationModeText"), "\uE787", true));
 
         // Currency remains disabled until its HTTP/cache loader is made portable.
         AddConverterNavigationItem(resources, CalculatorViewMode.Currency, "CategoryName_CurrencyText", "\uEB0D", false);

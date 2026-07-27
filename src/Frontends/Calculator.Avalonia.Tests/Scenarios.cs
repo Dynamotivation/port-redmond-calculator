@@ -96,6 +96,16 @@ internal static class Scenarios
 
         Mode("converter-dark-default", CalculatorViewMode.Length, 524, 773, ThemeVariant.Dark, Opaque),
         Mode("converter-light-default", CalculatorViewMode.Length, 524, 773, ThemeVariant.Light, Opaque),
+        DateDifference("date-dark-difference", ThemeVariant.Dark),
+        DateDifference("date-light-difference", ThemeVariant.Light),
+        new("date-dark-add", 524, 773, ThemeVariant.Dark, Opaque,
+            vm =>
+            {
+                SwitchTo(vm, CalculatorViewMode.Date);
+                vm.DateCalculator.SelectedCalculationIndex = 1;
+                vm.DateCalculator.StartDate = new DateTime(2024, 1, 31);
+                vm.DateCalculator.MonthsOffset = 1;
+            }),
 
         new("settings-dark", 524, 773, ThemeVariant.Dark, Opaque,
             vm => vm.OpenSettingsCommand.Execute(null)),
@@ -224,6 +234,15 @@ internal static class Scenarios
         ThemeVariant theme,
         AppSettings settings) =>
         new(name, width, height, theme, settings, vm => SwitchTo(vm, mode));
+
+    private static Scenario DateDifference(string name, ThemeVariant theme) =>
+        new(name, 524, 773, theme, Opaque,
+            vm =>
+            {
+                SwitchTo(vm, CalculatorViewMode.Date);
+                vm.DateCalculator.FromDate = new DateTime(2024, 1, 1);
+                vm.DateCalculator.ToDate = new DateTime(2025, 2, 10);
+            });
 
     private static void SwitchTo(CalculatorViewModel viewModel, CalculatorViewMode mode)
     {

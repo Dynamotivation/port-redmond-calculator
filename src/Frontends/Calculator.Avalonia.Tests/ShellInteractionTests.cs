@@ -17,6 +17,7 @@ internal static class ShellInteractionTests
         ("closed navigation toggle remains hit-testable", ClosedNavigationToggleRemainsHitTestable),
         ("Alt+2 navigates from settings", AltTwoNavigatesFromSettings),
         ("Alt+H toggles navigation pane", AltHTogglesNavigationPane),
+        ("date navigation shortcuts select date calculation", DateNavigationShortcutsSelectDateCalculation),
         ("opening shell surfaces transfers focus", OpeningShellSurfacesTransfersFocus),
     ];
 
@@ -90,6 +91,22 @@ internal static class ShellInteractionTests
             focused is Visual { IsEffectivelyVisible: true } visual
             && visual.GetVisualAncestors().Any(ancestor => ancestor is SettingsView),
             "opening settings should focus its first interactive control");
+    });
+
+    private static void DateNavigationShortcutsSelectDateCalculation() => Run((window, viewModel) =>
+    {
+        window.KeyPressQwerty(PhysicalKey.Digit5, RawInputModifiers.Alt);
+        Pump();
+        Assert(viewModel.IsDateCalculatorMode, "Alt+5 should select Date Calculation");
+        Assert(
+            window.FocusManager?.GetFocusedElement() is Control { Name: "CalculationModeSelector" },
+            "Date Calculation should focus its calculation-mode selector");
+
+        viewModel.TrySelectNavigationMode(CalculatorViewMode.Standard);
+        Pump();
+        window.KeyPressQwerty(PhysicalKey.E, RawInputModifiers.Control);
+        Pump();
+        Assert(viewModel.IsDateCalculatorMode, "Ctrl+E should select Date Calculation");
     });
 
     private static void Run(Action<MainWindow, CalculatorViewModel> body)
