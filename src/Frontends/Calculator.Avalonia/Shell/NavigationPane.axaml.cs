@@ -1,4 +1,7 @@
+using System.Linq;
 using Avalonia.Controls;
+using Avalonia.VisualTree;
+using Calculator.Managed;
 
 namespace Calculator.Avalonia.Shell;
 
@@ -14,4 +17,20 @@ namespace Calculator.Avalonia.Shell;
 public partial class NavigationPane : UserControl
 {
     public NavigationPane() => InitializeComponent();
+
+    public void FocusSelectedItem()
+    {
+        var selected = this.GetVisualDescendants()
+            .OfType<Button>()
+            .FirstOrDefault(button =>
+                button.IsEffectivelyVisible
+                && button.IsEnabled
+                && button.DataContext is CalculatorNavigationItem { IsSelected: true });
+        (selected ?? this.GetVisualDescendants()
+            .OfType<Button>()
+            .FirstOrDefault(button => button.IsEffectivelyVisible && button.IsEnabled))
+            ?.Focus();
+    }
+
+    public void FocusToggle() => NavigationToggleButton.Focus();
 }

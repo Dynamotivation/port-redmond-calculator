@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Calculator.Avalonia.Views;
 using Calculator.Managed;
 
 namespace Calculator.Avalonia.Tests;
@@ -14,6 +15,9 @@ internal static class ShellInteractionTests
     public static IReadOnlyList<(string Name, Action Run)> All =>
     [
         ("closed navigation toggle remains hit-testable", ClosedNavigationToggleRemainsHitTestable),
+        ("Alt+2 navigates from settings", AltTwoNavigatesFromSettings),
+        ("Alt+H toggles navigation pane", AltHTogglesNavigationPane),
+        ("opening shell surfaces transfers focus", OpeningShellSurfacesTransfersFocus),
     ];
 
     private static void ClosedNavigationToggleRemainsHitTestable()
@@ -42,6 +46,67 @@ internal static class ShellInteractionTests
             Assert(
                 toggle.GetVisualAncestors().OfType<InputElement>().All(element => element.IsHitTestVisible),
                 "a navigation toggle ancestor blocks pointer input while the pane is closed");
+        }
+        finally
+        {
+            window.Close();
+            Dispatcher.UIThread.RunJobs();
+        }
+    }
+
+    private static void AltTwoNavigatesFromSettings() => Run((window, viewModel) =>
+    {
+        viewModel.OpenSettingsCommand.Execute(null);
+        Pump();
+        Assert(viewModel.IsSettingsOpen, "settings should be open before Alt+2");
+
+        window.KeyPressQwerty(PhysicalKey.Digit2, RawInputModifiers.Alt);
+        Pump();
+        Assert(viewModel.IsScientificMode, "Alt+2 should select scientific mode");
+        Assert(!viewModel.IsSettingsOpen, "Alt+2 should close settings");
+    });
+
+    private static void AltHTogglesNavigationPane() => Run((window, viewModel) =>
+    {
+        Assert(!viewModel.IsNavigationPaneOpen, "navigation pane should start closed");
+        window.KeyPressQwerty(PhysicalKey.H, RawInputModifiers.Alt);
+        Pump();
+        Assert(viewModel.IsNavigationPaneOpen, "Alt+H should open the navigation pane");
+    });
+
+    private static void OpeningShellSurfacesTransfersFocus() => Run((window, viewModel) =>
+    {
+        viewModel.ToggleNavigationPaneCommand.Execute(null);
+        Pump();
+        var focused = window.FocusManager?.GetFocusedElement();
+        Assert(
+            focused is Button { DataContext: CalculatorNavigationItem { IsSelected: true } },
+            "opening navigation should focus the selected navigation item");
+
+        viewModel.OpenSettingsCommand.Execute(null);
+        Pump();
+        focused = window.FocusManager?.GetFocusedElement();
+        Assert(
+            focused is Visual { IsEffectivelyVisible: true } visual
+            && visual.GetVisualAncestors().Any(ancestor => ancestor is SettingsView),
+            "opening settings should focus its first interactive control");
+    });
+
+    private static void Run(Action<MainWindow, CalculatorViewModel> body)
+    {
+        Application.Current!.RequestedThemeVariant = ThemeVariant.Dark;
+        var window = new MainWindow(new AppSettings(
+            AppThemePreference.Dark,
+            "Inter",
+            UseMicaEffect: false,
+            WindowCornerStyle.Windows11,
+            WindowControlStyle.Windows11));
+
+        try
+        {
+            window.Show();
+            Pump();
+            body(window, (CalculatorViewModel)window.DataContext!);
         }
         finally
         {

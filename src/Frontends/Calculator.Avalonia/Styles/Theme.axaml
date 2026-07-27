@@ -114,9 +114,14 @@
             Classes.selected="{Binding IsSelected}"
             IsEnabled="{Binding IsEnabled}"
             AutomationProperties.Name="{Binding Name}"
+            AutomationProperties.AccessKey="{Binding AccessKey}"
             Command="{Binding $parent[Window].DataContext.SelectNavigationItemCommand}"
             CommandParameter="{Binding}">
       <Grid ColumnDefinitions="4,38,*">
+        <!-- Registers the localized UWP access-key sequence while the custom
+             icon/text layout remains the visible button content. -->
+        <AccessText Text="{Binding AccessKeyText}" Width="0" Height="0"
+                    Opacity="0" IsHitTestVisible="False" />
         <Border Width="3" Height="18" CornerRadius="2" VerticalAlignment="Center"
                 Background="{DynamicResource AccentButtonBrush}"
                 IsVisible="{Binding IsSelected}" />

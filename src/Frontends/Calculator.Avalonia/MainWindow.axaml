@@ -94,7 +94,7 @@
 
       <views:ScientificCalculatorView x:Name="ScientificView" Grid.Row="5" />
 
-      <views:UnitConverterView Grid.Row="1" Grid.RowSpan="5" />
+      <views:UnitConverterView x:Name="ConverterView" Grid.Row="1" Grid.RowSpan="5" />
 
       </local:NavigationCulledGrid>
 
@@ -104,7 +104,7 @@
 
       <!-- Source NavigationView replacement. The pane overlays content in the
            original LeftMinimal mode and keeps the title bar unobstructed. -->
-      <shell:NavigationPane Grid.Row="0" Grid.RowSpan="6" />
+      <shell:NavigationPane x:Name="ShellNavigation" Grid.Row="0" Grid.RowSpan="6" />
 
       <!-- UWP uses Flyout Placement="Full" with BackgroundSmokeFill here.
            Keep this after the NavigationView toggle so the flyout owns the
@@ -116,7 +116,7 @@
                             SheetHeight="{Binding #CalculatorKeypadRegion.Bounds.Height}" />
       </Grid>
 
-      <views:SettingsView Grid.Row="1" Grid.RowSpan="6" />
+      <views:SettingsView x:Name="SettingsPage" Grid.Row="1" Grid.RowSpan="6" />
     </Grid>
     </Border>
 

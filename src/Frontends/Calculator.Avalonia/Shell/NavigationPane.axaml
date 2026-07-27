@@ -52,6 +52,7 @@
           <Border Grid.Row="2" Height="1" Margin="0" VerticalAlignment="Top"
                   Background="{DynamicResource DividerBrush}" />
           <Button Grid.Row="2" Classes="navigationItem" Margin="4,16,8,4"
+                  TabIndex="3"
                   AutomationProperties.Name="{Binding SettingsName}"
                   Command="{Binding OpenSettingsCommand}">
             <Grid ColumnDefinitions="4,38,*">
@@ -67,11 +68,15 @@
 
     <Button x:Name="NavigationToggleButton"
             Classes="chromeButton navigationToggle" Margin="5,9,5,3"
+            TabIndex="1" AutomationProperties.AccessKey="Alt+H"
             AutomationProperties.Name="Switch calculator mode"
             IsVisible="{Binding !IsAlwaysOnTop}"
             IsHitTestVisible="{Binding CanInteractWithNavigationToggle}"
             Command="{Binding ToggleNavigationPaneCommand}">
       <Grid Width="24" Height="24">
+        <!-- AccessText performs the real Avalonia access-key registration;
+             it is visually collapsed because the hamburger glyph is custom. -->
+        <AccessText Text="_H" Width="0" Height="0" Opacity="0" IsHitTestVisible="False" />
         <Canvas Classes="hamburgerGlyph" Width="24" Height="24">
           <Path Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
                 Data="M 3,6 L 21,6 M 3,12 L 21,12 M 3,18 L 21,18" />

@@ -38,6 +38,14 @@ public partial class MainWindow : Window
         "calculator",
         "programmer",
     };
+    private readonly IReadOnlySet<string> _navigationShortcutScope = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "navigation",
+    };
+    private readonly IReadOnlySet<string> _converterShortcutScope = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "converter",
+    };
     private readonly IWindowPresentationService _presentation;
     private AppSettings _settings;
 
@@ -79,7 +87,7 @@ public partial class MainWindow : Window
         TitleBarChrome.CloseRequested += TitleBarChrome_OnCloseRequested;
         TitleBarChrome.AlwaysOnTopToggleRequested += TitleBarChrome_OnAlwaysOnTopToggleRequested;
         _shortcutPressedTargets =
-            [MemoryRow, StandardView, ScientificView, ScientificControls, ProgrammerView];
+            [MemoryRow, StandardView, ScientificView, ScientificControls, ProgrammerView, ConverterView];
         NarrowHistory.DismissRequested += NarrowHistory_OnDismissRequested;
         Deactivated += OnWindowDeactivated;
         SizeChanged += (_, _) => UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
@@ -178,6 +186,22 @@ public partial class MainWindow : Window
             UpdateCalculatorModeLayout();
             UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
         }
+        else if (e.PropertyName == nameof(CalculatorViewModel.IsNavigationPaneOpen))
+        {
+            Dispatcher.UIThread.Post(
+                _viewModel.IsNavigationPaneOpen
+                    ? ShellNavigation.FocusSelectedItem
+                    : ShellNavigation.FocusToggle,
+                DispatcherPriority.Input);
+        }
+        else if (e.PropertyName == nameof(CalculatorViewModel.IsSettingsOpen))
+        {
+            Dispatcher.UIThread.Post(
+                _viewModel.IsSettingsOpen
+                    ? SettingsPage.FocusFirstInteractiveControl
+                    : ShellNavigation.FocusToggle,
+                DispatcherPriority.Input);
+        }
     }
 
     private void UpdateCalculatorModeLayout()
@@ -210,43 +234,65 @@ public partial class MainWindow : Window
 
     private void OnCalculatorKeyDown(object? sender, KeyEventArgs e)
     {
-        if (!_viewModel.IsCalculatorMode || _viewModel.IsSettingsOpen || _viewModel.IsNavigationPaneOpen)
-        {
-            return;
-        }
-
         if (!TryCreateShortcutInput(e, out var input))
         {
             return;
         }
 
-        var result = _shortcutService.Process(
-            input,
-            _viewModel.IsScientificMode
-                ? _scientificShortcutScope
-                : _viewModel.IsProgrammerMode
-                    ? _programmerShortcutScope
-                    : _calculatorShortcutScope);
-        if (!result.WasMatched
-            && OperatingSystem.IsMacOS()
-            && input.Gesture.Modifiers.HasFlag(ShortcutModifiers.Command)
-            && input.Gesture.Key.Value is "C" or "V")
+        // Navigation is a shell scope, so it remains active while settings or
+        // the navigation pane has focus and before any page-specific routing.
+        var result = ProcessShortcut(input, _navigationShortcutScope);
+        if (result.WasMatched)
         {
-            // The source catalog intentionally preserves Microsoft's Ctrl+C/V
-            // declarations. At the platform boundary only, treat the native
-            // macOS Command modifier as Control for those two editing commands.
-            var normalizedModifiers = (input.Gesture.Modifiers & ~ShortcutModifiers.Command)
-                | ShortcutModifiers.Control;
-            input = new ShortcutInput(new ShortcutGesture(input.Gesture.Key, normalizedModifiers), input.IsRepeat);
-            result = _shortcutService.Process(input, _calculatorShortcutScope);
+            if (DispatchCalculatorShortcut(result[0].ShortcutId))
+            {
+                e.Handled = result.Handled;
+            }
+            return;
         }
+
+        // Page shortcuts must not leak through an open shell surface.
+        if (_viewModel.IsSettingsOpen || _viewModel.IsNavigationPaneOpen)
+        {
+            return;
+        }
+
+        if (_viewModel.IsCalculatorMode)
+        {
+            result = ProcessShortcut(
+                input,
+                _viewModel.IsScientificMode
+                    ? _scientificShortcutScope
+                    : _viewModel.IsProgrammerMode
+                        ? _programmerShortcutScope
+                        : _calculatorShortcutScope);
+        }
+        else if (_viewModel.IsUnitConverterMode)
+        {
+            // Converter-specific definitions win collisions such as F9. Digits,
+            // decimal, clear and backspace intentionally remain in Microsoft's
+            // shared calculator scope, so fall back to that scope afterwards.
+            result = ProcessShortcut(input, _converterShortcutScope);
+            if (!result.WasMatched)
+            {
+                result = ProcessShortcut(input, _calculatorShortcutScope);
+            }
+        }
+        else
+        {
+            return;
+        }
+
         if (!result.WasMatched)
         {
             return;
         }
 
         var match = result[0];
-        if (DispatchCalculatorShortcut(match.ShortcutId))
+        var dispatched = _viewModel.IsUnitConverterMode
+            ? _viewModel.Converter.TryDispatchShortcut(match.ShortcutId)
+            : DispatchCalculatorShortcut(match.ShortcutId);
+        if (dispatched)
         {
             // Holding a key that maps to a different button than the one this
             // key last pressed has to release the earlier one first.
@@ -265,7 +311,33 @@ public partial class MainWindow : Window
             }
         }
 
-        e.Handled = result.Handled;
+        // Observe-only or unsupported page gestures (notably Space on a
+        // focused converter ComboBox) continue to Avalonia's control handling.
+        e.Handled = dispatched && result.Handled;
+    }
+
+    private ShortcutProcessResult ProcessShortcut(
+        ShortcutInput input,
+        IReadOnlySet<string> scope)
+    {
+        var result = _shortcutService.Process(input, scope);
+        if (result.WasMatched
+            || !OperatingSystem.IsMacOS()
+            || !input.Gesture.Modifiers.HasFlag(ShortcutModifiers.Command)
+            || input.Gesture.Key.Value is not ("C" or "V"))
+        {
+            return result;
+        }
+
+        // The source catalog intentionally preserves Microsoft's Ctrl+C/V
+        // declarations. At the platform boundary only, treat native Command as
+        // Control for those two editing commands.
+        var normalizedModifiers = (input.Gesture.Modifiers & ~ShortcutModifiers.Command)
+            | ShortcutModifiers.Control;
+        var normalizedInput = new ShortcutInput(
+            new ShortcutGesture(input.Gesture.Key, normalizedModifiers),
+            input.IsRepeat);
+        return _shortcutService.Process(normalizedInput, scope);
     }
 
     private void OnCalculatorKeyUp(object? sender, KeyEventArgs e)
@@ -365,6 +437,13 @@ public partial class MainWindow : Window
         else if (TryMapFallbackKey(e.Key, modifiers, out var fallbackKey))
         {
             shortcutKey = fallbackKey;
+            if ((modifiers & (ShortcutModifiers.Control | ShortcutModifiers.Alt | ShortcutModifiers.Command)) != 0
+                && fallbackKey.Kind == ShortcutKeyKind.Character
+                && fallbackKey.Value.Length == 1
+                && char.IsLetterOrDigit(fallbackKey.Value[0]))
+            {
+                shortcutKey = ShortcutKey.Named(fallbackKey.Value.ToUpperInvariant());
+            }
             if (fallbackKey.Kind == ShortcutKeyKind.Character)
             {
                 modifiers &= ~ShortcutModifiers.Shift;
@@ -394,10 +473,16 @@ public partial class MainWindow : Window
             Key.Escape => "ESCAPE",
             Key.Delete => "DELETE",
             Key.Back => "BACK",
+            Key.Space => "SPACE",
+            Key.Up => "UP",
+            Key.Down => "DOWN",
+            Key.Left => "LEFT",
+            Key.Right => "RIGHT",
             Key.Decimal or Key.OemPeriod or Key.OemComma => "DECIMAL",
             Key.F3 => "F3",
             Key.F4 => "F4",
             Key.F5 => "F5",
+            Key.F9 => "F9",
             >= Key.A and <= Key.Z => key.ToString().ToUpperInvariant(),
             _ => string.Empty,
         };
@@ -454,6 +539,18 @@ public partial class MainWindow : Window
             case CalculatorShortcutOutcome.PasteExpression:
                 _ = PasteFromClipboardAsync();
                 return true;
+            case CalculatorShortcutOutcome.EnterAlwaysOnTop:
+                if (_viewModel.IsStandardMode && !_viewModel.IsAlwaysOnTop)
+                {
+                    _presentation.EnterCompactOverlay();
+                }
+                return true;
+            case CalculatorShortcutOutcome.ExitAlwaysOnTop:
+                if (_viewModel.IsAlwaysOnTop)
+                {
+                    _presentation.ExitCompactOverlay();
+                }
+                return true;
             case CalculatorShortcutOutcome.Handled:
                 return true;
             default:
@@ -466,7 +563,10 @@ public partial class MainWindow : Window
         var clipboard = Clipboard;
         if (clipboard is not null)
         {
-            await clipboard.SetTextAsync(_viewModel.PrimaryDisplay);
+            await clipboard.SetTextAsync(
+                _viewModel.IsUnitConverterMode
+                    ? _viewModel.Converter.FromDisplay
+                    : _viewModel.PrimaryDisplay);
         }
     }
 
@@ -479,7 +579,14 @@ public partial class MainWindow : Window
         }
 
         var text = await clipboard.TryGetTextAsync();
-        _viewModel.TryPasteStandardExpression(text);
+        if (_viewModel.IsUnitConverterMode)
+        {
+            _viewModel.Converter.TryPaste(text, _viewModel.DecimalSeparator);
+        }
+        else
+        {
+            _viewModel.TryPasteStandardExpression(text);
+        }
     }
 
     /// <summary>

@@ -1,7 +1,10 @@
 using System;
+using System.Linq;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 
 namespace Calculator.Avalonia.Views;
 
@@ -17,6 +20,15 @@ namespace Calculator.Avalonia.Views;
 public partial class SettingsView : UserControl
 {
     public SettingsView() => InitializeComponent();
+
+    public void FocusFirstInteractiveControl() =>
+        this.GetVisualDescendants()
+            .OfType<InputElement>()
+            .FirstOrDefault(element =>
+                element.Focusable
+                && element.IsEffectivelyVisible
+                && element.IsEffectivelyEnabled)
+            ?.Focus();
 
     private async void License_OnClick(object? sender, RoutedEventArgs e) =>
         await LaunchAsync("https://github.com/microsoft/calculator/blob/main/LICENSE");

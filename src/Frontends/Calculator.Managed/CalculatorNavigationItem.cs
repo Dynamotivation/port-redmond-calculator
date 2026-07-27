@@ -37,13 +37,16 @@ public sealed partial class CalculatorNavigationItem(
     CalculatorNavigationGroup group,
     string name,
     string glyph,
-    bool isEnabled) : ObservableObject
+    bool isEnabled,
+    string accessKey = "") : ObservableObject
 {
     public CalculatorViewMode Mode { get; } = mode;
     public CalculatorNavigationGroup Group { get; } = group;
     public string Name { get; } = name;
     public string Glyph { get; } = glyph;
     public bool IsEnabled { get; } = isEnabled;
+    public string AccessKey { get; } = accessKey;
+    public string AccessKeyText => string.IsNullOrEmpty(AccessKey) ? string.Empty : $"_{AccessKey}";
 
     [ObservableProperty]
     public partial bool IsSelected { get; set; }

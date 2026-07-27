@@ -14,6 +14,8 @@ public enum CalculatorShortcutOutcome
     Handled,
     CopyDisplay,
     PasteExpression,
+    EnterAlwaysOnTop,
+    ExitAlwaysOnTop,
 }
 
 /// <summary>
@@ -214,9 +216,37 @@ public static class CalculatorShortcutRouter
             case "gradButton": if (!viewModel.IsError) viewModel.ExecuteCalculatorCommand(CalculatorCommand.Grads); break;
             case "ftoeButton": if (!viewModel.IsError) viewModel.Scientific.ToggleNotationCommand.Execute(null); break;
             case "copyButton":
-            case "copyButtonAlternate": return CalculatorShortcutOutcome.CopyDisplay;
+            case "copyButtonAlternate":
+            case "navigation.copy":
+            case "navigation.copyAlternate": return CalculatorShortcutOutcome.CopyDisplay;
             case "pasteButton":
-            case "pasteButtonAlternate": return CalculatorShortcutOutcome.PasteExpression;
+            case "pasteButtonAlternate":
+            case "navigation.paste":
+            case "navigation.pasteAlternate": return CalculatorShortcutOutcome.PasteExpression;
+            case "navigation.standard":
+                return viewModel.TrySelectNavigationMode(CalculatorViewMode.Standard)
+                    ? CalculatorShortcutOutcome.Handled
+                    : CalculatorShortcutOutcome.NotHandled;
+            case "navigation.scientific":
+                return viewModel.TrySelectNavigationMode(CalculatorViewMode.Scientific)
+                    ? CalculatorShortcutOutcome.Handled
+                    : CalculatorShortcutOutcome.NotHandled;
+            case "navigation.programmer":
+                return viewModel.TrySelectNavigationMode(CalculatorViewMode.Programmer)
+                    ? CalculatorShortcutOutcome.Handled
+                    : CalculatorShortcutOutcome.NotHandled;
+            // Graphing and date calculation are represented in the source
+            // shortcut catalog, but their navigation items stay disabled until
+            // those pages are ported. Swallowing the accelerators matches the
+            // disabled UWP NavigationView items without routing into a stub.
+            case "navigation.graphing":
+            case "navigation.date":
+            case "navigation.dateCalculation": return CalculatorShortcutOutcome.Handled;
+            case "navigation.pane.toggle":
+                viewModel.ToggleNavigationPaneCommand.Execute(null);
+                return CalculatorShortcutOutcome.Handled;
+            case "window.alwaysOnTop.enter": return CalculatorShortcutOutcome.EnterAlwaysOnTop;
+            case "window.alwaysOnTop.exit": return CalculatorShortcutOutcome.ExitAlwaysOnTop;
             default: return CalculatorShortcutOutcome.NotHandled;
         }
 

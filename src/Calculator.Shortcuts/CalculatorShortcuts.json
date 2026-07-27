@@ -2198,6 +2198,25 @@
       }
     },
     {
+      "id": "navigation.pane.toggle",
+      "scope": "navigation",
+      "source": "UwpNavigation",
+      "description": "Open or close the navigation pane",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "H"
+            },
+            "modifiers": [
+              "Alt"
+            ]
+          }
+        ]
+      }
+    },
+    {
       "id": "navigation.standard",
       "scope": "navigation",
       "source": "UwpNavigation",
