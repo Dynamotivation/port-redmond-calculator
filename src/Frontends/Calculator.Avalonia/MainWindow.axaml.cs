@@ -14,6 +14,7 @@ using Calculator.Avalonia.Services;
 using Calculator.Avalonia.Services.Platform;
 using Calculator.Managed;
 using Calculator.Shortcuts;
+using Redmond.Shortcuts;
 
 namespace Calculator.Avalonia;
 
@@ -100,10 +101,8 @@ public partial class MainWindow : Window
             AppSettingsStore.Save(_settings);
         }
         var presentation = new WindowPresentationService(
-            this, _viewModel, () => _settings.ToPlatformAppearance(), enableNativeEffects);
+            this, WindowSurface, _viewModel, appearance, enableNativeEffects);
         _presentation = presentation;
-        presentation.ApplyWindowDecorations(appearance);
-        Opened += (_, _) => _presentation.OnWindowOpened(appearance);
         Closed += (_, _) =>
         {
             _presentation.Dispose();
@@ -636,23 +635,6 @@ public partial class MainWindow : Window
             BeginMoveDrag(e);
         }
     }
-
-    private void BeginResize(WindowEdge edge, PointerPressedEventArgs e)
-    {
-        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-        {
-            BeginResizeDrag(edge, e);
-        }
-    }
-
-    private void ResizeNorthWest_OnPointerPressed(object? sender, PointerPressedEventArgs e) => BeginResize(WindowEdge.NorthWest, e);
-    private void ResizeNorth_OnPointerPressed(object? sender, PointerPressedEventArgs e) => BeginResize(WindowEdge.North, e);
-    private void ResizeNorthEast_OnPointerPressed(object? sender, PointerPressedEventArgs e) => BeginResize(WindowEdge.NorthEast, e);
-    private void ResizeWest_OnPointerPressed(object? sender, PointerPressedEventArgs e) => BeginResize(WindowEdge.West, e);
-    private void ResizeEast_OnPointerPressed(object? sender, PointerPressedEventArgs e) => BeginResize(WindowEdge.East, e);
-    private void ResizeSouthWest_OnPointerPressed(object? sender, PointerPressedEventArgs e) => BeginResize(WindowEdge.SouthWest, e);
-    private void ResizeSouth_OnPointerPressed(object? sender, PointerPressedEventArgs e) => BeginResize(WindowEdge.South, e);
-    private void ResizeSouthEast_OnPointerPressed(object? sender, PointerPressedEventArgs e) => BeginResize(WindowEdge.SouthEast, e);
 
     private void TitleBarChrome_OnMinimizeRequested(object? sender, EventArgs e) =>
         WindowState = WindowState.Minimized;

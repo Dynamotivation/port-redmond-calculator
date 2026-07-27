@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="CalculatorShortcuts.json" LogicalName="Calculator.Shortcuts.CalculatorShortcuts.json" />
+    <ProjectReference Include="../../redmond-commons/Redmond.Shortcuts/Redmond.Shortcuts.csproj" />
   </ItemGroup>
 
 </Project>

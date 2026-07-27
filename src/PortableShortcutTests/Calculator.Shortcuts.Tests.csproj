@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Calculator.Shortcuts\Calculator.Shortcuts.csproj" />
+    <ProjectReference Include="..\..\redmond-commons\Redmond.Shortcuts\Redmond.Shortcuts.csproj" />
   </ItemGroup>
 
 </Project>

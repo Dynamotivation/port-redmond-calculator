@@ -6,6 +6,7 @@
         xmlns:shell="using:Calculator.Avalonia.Shell"
         xmlns:controls="using:Calculator.Avalonia.Controls"
         xmlns:views="using:Calculator.Avalonia.Views"
+        xmlns:shared="using:Redmond.Avalonia.Controls"
         x:Class="Calculator.Avalonia.MainWindow"
         x:DataType="managed:CalculatorViewModel"
         Width="524" Height="773"
@@ -19,7 +20,8 @@
         Title="{Binding ApplicationName}">
 
   <Grid>
-    <Border Classes="windowSurface"
+    <Border x:Name="WindowSurface"
+            Classes="windowSurface"
             Classes.noBackdrop="{Binding !Settings.UseMicaEffect}"
             Classes.inactive="{Binding !IsActive, RelativeSource={RelativeSource AncestorType=Window}}"
             Classes.nativeFrame="{Binding UsesNativeWindowGeometry}"
@@ -121,26 +123,8 @@
     </Grid>
     </Border>
 
-    <!-- Custom chrome removes the native frame, so retain native resizing through
-         narrow hit targets at each edge and corner. -->
-    <Grid RowDefinitions="7,*,7" ColumnDefinitions="7,*,7"
-          IsVisible="{Binding UsesCustomResizeHandles}">
-      <Border Grid.Row="0" Grid.Column="0" Background="Transparent"
-              PointerPressed="ResizeNorthWest_OnPointerPressed" />
-      <Border Grid.Row="0" Grid.Column="1" Background="Transparent"
-              PointerPressed="ResizeNorth_OnPointerPressed" />
-      <Border Grid.Row="0" Grid.Column="2" Background="Transparent"
-              PointerPressed="ResizeNorthEast_OnPointerPressed" />
-      <Border Grid.Row="1" Grid.Column="0" Background="Transparent"
-              PointerPressed="ResizeWest_OnPointerPressed" />
-      <Border Grid.Row="1" Grid.Column="2" Background="Transparent"
-              PointerPressed="ResizeEast_OnPointerPressed" />
-      <Border Grid.Row="2" Grid.Column="0" Background="Transparent"
-              PointerPressed="ResizeSouthWest_OnPointerPressed" />
-      <Border Grid.Row="2" Grid.Column="1" Background="Transparent"
-              PointerPressed="ResizeSouth_OnPointerPressed" />
-      <Border Grid.Row="2" Grid.Column="2" Background="Transparent"
-              PointerPressed="ResizeSouthEast_OnPointerPressed" />
-    </Grid>
+    <!-- Custom chrome removes the native frame, so retain native resizing
+         through the shared edge and corner hit targets. -->
+    <shared:WindowResizeHandles IsVisible="{Binding UsesCustomResizeHandles}" />
   </Grid>
 </Window>

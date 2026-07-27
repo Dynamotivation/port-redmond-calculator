@@ -21,12 +21,6 @@ public interface IWindowPresentationService
     /// </summary>
     void ApplyAppearance(PlatformAppearancePreferences preferences);
 
-    /// <summary>
-    /// Called once the window is on screen; native decorations cannot be
-    /// applied before a platform handle exists.
-    /// </summary>
-    void OnWindowOpened(PlatformAppearancePreferences preferences);
-
     /// <summary>Shrinks to the compact always-on-top presentation.</summary>
     void EnterCompactOverlay();
 
