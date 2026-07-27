@@ -39,6 +39,10 @@ public partial class MainWindow : Window
         "calculator",
         "programmer",
     };
+    private readonly IReadOnlySet<string> _graphingShortcutScope = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "graphing",
+    };
     private readonly IReadOnlySet<string> _navigationShortcutScope = new HashSet<string>(StringComparer.Ordinal)
     {
         "navigation",
@@ -190,6 +194,10 @@ public partial class MainWindow : Window
             {
                 Dispatcher.UIThread.Post(DateView.FocusDefault, DispatcherPriority.Input);
             }
+            else if (_viewModel.IsGraphingMode)
+            {
+                Dispatcher.UIThread.Post(GraphingView.FocusDefault, DispatcherPriority.Input);
+            }
         }
         else if (e.PropertyName == nameof(CalculatorViewModel.IsAlwaysOnTop))
         {
@@ -292,6 +300,10 @@ public partial class MainWindow : Window
                 result = ProcessShortcut(input, _calculatorShortcutScope);
             }
         }
+        else if (_viewModel.IsGraphingMode)
+        {
+            result = ProcessShortcut(input, _graphingShortcutScope);
+        }
         else
         {
             return;
@@ -305,7 +317,9 @@ public partial class MainWindow : Window
         var match = result[0];
         var dispatched = _viewModel.IsUnitConverterMode
             ? _viewModel.Converter.TryDispatchShortcut(match.ShortcutId)
-            : DispatchCalculatorShortcut(match.ShortcutId);
+            : _viewModel.IsGraphingMode
+                ? DispatchGraphingShortcut(match.ShortcutId)
+                : DispatchCalculatorShortcut(match.ShortcutId);
         if (dispatched)
         {
             // Holding a key that maps to a different button than the one this
@@ -422,7 +436,19 @@ public partial class MainWindow : Window
 
         ShortcutKey shortcutKey;
         var symbol = e.KeySymbol;
-        if (!_viewModel.IsProgrammerMode
+        var hasCommandModifier =
+            (modifiers & (ShortcutModifiers.Control | ShortcutModifiers.Alt | ShortcutModifiers.Command)) != 0;
+        if (hasCommandModifier
+            && TryMapFallbackKey(e.Key, modifiers & ~ShortcutModifiers.Shift, out var modifiedFallbackKey)
+            && modifiedFallbackKey.Value.Length == 1
+            && char.IsLetterOrDigit(modifiedFallbackKey.Value[0]))
+        {
+            // macOS Option modifies KeySymbol (Option+3, for example, becomes
+            // '£'). Navigation accelerators describe the physical alphanumeric
+            // key, so modified chords must prefer Avalonia's physical key.
+            shortcutKey = ShortcutKey.Named(modifiedFallbackKey.Value.ToUpperInvariant());
+        }
+        else if (!_viewModel.IsProgrammerMode
             && (symbol is "." or ",")
             && modifiers is ShortcutModifiers.None or ShortcutModifiers.Shift)
         {
@@ -431,7 +457,6 @@ public partial class MainWindow : Window
         }
         else if (symbol?.Length == 1 && !char.IsControl(symbol[0]) && !char.IsWhiteSpace(symbol[0]))
         {
-            var hasCommandModifier = (modifiers & (ShortcutModifiers.Control | ShortcutModifiers.Alt | ShortcutModifiers.Command)) != 0;
             var isLetterKey = char.IsLetter(symbol[0]);
             shortcutKey = hasCommandModifier || isLetterKey
                 ? ShortcutKey.Named(symbol)
@@ -578,6 +603,23 @@ public partial class MainWindow : Window
             case CalculatorShortcutOutcome.Handled:
                 return true;
             default:
+                return false;
+        }
+    }
+
+    private bool DispatchGraphingShortcut(string shortcutId)
+    {
+        switch (shortcutId)
+        {
+            case "graphViewButton":
+                GraphingView.ResetView();
+                return true;
+            case "plotButton":
+                GraphingView.FocusGraph();
+                return true;
+            default:
+                // Character shortcuts such as x, y and ^ are catalogued for
+                // graphing but remain native TextBox input in this frontend.
                 return false;
         }
     }

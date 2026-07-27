@@ -38,6 +38,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
     public ProgrammerViewModel Programmer { get; }
 
+    public GraphingViewModel Graphing { get; }
 
 
     public bool IsHistoryPaneVisible => IsCalculatorMode && !IsAlwaysOnTop && (History.IsDocked || History.IsOpen);
@@ -54,6 +55,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(IsStandardMode))]
     [NotifyPropertyChangedFor(nameof(IsScientificMode))]
     [NotifyPropertyChangedFor(nameof(IsProgrammerMode))]
+    [NotifyPropertyChangedFor(nameof(IsGraphingMode))]
     [NotifyPropertyChangedFor(nameof(IsCalculatorMode))]
     [NotifyPropertyChangedFor(nameof(IsStandardOrScientificMode))]
     [NotifyPropertyChangedFor(nameof(IsUnitConverterMode))]
@@ -124,6 +126,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public bool CanEnterAlwaysOnTop => IsStandardMode && !IsAlwaysOnTop;
     public bool IsScientificMode => CurrentViewMode == CalculatorViewMode.Scientific;
     public bool IsProgrammerMode => CurrentViewMode == CalculatorViewMode.Programmer;
+    public bool IsGraphingMode => CurrentViewMode == CalculatorViewMode.Graphing;
     public bool IsCalculatorMode => IsStandardMode || IsScientificMode || IsProgrammerMode;
     public bool IsStandardOrScientificMode => IsStandardMode || IsScientificMode;
     public bool IsUnitConverterMode => CurrentViewMode is >= CalculatorViewMode.Volume and <= CalculatorViewMode.Angle;
@@ -251,6 +254,16 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
                 appResources.GetString("HistoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
                 appResources.GetString("DeleteHistoryMenuItem/Text")));
         History.PropertyChanged += (_, _) => NotifyHistoryVisibilityChanged();
+        Graphing = new GraphingViewModel(
+            new GraphingStrings(
+                appResources.GetString("mathRichEditBox.PlaceholderText"),
+                appResources.GetString("EquationTextBoxAddPanel/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                appResources.GetString("VaiablesHeader.Text"),
+                appResources.GetString("zoomInButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                appResources.GetString("zoomOutButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                appResources.GetString("graphViewButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                appResources.GetString("GraphSwitchToEquationMode"),
+                appResources.GetString("GraphSwitchToGraphMode")));
         DateCalculator = new DateCalculatorViewModel(
             new DateCalculatorStrings(
                 appResources.GetString("Date_DifferenceOption.Content"),
@@ -775,7 +788,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         CalculatorNavigationItems.Add(new(CalculatorViewMode.Scientific, CalculatorNavigationGroup.Calculator,
             resources.GetString("ScientificModeText"), "\uF196", true));
         CalculatorNavigationItems.Add(new(CalculatorViewMode.Graphing, CalculatorNavigationGroup.Calculator,
-            resources.GetString("GraphingCalculatorModeText"), "\uF770", false));
+            resources.GetString("GraphingCalculatorModeText"), "\uF770", true));
         CalculatorNavigationItems.Add(new(CalculatorViewMode.Programmer, CalculatorNavigationGroup.Calculator,
             resources.GetString("ProgrammerModeText"), "\uECCE", true));
         CalculatorNavigationItems.Add(new(CalculatorViewMode.Date, CalculatorNavigationGroup.Calculator,

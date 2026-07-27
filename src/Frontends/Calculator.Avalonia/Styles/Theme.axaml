@@ -51,6 +51,12 @@
         <SolidColorBrush x:Key="AccentButtonBrush" Color="#4CC2FF" />
         <SolidColorBrush x:Key="AccentButtonHoverBrush" Color="#65CAFA" />
         <SolidColorBrush x:Key="AccentButtonPressedBrush" Color="#36A9E2" />
+        <SolidColorBrush x:Key="GraphPlotBackgroundBrush" Color="#FF202020" />
+        <SolidColorBrush x:Key="GraphEquationPanelBrush" Color="#DD202020" />
+        <SolidColorBrush x:Key="GraphEquationCardBrush" Color="#E62B2B2B" />
+        <SolidColorBrush x:Key="GraphCommandPanelBrush" Color="#E62B2B2B" />
+        <SolidColorBrush x:Key="GraphGridBrush" Color="#28FFFFFF" />
+        <SolidColorBrush x:Key="GraphAxisBrush" Color="#B3FFFFFF" />
       </ResourceDictionary>
       <ResourceDictionary x:Key="Light">
         <SolidColorBrush x:Key="CalculatorBackgroundBrush" Color="#18F3F3F3" />
@@ -106,6 +112,12 @@
         <SolidColorBrush x:Key="AccentButtonBrush" Color="#0067C0" />
         <SolidColorBrush x:Key="AccentButtonHoverBrush" Color="#1975C5" />
         <SolidColorBrush x:Key="AccentButtonPressedBrush" Color="#005A9E" />
+        <SolidColorBrush x:Key="GraphPlotBackgroundBrush" Color="#FFF9F9F9" />
+        <SolidColorBrush x:Key="GraphEquationPanelBrush" Color="#DDF9F9F9" />
+        <SolidColorBrush x:Key="GraphEquationCardBrush" Color="#E6FBFBFB" />
+        <SolidColorBrush x:Key="GraphCommandPanelBrush" Color="#E6FBFBFB" />
+        <SolidColorBrush x:Key="GraphGridBrush" Color="#22000000" />
+        <SolidColorBrush x:Key="GraphAxisBrush" Color="#99000000" />
       </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
     <FontFamily x:Key="CalculatorIconFont">avares://Redmond%20Calculator/Assets/CalculatorIcons.ttf#Calculator Fluent Icons</FontFamily>

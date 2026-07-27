@@ -204,6 +204,12 @@ internal static class RouterTests
         Assert(!viewModel.IsSettingsOpen, "mode navigation should leave settings");
 
         Assert(
+            CalculatorShortcutRouter.Dispatch(viewModel, "navigation.graphing")
+                == CalculatorShortcutOutcome.Handled,
+            "Alt+4 should route to graphing");
+        Assert(viewModel.IsGraphingMode, "Alt+4 should select graphing mode");
+
+        Assert(
             CalculatorShortcutRouter.Dispatch(viewModel, "window.alwaysOnTop.enter")
                 == CalculatorShortcutOutcome.EnterAlwaysOnTop,
             "Alt+Up should be delegated to the window host");

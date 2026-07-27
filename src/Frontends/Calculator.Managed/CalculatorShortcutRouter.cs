@@ -236,7 +236,9 @@ public static class CalculatorShortcutRouter
                     ? CalculatorShortcutOutcome.Handled
                     : CalculatorShortcutOutcome.NotHandled;
             case "navigation.graphing":
-                return CalculatorShortcutOutcome.Handled;
+                return viewModel.TrySelectNavigationMode(CalculatorViewMode.Graphing)
+                    ? CalculatorShortcutOutcome.Handled
+                    : CalculatorShortcutOutcome.NotHandled;
             case "navigation.date":
             case "navigation.dateCalculation":
                 return viewModel.TrySelectNavigationMode(CalculatorViewMode.Date)

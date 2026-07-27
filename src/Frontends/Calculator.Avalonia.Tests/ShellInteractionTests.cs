@@ -16,6 +16,7 @@ internal static class ShellInteractionTests
     [
         ("closed navigation toggle remains hit-testable", ClosedNavigationToggleRemainsHitTestable),
         ("Alt+2 navigates from settings", AltTwoNavigatesFromSettings),
+        ("Alt+3 navigates to graphing", AltThreeNavigatesToGraphing),
         ("Alt+H toggles navigation pane", AltHTogglesNavigationPane),
         ("date navigation shortcuts select date calculation", DateNavigationShortcutsSelectDateCalculation),
         ("opening shell surfaces transfers focus", OpeningShellSurfacesTransfersFocus),
@@ -73,6 +74,20 @@ internal static class ShellInteractionTests
         window.KeyPressQwerty(PhysicalKey.H, RawInputModifiers.Alt);
         Pump();
         Assert(viewModel.IsNavigationPaneOpen, "Alt+H should open the navigation pane");
+    });
+
+    private static void AltThreeNavigatesToGraphing() => Run((window, viewModel) =>
+    {
+        window.KeyPressQwerty(PhysicalKey.Digit3, RawInputModifiers.Alt);
+        Pump();
+        Assert(viewModel.IsGraphingMode, "Alt+3 should select Graphing");
+        Assert(
+            window.FocusManager?.GetFocusedElement() is Control
+            {
+                Name: "Plot",
+                IsEffectivelyVisible: true,
+            },
+            "narrow Graphing navigation should focus the visible graph");
     });
 
     private static void OpeningShellSurfacesTransfersFocus() => Run((window, viewModel) =>
