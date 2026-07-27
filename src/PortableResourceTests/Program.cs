@@ -133,26 +133,28 @@ using (var viewModel = new CalculatorViewModel(
     viewModel.ExecuteCalculatorCommand(CalculatorCommand.Add);
     viewModel.ExecuteCalculatorCommand(CalculatorCommand.Two);
     viewModel.ExecuteCalculatorCommand(CalculatorCommand.Equals);
-    Require(viewModel.PrimaryDisplay == "3" && viewModel.HasHistory && viewModel.History.Count == 1,
+    Require(viewModel.PrimaryDisplay == "3"
+        && viewModel.History.HasEntries
+        && viewModel.History.Entries.Count == 1,
         "Standard calculations did not synchronize typed history from CalculatorManager.");
-    viewModel.SetHistoryDocked(false);
-    viewModel.ToggleHistoryCommand.Execute(null);
+    viewModel.History.SetDocked(false);
+    viewModel.History.ToggleCommand.Execute(null);
     Require(viewModel.IsNarrowHistoryPaneVisible && !viewModel.IsDockedHistoryPaneVisible,
         "Narrow history did not open on demand.");
-    viewModel.CloseHistoryCommand.Execute(null);
-    Require(!viewModel.IsNarrowHistoryPaneVisible && !viewModel.IsHistoryOpen,
+    viewModel.History.CloseCommand.Execute(null);
+    Require(!viewModel.IsNarrowHistoryPaneVisible && !viewModel.History.IsOpen,
         "Narrow history did not support the flyout light-dismiss path.");
-    viewModel.ToggleHistoryCommand.Execute(null);
-    viewModel.SelectHistoryEntryCommand.Execute(viewModel.History[0]);
-    Require(viewModel.PrimaryDisplay == "3" && !viewModel.IsHistoryOpen,
+    viewModel.History.ToggleCommand.Execute(null);
+    viewModel.History.SelectEntryCommand.Execute(viewModel.History.Entries[0]);
+    Require(viewModel.PrimaryDisplay == "3" && !viewModel.History.IsOpen,
         "Selecting narrow history did not restore its display and close the full-page flyout.");
-    viewModel.SetHistoryDocked(true);
-    Require(viewModel.IsDockedHistoryPaneVisible && !viewModel.IsHistoryOpen && !viewModel.IsHistoryButtonVisible,
+    viewModel.History.SetDocked(true);
+    Require(viewModel.IsDockedHistoryPaneVisible && !viewModel.History.IsOpen && !viewModel.IsHistoryButtonVisible,
         "Wide history did not switch to the source Calculator's docked state.");
     Require(viewModel.TryPasteStandardExpression("-12.5 + 2 =") && viewModel.PrimaryDisplay == "-10,5",
         $"Cross-platform Standard paste did not preserve CalculatorManager semantics or locale formatting (actual: {viewModel.PrimaryDisplay}).");
-    viewModel.ClearHistoryCommand.Execute(null);
-    Require(!viewModel.HasHistory && viewModel.History.Count == 0,
+    viewModel.History.ClearCommand.Execute(null);
+    Require(!viewModel.History.HasEntries && viewModel.History.Entries.Count == 0,
         "Clear history did not update CalculatorManager and the managed collection together.");
 
     var scientificItem = viewModel.CalculatorNavigationItems.Single(item => item.Mode == CalculatorViewMode.Scientific);
@@ -164,8 +166,9 @@ using (var viewModel = new CalculatorViewModel(
     viewModel.ExecuteCalculatorCommand(CalculatorCommand.Nine);
     viewModel.ExecuteCalculatorCommand(CalculatorCommand.SquareRoot);
     Require(viewModel.PrimaryDisplay == "3", "Scientific commands did not execute through CalculatorManager.");
-    viewModel.CycleScientificAngleCommand.Execute(null);
-    Require(viewModel.SelectedScientificAngle == CalculatorAngleMode.Radians && viewModel.ScientificAngleLabel == "RAD",
+    viewModel.Scientific.CycleAngleCommand.Execute(null);
+    Require(viewModel.Scientific.SelectedAngle == CalculatorAngleMode.Radians
+        && viewModel.Scientific.AngleLabel == "RAD",
         "Scientific angle mode did not advance from degrees to radians.");
     Require(viewModel.TryPasteStandardExpression("2^3=") && viewModel.PrimaryDisplay == "8",
         $"Scientific paste did not preserve the native power operation (actual: {viewModel.PrimaryDisplay}).");
@@ -179,14 +182,14 @@ using (var viewModel = new CalculatorViewModel(
         "Scientific paste accepted named functions that its command grammar does not support.");
     Require(!viewModel.TryPasteStandardExpression("(2+3"),
         "Scientific paste accepted an unbalanced parenthesized expression.");
-    viewModel.ToggleScientificInverseCommand.Execute(null);
+    viewModel.Scientific.ToggleInverseCommand.Execute(null);
     viewModel.ExecuteCalculatorCommand(CalculatorCommand.Cube);
-    Require(!viewModel.IsScientificInverse,
+    Require(!viewModel.Scientific.IsInverse,
         "The Scientific 2nd state did not reset after an alternate operation.");
-    viewModel.ToggleTrigInverseCommand.Execute(null);
-    viewModel.ToggleTrigHyperbolicCommand.Execute(null);
+    viewModel.Scientific.ToggleTrigInverseModifierCommand.Execute(null);
+    viewModel.Scientific.ToggleTrigHyperbolicModifierCommand.Execute(null);
     viewModel.ExecuteCalculatorCommand(CalculatorCommand.InverseSinh);
-    Require(!viewModel.IsTrigInverse && !viewModel.IsTrigHyperbolic,
+    Require(!viewModel.Scientific.IsTrigInverse && !viewModel.Scientific.IsTrigHyperbolic,
         "The Scientific trigonometry flyout state did not reset after an operation.");
     viewModel.ExecuteCalculatorCommand(CalculatorCommand.Clear);
     viewModel.ExecuteCalculatorCommand(CalculatorCommand.Zero);
@@ -213,7 +216,7 @@ using (var viewModel = new CalculatorViewModel(
     var temperatureItem = viewModel.ConverterNavigationItems.Single(item => item.Mode == CalculatorViewMode.Temperature);
     await viewModel.SelectNavigationItemCommand.ExecuteAsync(temperatureItem);
     Require(viewModel.IsUnitConverterMode && viewModel.CurrentViewMode == CalculatorViewMode.Temperature
-        && viewModel.SelectedUnitCategory?.Id == (int)CalculatorViewMode.Temperature
+        && viewModel.Converter.SelectedCategory?.Id == (int)CalculatorViewMode.Temperature
         && !viewModel.IsNavigationPaneOpen && temperatureItem.IsSelected,
         "Navigation did not route to the selected converter category.");
 
@@ -222,20 +225,20 @@ using (var viewModel = new CalculatorViewModel(
     Require(viewModel.IsSettingsOpen && !viewModel.IsNavigationPaneOpen,
         "Settings navigation did not close the pane and open the Settings surface.");
     AppThemePreference? changedTheme = null;
-    viewModel.ThemePreferenceChanged += value => changedTheme = value;
-    viewModel.SelectThemeCommand.Execute(nameof(AppThemePreference.Light));
-    Require(viewModel.IsLightThemeSelected && changedTheme == AppThemePreference.Light,
+    viewModel.Settings.ThemePreferenceChanged += value => changedTheme = value;
+    viewModel.Settings.SelectThemeCommand.Execute(nameof(AppThemePreference.Light));
+    Require(viewModel.Settings.IsLightThemeSelected && changedTheme == AppThemePreference.Light,
         "Settings theme selection did not update state or notify the frontend host.");
     string? changedFont = null;
-    viewModel.FontPreferenceChanged += value => changedFont = value;
-    Require(viewModel.SelectedFontFamily == "Inter", "Inter was not retained as the recommended default font.");
-    viewModel.SelectedFontFamily = "Aptos";
+    viewModel.Settings.FontPreferenceChanged += value => changedFont = value;
+    Require(viewModel.Settings.SelectedFontFamily == "Inter", "Inter was not retained as the recommended default font.");
+    viewModel.Settings.SelectedFontFamily = "Aptos";
     Require(changedFont == "Aptos", "An available device font was not selected.");
     PlatformAppearancePreferences? changedAppearance = null;
-    viewModel.PlatformAppearancePreferencesChanged += value => changedAppearance = value;
-    viewModel.UseMicaEffect = false;
-    viewModel.SelectWindowControlStyleCommand.Execute(nameof(WindowControlStyle.MacOS));
-    Require(viewModel.SupportsPlatformAppearanceSettings
+    viewModel.Settings.PlatformAppearanceChanged += value => changedAppearance = value;
+    viewModel.Settings.UseMicaEffect = false;
+    viewModel.Settings.SelectWindowControlStyleCommand.Execute(nameof(WindowControlStyle.MacOS));
+    Require(viewModel.Settings.SupportsPlatformAppearanceSettings
         && changedAppearance == new PlatformAppearancePreferences(
             false,
             WindowCornerStyle.Windows11,
@@ -243,27 +246,27 @@ using (var viewModel = new CalculatorViewModel(
         && !viewModel.UsesNativeWindowGeometry
         && viewModel.UsesMacOSWindowControls,
         "macOS controls changed the selected corner geometry or failed to notify the frontend host.");
-    viewModel.SelectWindowCornerStyleCommand.Execute(nameof(WindowCornerStyle.Windows10));
+    viewModel.Settings.SelectWindowCornerStyleCommand.Execute(nameof(WindowCornerStyle.Windows10));
     Require(viewModel.UsesSquareWindowCorners && viewModel.UsesMacOSWindowControls
         && viewModel.WindowCornerRadius == 0,
         "macOS controls could not be combined with the Windows 10 square shape.");
-    viewModel.SelectWindowCornerStyleCommand.Execute(nameof(WindowCornerStyle.MacOS));
-    Require(viewModel.IsMacOSCornerStyleSelected && viewModel.UsesMacOSWindowControls,
+    viewModel.Settings.SelectWindowCornerStyleCommand.Execute(nameof(WindowCornerStyle.MacOS));
+    Require(viewModel.Settings.IsMacOSCornerStyleSelected && viewModel.UsesMacOSWindowControls,
         "The fully native macOS combination could not be selected.");
-    viewModel.SelectWindowControlStyleCommand.Execute(nameof(WindowControlStyle.Windows10));
-    Require(viewModel.IsMacOSCornerStyleSelected
-        && viewModel.IsWindows10WindowControlStyleSelected
+    viewModel.Settings.SelectWindowControlStyleCommand.Execute(nameof(WindowControlStyle.Windows10));
+    Require(viewModel.Settings.IsMacOSCornerStyleSelected
+        && viewModel.Settings.IsWindows10WindowControlStyleSelected
         && viewModel.UsesWindowsWindowControls
         && viewModel.UsesNativeWindowGeometry,
         "macOS corners could not be combined with Windows 10 controls.");
-    viewModel.SelectWindowCornerStyleCommand.Execute(nameof(WindowCornerStyle.Windows11));
-    Require(viewModel.IsWindows11CornerStyleSelected
-        && viewModel.IsWindows10WindowControlStyleSelected
+    viewModel.Settings.SelectWindowCornerStyleCommand.Execute(nameof(WindowCornerStyle.Windows11));
+    Require(viewModel.Settings.IsWindows11CornerStyleSelected
+        && viewModel.Settings.IsWindows10WindowControlStyleSelected
         && viewModel.WindowCornerRadius == 8,
         "Changing corner geometry also changed the Windows title-bar generation.");
-    viewModel.SelectWindowControlStyleCommand.Execute(nameof(WindowControlStyle.Windows11));
-    Require(viewModel.IsWindows11CornerStyleSelected
-        && viewModel.IsWindows11WindowControlStyleSelected
+    viewModel.Settings.SelectWindowControlStyleCommand.Execute(nameof(WindowControlStyle.Windows11));
+    Require(viewModel.Settings.IsWindows11CornerStyleSelected
+        && viewModel.Settings.IsWindows11WindowControlStyleSelected
         && viewModel.UsesWindowsWindowControls,
         "Windows 11 title-bar controls could not be selected independently.");
     viewModel.CloseSettingsCommand.Execute(null);
