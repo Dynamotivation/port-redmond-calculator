@@ -2,33 +2,45 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-upstream_ref="${1:-upstream/main}"
+submodule_path="${1:-${repo_root}/upstream/windows-calculator}"
 
 cd "$repo_root"
 
-if ! git rev-parse --verify --quiet "${upstream_ref}^{commit}" >/dev/null; then
-    echo "Unable to verify protected Microsoft sources: ${upstream_ref} is unavailable." >&2
-    echo "Fetch the upstream remote or pass an explicit upstream commit." >&2
+duplicated_roots=(
+    src/CalcManager
+    src/CalcViewModel
+    src/Calculator
+    src/GraphControl
+    src/GraphingImpl
+    src/GraphingInterfaces
+)
+
+for duplicated_root in "${duplicated_roots[@]}"; do
+    if [[ -e "$duplicated_root" ]]; then
+        echo "Microsoft-owned source root is duplicated in the superproject: ${duplicated_root}" >&2
+        echo "Consume it only through upstream/windows-calculator." >&2
+        exit 1
+    fi
+done
+
+if [[ ! -e "${submodule_path}/.git" ]]; then
+    echo "Microsoft Calculator submodule is unavailable at ${submodule_path}." >&2
+    echo "Run: git submodule update --init --recursive" >&2
     exit 2
 fi
 
-protected_roots=(
-    src/CalcManager
-    src/CalcViewModel/DataLoaders
-    src/GraphingInterfaces
-    src/GraphingImpl
-    src/GraphControl
-)
-
-violations="$(
-    git diff --name-status --diff-filter=MDRT "${upstream_ref}" -- "${protected_roots[@]}"
-)"
-
-if [[ -n "$violations" ]]; then
-    echo "Protected Microsoft domain sources differ from ${upstream_ref}:" >&2
-    echo "$violations" >&2
-    echo "Move platform work into shims, adapters, or generated build overlays." >&2
+expected_commit="$(git rev-parse ':upstream/windows-calculator')"
+actual_commit="$(git -C "$submodule_path" rev-parse HEAD)"
+if [[ "$actual_commit" != "$expected_commit" ]]; then
+    echo "Microsoft Calculator is checked out at ${actual_commit}, but the superproject pins ${expected_commit}." >&2
     exit 1
 fi
 
-echo "Protected Microsoft calculation, conversion, graphing, and native sources are pristine."
+if [[ -n "$(git -C "$submodule_path" status --porcelain --untracked-files=all)" ]]; then
+    echo "Microsoft Calculator submodule contains local modifications:" >&2
+    git -C "$submodule_path" status --short >&2
+    echo "All platform work must remain in the Redmond superproject." >&2
+    exit 1
+fi
+
+echo "Microsoft Calculator submodule is pinned and pristine at ${actual_commit}."

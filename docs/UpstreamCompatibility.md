@@ -1,81 +1,77 @@
-# Upstream source compatibility
+# Microsoft Calculator submodule contract
 
-The cross-platform frontend may replace UWP views, windowing, and presentation
-code. Microsoft-owned calculation, conversion, graphing-contract, and native
-domain sources remain byte-for-byte identical to `upstream/main`.
+Microsoft Calculator is an immutable input to the Redmond build. Its complete
+source tree lives only in the `upstream/windows-calculator` Git submodule.
+Redmond source, adapters, patches, and generated files live in the
+superproject.
 
 Run the invariant check directly with:
 
 ```sh
-scripts/verify-upstream-pristine.sh upstream/main
+scripts/verify-upstream-pristine.sh
 ```
 
-Test configuration fails when the selected upstream ref is unavailable; the
-guard is never silently skipped. CI and shallow checkouts must fetch the
-reviewed upstream commit or set `CALCULATOR_UPSTREAM_REF` to an available,
-reviewed commit.
+The check fails when:
 
-The check rejects modified, deleted, or renamed files under:
+- the submodule is missing;
+- its checked-out commit differs from the superproject gitlink;
+- any tracked or untracked file exists as a local submodule change.
 
-- `src/CalcManager`
-- `src/CalcViewModel/DataLoaders`
-- `src/GraphingInterfaces`
-- `src/GraphingImpl`
-- `src/GraphControl`
-
-New adjacent build or adapter files are allowed. Platform behavior must not be
-implemented by editing an existing protected file.
+The CMake test suite always runs this check. It is never silently skipped.
 
 ## Calculator and converter engine
 
-The portable CMake target compiles Microsoft's original CalculatorManager,
-CalcEngine, RatPack, UnitConverter, and number-formatting translation units
-directly.
+`src/CalculatorCore/CMakeLists.txt` compiles Microsoft's original
+CalculatorManager, CalcEngine, RatPack, UnitConverter, and number-formatting
+translation units directly from the submodule.
 
-Windows SDK dependencies named by those files are supplied on non-Windows hosts
-through the `src/PortableCompat/include/nonwindows` include directory. In
-particular, the portable `ppltasks.h` preserves the `concurrency::task<T>`,
-`task_from_result`, `get`, and `then` API used by UnitConverter while
-implementing it with standard C++. Windows continues to resolve the real SDK
-headers. The Microsoft `UnitConverter.h` and `UnitConverter.cpp` signatures are
-not changed.
+Windows SDK dependencies are supplied on non-Windows hosts through
+`src/PortableCompat/include/nonwindows`. The portable `ppltasks.h` preserves
+the `concurrency::task<T>`, `task_from_result`, `get`, and `then` API used by
+UnitConverter while implementing it with standard C++. Windows continues to
+resolve its real SDK headers.
 
-## C++/CX unit catalog
+No Microsoft header or implementation file is copied into the Redmond source
+tree.
 
-`UnitConverterDataLoader` contains C++/CX syntax that a non-Windows compiler
-cannot parse. Its authoritative Microsoft files remain pristine. During CMake
-configuration they are copied to
-`build/portable/generated/portable-upstream`, where the deterministic
-`UnitConverterDataLoader.portable.patch` replaces only platform-bound resource,
-region, and navigation access.
+## Generated C++/CX unit catalog overlay
 
-The generated copy is the one compiled into the portable library. If upstream
-changes invalidate the transformation, configuration fails instead of silently
-building a stale fork. The conversion table, ordering, factors, offsets,
-regional choices, and whimsical units continue to originate from Microsoft's
-file.
+Microsoft's `UnitConverterDataLoader` contains C++/CX syntax that a
+non-Windows compiler cannot parse. CMake copies its three authoritative source
+files from the submodule into `build/portable/generated/portable-upstream` and
+applies `UnitConverterDataLoader.portable.patch` there.
+
+Only the generated build-tree copy is compiled. A patch failure is an upstream
+compatibility event and stops configuration. The source catalog, conversion
+factors, offsets, ordering, regional defaults, and unit identifiers remain
+owned by Microsoft.
 
 ## Graphing replacement
 
-The proprietary Microsoft graphing implementation is unavailable, but its
-public headers remain the authoritative compatibility contract.
+Microsoft's proprietary graphing implementation is unavailable, but the public
+headers in `src/GraphingInterfaces` remain authoritative.
 
-`GraphingInterfaceContractTests` compiles the pristine headers through the
-portable `HRESULT`, `BYTE`, and `GRAPHINGAPI` compatibility definitions and
-checks the principal method signatures. `GraphingInterfaceHash` checks every
-interface header. Any upstream header change therefore fails the portable test
-suite until the replacement backend's coverage has been reviewed.
+`GraphingInterfaceContractTests` compiles those headers directly from the
+submodule and checks principal method signatures. `GraphingInterfaceHash`
+checks every interface header. Any contract change therefore stops the build
+until the managed replacement and adapters have been reviewed.
 
-Refreshing a graphing-contract hash without reviewing every changed signature
-and feature is prohibited.
+## Resources and assets
+
+`Directory.Build.props` exposes one `MicrosoftCalculatorRoot` MSBuild property.
+Avalonia projects consume localized `.resw` resources and
+`CalculatorIcons.ttf` through that path. They do not duplicate those Microsoft
+files in this repository.
 
 ## Upstream update procedure
 
-1. Fetch and integrate `upstream/main`.
-2. Run `scripts/verify-upstream-pristine.sh upstream/main`.
-3. Configure the portable build. A failed generated-overlay patch is an
-   upstream compatibility event, not a reason to edit Microsoft source.
-4. Build and run all CTest targets, including graphing contract checks.
-5. Run resource, managed behavior, and visual snapshot tests.
-6. Update adapters or generated transformations only after classifying every
-   upstream change.
+1. Update only the `upstream/windows-calculator` gitlink.
+2. Leave the submodule worktree untouched.
+3. Configure and build the native targets. A failed generated patch requires an
+   adapter update in this repository.
+4. Run all CTest targets, resource tests, managed behavior tests, and visual
+   snapshots.
+5. Review every graph-contract hash or signature change before refreshing its
+   expected value.
+6. Commit the submodule pointer and required Redmond-side adapter changes as an
+   isolated upstream-update batch.

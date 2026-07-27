@@ -4,7 +4,7 @@ using Windows.ApplicationModel.Resources;
 
 var resourceRoot = args.Length == 1
     ? Path.GetFullPath(args[0])
-    : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../Calculator/Resources"));
+    : Path.Combine(AppContext.BaseDirectory, "Resources");
 
 static void Require(bool condition, string message)
 {

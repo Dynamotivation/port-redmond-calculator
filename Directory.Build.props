@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <MicrosoftCalculatorRoot Condition="'$(MicrosoftCalculatorRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)upstream/windows-calculator'))</MicrosoftCalculatorRoot>
+  </PropertyGroup>
+
+  <Target Name="RequireMicrosoftCalculatorSubmodule"
+          BeforeTargets="PrepareForBuild"
+          Condition="!Exists('$(MicrosoftCalculatorRoot)/src/Calculator/Resources/en-US/Resources.resw')">
+    <Error Text="Microsoft Calculator submodule is unavailable. Run 'git submodule update --init --recursive'." />
+  </Target>
+</Project>

@@ -7,9 +7,10 @@ and interactions without changing the calculator.
 ## Source-faithful Avalonia calculator slice
 
 `Calculator.Avalonia` reconstructs the original Standard Calculator UI from
-`Calculator.xaml`, `CalculatorStandardOperators.xaml`, `NumberPad.xaml`, and the
-repository's reference screenshot. Its standard keypad is connected through the
-managed C ABI wrapper to the original portable CalculatorManager engine.
+`Calculator.xaml`, `CalculatorStandardOperators.xaml`, and `NumberPad.xaml` in
+the pinned Microsoft Calculator submodule. Its standard keypad is connected
+through the managed C ABI wrapper to the original CalculatorManager engine
+compiled directly from that submodule.
 
 ![Avalonia Standard Calculator slice](../../docs/Images/AvaloniaStandardSlice.jpg)
 
