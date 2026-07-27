@@ -181,8 +181,8 @@ static void CatalogCompleteness()
         CalculatorShortcutCatalog.Bindings.Count(item => item.Source == ShortcutCatalogSource.UwpResource) == 129,
         "The catalog does not contain all 129 resource-defined bindings from the matrix.");
     Require(
-        CalculatorShortcutCatalog.Bindings.Count(item => item.Source == ShortcutCatalogSource.UwpNavigation) == 12,
-        "The catalog does not contain all 12 navigation accelerators from the matrix.");
+        CalculatorShortcutCatalog.Bindings.Count(item => item.Source == ShortcutCatalogSource.UwpNavigation) == 13,
+        "The catalog does not contain all 13 navigation accelerators from the matrix.");
     Require(
         CalculatorShortcutCatalog.Bindings.Count(item => item.Source == ShortcutCatalogSource.HardCodedControl) == 17,
         "The 10 hard-coded matrix behaviors did not expand to all 17 concrete gestures.");

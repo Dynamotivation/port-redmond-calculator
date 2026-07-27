@@ -227,7 +227,9 @@ internal static class SnapshotRunner
             }
         }
 
-        bitmap.Save(Path.Combine(SnapshotDirectory, $"{name}.png"));
+        bitmap.Save(
+            Path.Combine(SnapshotDirectory, $"{name}.png"),
+            PngBitmapEncoderOptions.Default);
     }
 
     public static void WriteActual(string name, Frame frame)
