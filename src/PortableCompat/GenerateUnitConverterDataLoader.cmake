@@ -16,13 +16,13 @@ foreach(source_name
     UnitConverterDataLoader.cpp
     UnitConverterDataLoader.h)
     configure_file(
-        "${PROJECT_SOURCE_DIR}/src/CalcViewModel/DataLoaders/${source_name}"
+        "${MICROSOFT_CALCULATOR_ROOT}/src/CalcViewModel/DataLoaders/${source_name}"
         "${CALCULATOR_GENERATED_DATALOADER_DIR}/${source_name}"
         COPYONLY)
 endforeach()
 
 configure_file(
-    "${PROJECT_SOURCE_DIR}/src/CalcViewModel/Common/PortableNavCategory.h"
+    "${PROJECT_SOURCE_DIR}/src/PortableCompat/include/PortableNavCategory.h"
     "${CALCULATOR_GENERATED_COMMON_DIR}/PortableNavCategory.h"
     COPYONLY)
 

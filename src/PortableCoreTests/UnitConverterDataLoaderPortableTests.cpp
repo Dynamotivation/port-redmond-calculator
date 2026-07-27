@@ -40,7 +40,8 @@ namespace
 
     std::unordered_map<std::wstring, std::wstring> LoadResources()
     {
-        const std::string path = std::string{ CALCULATOR_SOURCE_DIR } + "/src/Calculator/Resources/en-US/Resources.resw";
+        const std::string path =
+            std::string{ MICROSOFT_CALCULATOR_ROOT } + "/src/Calculator/Resources/en-US/Resources.resw";
         std::ifstream input(path);
         const std::string xml{ std::istreambuf_iterator<char>{ input }, std::istreambuf_iterator<char>{} };
         if (xml.empty())

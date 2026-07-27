@@ -26,7 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Calculator.Managed/Calculator.Managed.csproj" />
-    <Content Include="../../Calculator/Resources/en-US/CEngineStrings.resw"
+    <Content Include="$(MicrosoftCalculatorRoot)/src/Calculator/Resources/en-US/CEngineStrings.resw"
              Link="CEngineStrings.resw"
              CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(NativeCalculatorLibrary)"

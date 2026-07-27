@@ -15,7 +15,7 @@ foreach(contract_entry IN LISTS graphing_contract_files)
     list(GET contract_parts 0 expected_hash)
     list(GET contract_parts 1 contract_name)
     set(contract_path
-        "${CALCULATOR_SOURCE_DIR}/src/GraphingInterfaces/${contract_name}")
+        "${MICROSOFT_CALCULATOR_ROOT}/src/GraphingInterfaces/${contract_name}")
     # Hash normalized text so Git's checkout line-ending policy cannot make the
     # same Microsoft contract pass on one platform and fail on another.
     file(READ "${contract_path}" contract_contents)

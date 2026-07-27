@@ -1,0 +1,8 @@
+* text=auto
+*.cs diff=csharp
+*.jpg binary
+*.png binary
+*.gif binary
+
+# Unified diff context lines intentionally contain a single prefix space.
+*.patch whitespace=-blank-at-eol

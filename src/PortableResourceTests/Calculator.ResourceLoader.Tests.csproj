@@ -10,6 +10,9 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <ProjectReference Include="../Calculator.ResourceLoader/Calculator.ResourceLoader.csproj" />
     <ProjectReference Include="../Frontends/Calculator.Managed/Calculator.Managed.csproj" />
+    <Content Include="$(MicrosoftCalculatorRoot)/src/Calculator/Resources/**/*.resw"
+             Link="Resources/%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(NativeCalculatorLibrary)"
              Condition="'$(NativeCalculatorLibrary)' != '' and Exists('$(NativeCalculatorLibrary)')"
              Link="libcalculator_engine.dylib"

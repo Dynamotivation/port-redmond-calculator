@@ -1,0 +1,13 @@
+.DS_Store
+.idea/
+.vscode/
+.vs/
+
+**/bin/
+**/obj/
+build/
+
+src/Frontends/Calculator.Avalonia.Tests/Snapshots/
+*.user
+*.suo
+*.log

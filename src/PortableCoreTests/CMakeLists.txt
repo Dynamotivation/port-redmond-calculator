@@ -14,9 +14,13 @@ add_executable(
     ../CalculatorNative/Utf8.cpp
 )
 target_link_libraries(UnitConverterDataLoaderPortableTests PRIVATE Calculator::Core)
+target_include_directories(
+    UnitConverterDataLoaderPortableTests
+    PRIVATE ${PROJECT_SOURCE_DIR}/src
+)
 target_compile_definitions(
     UnitConverterDataLoaderPortableTests
-    PRIVATE CALCULATOR_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+    PRIVATE MICROSOFT_CALCULATOR_ROOT="${MICROSOFT_CALCULATOR_ROOT}"
 )
 
 add_test(NAME UnitConverterDataLoaderPortableTests COMMAND UnitConverterDataLoaderPortableTests)
@@ -25,7 +29,7 @@ add_executable(CalculatorNativeSmokeTests CalculatorNativeSmokeTests.cpp)
 target_link_libraries(CalculatorNativeSmokeTests PRIVATE Calculator::Native Calculator::Core)
 target_compile_definitions(
     CalculatorNativeSmokeTests
-    PRIVATE CALCULATOR_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+    PRIVATE MICROSOFT_CALCULATOR_ROOT="${MICROSOFT_CALCULATOR_ROOT}"
 )
 
 add_test(NAME CalculatorNativeSmokeTests COMMAND CalculatorNativeSmokeTests)
@@ -38,7 +42,7 @@ target_compile_features(GraphingInterfaceContractTests PRIVATE cxx_std_20)
 target_include_directories(
     GraphingInterfaceContractTests
     PRIVATE
-        ${PROJECT_SOURCE_DIR}/src
+        ${MICROSOFT_CALCULATOR_ROOT}/src
         ${PROJECT_SOURCE_DIR}/src/PortableCompat/include
 )
 
@@ -47,6 +51,6 @@ add_test(
     NAME GraphingInterfaceHash
     COMMAND
         ${CMAKE_COMMAND}
-        -DCALCULATOR_SOURCE_DIR=${PROJECT_SOURCE_DIR}
+        -DMICROSOFT_CALCULATOR_ROOT=${MICROSOFT_CALCULATOR_ROOT}
         -P ${PROJECT_SOURCE_DIR}/src/PortableCompat/VerifyGraphingContract.cmake
 )

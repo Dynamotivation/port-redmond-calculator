@@ -54,7 +54,8 @@ namespace
 
     std::vector<std::pair<std::string, std::string>> LoadResources(const std::string& fileName)
     {
-        const std::string path = std::string{ CALCULATOR_SOURCE_DIR } + "/src/Calculator/Resources/en-US/" + fileName;
+        const std::string path =
+            std::string{ MICROSOFT_CALCULATOR_ROOT } + "/src/Calculator/Resources/en-US/" + fileName;
         std::ifstream input(path);
         const std::string xml{ std::istreambuf_iterator<char>{ input }, std::istreambuf_iterator<char>{} };
         if (xml.empty())

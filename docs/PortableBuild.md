@@ -13,10 +13,11 @@ without the UWP user interface. It currently includes:
 The native library does not reimplement or stub Calculator behavior. It links the
 same C++ sources used by the Windows application.
 
-Protected Microsoft calculation, conversion, graphing-contract, and native
-domain files remain byte-for-byte identical to upstream. Platform dependencies
-are supplied through compatibility headers and a generated build-tree overlay;
-see the [upstream compatibility contract](UpstreamCompatibility.md).
+Microsoft calculation, conversion, graphing-contract, and native domain files
+exist only in the pinned `upstream/windows-calculator` submodule. The Redmond
+build compiles them without modifying that worktree. Platform dependencies are
+supplied through compatibility headers and a generated build-tree overlay; see
+the [upstream compatibility contract](UpstreamCompatibility.md).
 
 ## Build and test
 
@@ -24,7 +25,7 @@ see the [upstream compatibility contract](UpstreamCompatibility.md).
 cmake -S . -B build/portable -DCMAKE_BUILD_TYPE=Release
 cmake --build build/portable --parallel
 ctest --test-dir build/portable --output-on-failure
-dotnet run --project src/PortableResourceTests/Calculator.ResourceLoader.Tests.csproj -- src/Calculator/Resources
+dotnet run --project src/PortableResourceTests/Calculator.ResourceLoader.Tests.csproj
 ```
 
 The shared-library output is named `calculator_engine.dll` on Windows,
@@ -181,13 +182,13 @@ compiled with currency methods removed or stubbed.
 ## Portable unit catalog
 
 The original `CalcViewModel/DataLoaders/UnitConverterDataLoader.cpp` remains
-byte-for-byte identical to upstream. CMake copies it into the build tree and
-applies a deterministic portability transformation there. The generated
+untouched inside the Microsoft submodule. CMake copies it into the build tree
+and applies a deterministic portability transformation there. The generated
 standard-C++ constructor takes a two-letter region code and a resource-lookup
 function. This preserves one authoritative Microsoft table for unit IDs,
 ordering, factors, whimsical units, temperature offsets, and regional source/
-target defaults. If the transformation no longer applies after an upstream
-change, configuration fails and requires an explicit adapter review.
+target defaults. If the transformation no longer applies after a submodule
+update, configuration fails and requires an explicit adapter review.
 
 `UnitConverterDataLoaderPortableTests` loads the real English resources and
 verifies US customary, SI, Fahrenheit, and Japanese Pyeong selection along with

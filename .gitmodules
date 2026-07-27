@@ -1,3 +1,6 @@
 [submodule "redmond-commons"]
 	path = redmond-commons
 	url = https://github.com/Dynamotivation/port-redmond-commons.git
+[submodule "upstream/windows-calculator"]
+	path = upstream/windows-calculator
+	url = https://github.com/microsoft/calculator.git
