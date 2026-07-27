@@ -1,6 +1,7 @@
 #include "CalculatorNative.h"
 
 #include "Utf8.h"
+#include "ResourceKeyCompat.h"
 #include "CalcManager/CalculatorManager.h"
 #include "CalcManager/CalculatorResource.h"
 #include "CalcManager/Command.h"
@@ -56,7 +57,7 @@ namespace
 
         std::wstring GetString(std::wstring_view id) const
         {
-            const auto value = m_resources.find(std::wstring{ id });
+            const auto value = m_resources.find(Calculator::PortableCompat::NormalizeResourceKey(id));
             return value == m_resources.end() ? std::wstring{} : value->second;
         }
 

@@ -1,7 +1,6 @@
 #include "CalcManager/Command.h"
 #include "CalcManager/UnitConverter.h"
 
-#include <future>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -49,13 +48,9 @@ namespace
         return false;
     }
 
-    AsyncResult<bool> ReadyAsync(bool value)
+    concurrency::task<bool> ReadyAsync(bool value)
     {
-#if defined(_WIN32)
         return concurrency::task_from_result(value);
-#else
-        return std::async(std::launch::async, [value]() { return value; });
-#endif
     }
 
     class StaticDataLoader final : public IConverterDataLoader
@@ -125,9 +120,9 @@ namespace
             return { L"1 USD = 0.9 EUR", L"1 US dollar equals 0.9 euro" };
         }
         std::wstring GetCurrencyTimestamp() override { return L"2026-07-17T00:00:00Z"; }
-        AsyncResult<bool> TryLoadDataFromCacheAsync() override { return ReadyAsync(true); }
-        AsyncResult<bool> TryLoadDataFromWebAsync() override { return ReadyAsync(true); }
-        AsyncResult<bool> TryLoadDataFromWebOverrideAsync() override { return ReadyAsync(true); }
+        concurrency::task<bool> TryLoadDataFromCacheAsync() override { return ReadyAsync(true); }
+        concurrency::task<bool> TryLoadDataFromWebAsync() override { return ReadyAsync(true); }
+        concurrency::task<bool> TryLoadDataFromWebOverrideAsync() override { return ReadyAsync(true); }
 
     private:
         UnitToUnitToConversionDataMap m_ratios;

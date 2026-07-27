@@ -1,0 +1,221 @@
+diff --git a/src/CalcViewModel/DataLoaders/UnitConverterDataConstants.h b/src/CalcViewModel/DataLoaders/UnitConverterDataConstants.h
+index db01aab..8d61b01 100644
+--- a/src/CalcViewModel/DataLoaders/UnitConverterDataConstants.h
++++ b/src/CalcViewModel/DataLoaders/UnitConverterDataConstants.h
+@@ -5,7 +5,9 @@ namespace CalculatorApp
+ {
+     namespace ViewModel::Common
+     {
++#if defined(__cplusplus_winrt)
+     private
++#endif
+         enum UnitConverterUnits
+         {
+             UnitStart = 0,
+diff --git a/src/CalcViewModel/DataLoaders/UnitConverterDataLoader.cpp b/src/CalcViewModel/DataLoaders/UnitConverterDataLoader.cpp
+index 795091e..51a8ae7 100644
+--- a/src/CalcViewModel/DataLoaders/UnitConverterDataLoader.cpp
++++ b/src/CalcViewModel/DataLoaders/UnitConverterDataLoader.cpp
+@@ -1,26 +1,55 @@
+ // Copyright (c) Microsoft Corporation. All rights reserved.
+ // Licensed under the MIT License.
+ 
++#if defined(__cplusplus_winrt)
+ #include "pch.h"
+ #include "Common/AppResourceProvider.h"
++#endif
+ #include "UnitConverterDataLoader.h"
+ #include "UnitConverterDataConstants.h"
++#if defined(__cplusplus_winrt)
+ #include "CurrencyDataLoader.h"
++#else
++#include <algorithm>
++#include <cassert>
++#include <stdexcept>
++#include <utility>
++#endif
+ 
+ using namespace CalculatorApp::ViewModel::Common;
++#if defined(__cplusplus_winrt)
+ using namespace CalculatorApp::ViewModel::DataLoaders;
++#endif
+ using namespace CalculatorApp::ViewModel;
++#if defined(__cplusplus_winrt)
+ using namespace Platform;
++#endif
+ using namespace std;
++#if defined(__cplusplus_winrt)
+ using namespace Windows::ApplicationModel::Resources;
+ using namespace Windows::ApplicationModel::Resources::Core;
+ using namespace Windows::Globalization;
++#else
++namespace UCM = UnitConversionManager;
++#endif
+ 
+ static constexpr bool CONVERT_WITH_OFFSET_FIRST = true;
+ 
++#if defined(__cplusplus_winrt)
+ UnitConverterDataLoader::UnitConverterDataLoader(GeographicRegion ^ region)
+-    : m_currentRegionCode(region->CodeTwoLetter)
++    : m_currentRegionCode(region->CodeTwoLetter->Data())
++#else
++UnitConverterDataLoader::UnitConverterDataLoader(wstring regionCode, ResourceLookup resourceLookup)
++    : m_currentRegionCode(std::move(regionCode))
++    , m_resourceLookup(std::move(resourceLookup))
++#endif
+ {
++#if !defined(__cplusplus_winrt)
++    if (!m_resourceLookup)
++    {
++        throw invalid_argument("unit converter resource lookup must be provided");
++    }
++#endif
+     m_categoryList = make_shared<vector<UCM::Category>>();
+     m_categoryIDToUnitsMap = make_shared<UCM::CategoryToUnitVectorMap>();
+     m_ratioMap = make_shared<UCM::UnitToUnitToConversionDataMap>();
+@@ -148,12 +178,41 @@ void UnitConverterDataLoader::LoadData()
+ void UnitConverterDataLoader::GetCategories(_In_ shared_ptr<vector<UCM::Category>> categoriesList)
+ {
+     categoriesList->clear();
++#if defined(__cplusplus_winrt)
+     auto converterCategory = NavCategoryStates::CreateConverterCategoryGroup();
+     for (auto const& category : converterCategory->Categories)
+     {
+         /* Id, CategoryName, SupportsNegative */
+         categoriesList->emplace_back(NavCategoryStates::Serialize(category->ViewMode), category->Name->Data(), category->SupportsNegative);
+     }
++#else
++    struct CategoryData
++    {
++        ViewMode mode;
++        wstring_view resourceKey;
++        bool supportsNegative;
++    };
++    static constexpr CategoryData categories[] = {
++        { ViewMode::Currency, L"CategoryName_CurrencyText", false },
++        { ViewMode::Volume, L"CategoryName_VolumeText", false },
++        { ViewMode::Length, L"CategoryName_LengthText", false },
++        { ViewMode::Weight, L"CategoryName_WeightText", false },
++        { ViewMode::Temperature, L"CategoryName_TemperatureText", true },
++        { ViewMode::Energy, L"CategoryName_EnergyText", false },
++        { ViewMode::Area, L"CategoryName_AreaText", false },
++        { ViewMode::Speed, L"CategoryName_SpeedText", false },
++        { ViewMode::Time, L"CategoryName_TimeText", false },
++        { ViewMode::Power, L"CategoryName_PowerText", true },
++        { ViewMode::Data, L"CategoryName_DataText", false },
++        { ViewMode::Pressure, L"CategoryName_PressureText", false },
++        { ViewMode::Angle, L"CategoryName_AngleText", true },
++    };
++    for (const auto& category : categories)
++    {
++        categoriesList->emplace_back(
++            NavCategoryStates::Serialize(category.mode), GetLocalizedStringName(category.resourceKey), category.supportsNegative);
++    }
++#endif
+ }
+ 
+ void UnitConverterDataLoader::GetUnits(_In_ unordered_map<ViewMode, vector<OrderedUnit>>& unitMap)
+@@ -171,9 +230,9 @@ void UnitConverterDataLoader::GetUnits(_In_ unordered_map<ViewMode, vector<Order
+ 
+     // useUSCustomaryAndFahrenheit + the Bahamas, the Cayman Islands and Liberia
+     // Source: http://en.wikipedia.org/wiki/Fahrenheit
+-    bool useFahrenheit = useUSCustomaryAndFahrenheit || m_currentRegionCode == "BS" || m_currentRegionCode == "KY" || m_currentRegionCode == "LR";
++    bool useFahrenheit = useUSCustomaryAndFahrenheit || m_currentRegionCode == L"BS" || m_currentRegionCode == L"KY" || m_currentRegionCode == L"LR";
+ 
+-    bool useWattInsteadOfKilowatt = m_currentRegionCode == "GB";
++    bool useWattInsteadOfKilowatt = m_currentRegionCode == L"GB";
+ 
+     // Use 坪(Tsubo), or Pyeong in Korean, a Japanese unit of floorspace.
+     // https://en.wikipedia.org/wiki/Japanese_units_of_measurement#Area
+@@ -633,7 +692,7 @@ void UnitConverterDataLoader::GetUnits(_In_ unordered_map<ViewMode, vector<Order
+                                        GetLocalizedStringName(L"UnitAbbreviation_TeaspoonUS"),
+                                        5,
+                                        useSI,
+-                                       useUSCustomary && m_currentRegionCode != "GB" });
++                                       useUSCustomary && m_currentRegionCode != L"GB" });
+     volumeUnits.push_back(OrderedUnit{
+         UnitConverterUnits::Volume_QuartUK, GetLocalizedStringName(L"UnitName_QuartUK"), GetLocalizedStringName(L"UnitAbbreviation_QuartUK"), 19 });
+     volumeUnits.push_back(OrderedUnit{
+@@ -643,7 +702,7 @@ void UnitConverterDataLoader::GetUnits(_In_ unordered_map<ViewMode, vector<Order
+                                        GetLocalizedStringName(L"UnitAbbreviation_TeaspoonUK"),
+                                        15,
+                                        false,
+-                                       useUSCustomary && m_currentRegionCode == "GB" });
++                                       useUSCustomary && m_currentRegionCode == L"GB" });
+     volumeUnits.push_back(OrderedUnit{ UnitConverterUnits::Volume_TablespoonUK,
+                                        GetLocalizedStringName(L"UnitName_TablespoonUK"),
+                                        GetLocalizedStringName(L"UnitAbbreviation_TablespoonUK"),
+@@ -965,10 +1024,22 @@ void UnitConverterDataLoader::GetConversionData(_In_ unordered_map<ViewMode, uno
+     }
+ }
+ 
++#if defined(__cplusplus_winrt)
+ wstring UnitConverterDataLoader::GetLocalizedStringName(String ^ stringId)
+ {
+     return AppResourceProvider::GetInstance()->GetResourceString(stringId)->Data();
+ }
++#else
++wstring UnitConverterDataLoader::GetLocalizedStringName(wstring_view stringId)
++{
++    auto value = m_resourceLookup(stringId);
++    if (value.empty())
++    {
++        throw runtime_error("missing localized unit converter resource: " + string(stringId.begin(), stringId.end()));
++    }
++    return value;
++}
++#endif
+ 
+ void UnitConverterDataLoader::GetExplicitConversionData(_In_ unordered_map<int, unordered_map<int, UCM::ConversionData>>& unitToUnitConversionList)
+ {
+diff --git a/src/CalcViewModel/DataLoaders/UnitConverterDataLoader.h b/src/CalcViewModel/DataLoaders/UnitConverterDataLoader.h
+index beb5be6..b3518ff 100644
+--- a/src/CalcViewModel/DataLoaders/UnitConverterDataLoader.h
++++ b/src/CalcViewModel/DataLoaders/UnitConverterDataLoader.h
+@@ -4,7 +4,12 @@
+ #pragma once
+ 
+ #include "CalcManager/UnitConverter.h"
++#if defined(__cplusplus_winrt)
+ #include "Common/NavCategory.h"
++#else
++#include "../Common/PortableNavCategory.h"
++#include <functional>
++#endif
+ 
+ namespace CalculatorApp
+ {
+@@ -66,7 +71,12 @@ namespace CalculatorApp
+         class UnitConverterDataLoader : public UnitConversionManager::IConverterDataLoader, public std::enable_shared_from_this<UnitConverterDataLoader>
+         {
+         public:
++#if defined(__cplusplus_winrt)
+             UnitConverterDataLoader(Windows::Globalization::GeographicRegion ^ region);
++#else
++            using ResourceLookup = std::function<std::wstring(std::wstring_view)>;
++            UnitConverterDataLoader(std::wstring regionCode, ResourceLookup resourceLookup);
++#endif
+ 
+         private:
+             // IConverterDataLoader
+@@ -83,12 +93,19 @@ namespace CalculatorApp
+             void GetConversionData(_In_ std::unordered_map<CalculatorApp::ViewModel::Common::ViewMode, std::unordered_map<int, double>>& categoryToUnitConversionMap);
+             void GetExplicitConversionData(_In_ std::unordered_map<int, std::unordered_map<int, UnitConversionManager::ConversionData>>& unitToUnitConversionList);
+ 
++#if defined(__cplusplus_winrt)
+             std::wstring GetLocalizedStringName(_In_ Platform::String ^ stringId);
++#else
++            std::wstring GetLocalizedStringName(std::wstring_view stringId);
++#endif
+ 
+             std::shared_ptr<std::vector<UnitConversionManager::Category>> m_categoryList;
+             std::shared_ptr<UnitConversionManager::CategoryToUnitVectorMap> m_categoryIDToUnitsMap;
+             std::shared_ptr<UnitConversionManager::UnitToUnitToConversionDataMap> m_ratioMap;
+-            Platform::String ^ m_currentRegionCode;
++            std::wstring m_currentRegionCode;
++#if !defined(__cplusplus_winrt)
++            ResourceLookup m_resourceLookup;
++#endif
+         };
+     }
+ }

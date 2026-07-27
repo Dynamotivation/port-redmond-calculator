@@ -29,3 +29,24 @@ target_compile_definitions(
 )
 
 add_test(NAME CalculatorNativeSmokeTests COMMAND CalculatorNativeSmokeTests)
+
+add_executable(
+    GraphingInterfaceContractTests
+    GraphingInterfaceContractTests.cpp
+)
+target_compile_features(GraphingInterfaceContractTests PRIVATE cxx_std_20)
+target_include_directories(
+    GraphingInterfaceContractTests
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/src
+        ${PROJECT_SOURCE_DIR}/src/PortableCompat/include
+)
+
+add_test(NAME GraphingInterfaceContractTests COMMAND GraphingInterfaceContractTests)
+add_test(
+    NAME GraphingInterfaceHash
+    COMMAND
+        ${CMAKE_COMMAND}
+        -DCALCULATOR_SOURCE_DIR=${PROJECT_SOURCE_DIR}
+        -P ${PROJECT_SOURCE_DIR}/src/PortableCompat/VerifyGraphingContract.cmake
+)

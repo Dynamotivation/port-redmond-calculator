@@ -13,6 +13,11 @@ without the UWP user interface. It currently includes:
 The native library does not reimplement or stub Calculator behavior. It links the
 same C++ sources used by the Windows application.
 
+Protected Microsoft calculation, conversion, graphing-contract, and native
+domain files remain byte-for-byte identical to upstream. Platform dependencies
+are supplied through compatibility headers and a generated build-tree overlay;
+see the [upstream compatibility contract](UpstreamCompatibility.md).
+
 ## Build and test
 
 ```sh
@@ -118,9 +123,11 @@ categories route to working cross-platform surfaces. Settings routes to a
 functional cross-platform page with persisted Light, Dark, and system theme
 preferences.
 
-Graphing uses a platform-neutral managed contract modeled after the public
-`GraphingInterfaces` seam. `AngouriMathSolver` is the replaceable CAS adapter;
-AngouriMath types never enter the view models or Avalonia controls. The current
+Graphing uses a platform-neutral managed backend behind the pristine public
+`GraphingInterfaces` contract. Compile-time signature probes and full-header
+hash checks make upstream contract changes fail the portable test suite.
+`AngouriMathSolver` is the replaceable CAS adapter; AngouriMath types never
+enter the view models or Avalonia controls. The current
 surface supports explicit, implicit, polar, and inequality plots, multiple
 equations, parameter sliders, pan/zoom/reset, and the source 800-logical-pixel
 graph/equation-panel breakpoint. Structured math input, equation styling,
@@ -165,20 +172,22 @@ Avalonia frontend.
 ## Asynchronous compatibility boundary
 
 The original currency interfaces use Microsoft's PPL `concurrency::task`. The
-portable source keeps that exact type on Windows, preserving compatibility with
-the existing UWP currency loaders. On non-Windows platforms the same interface
-is represented by the standard C++ `std::future`, and currency refresh
-continuations run with `std::async`. This is a real asynchronous implementation;
-the conversion engine is not compiled with currency methods removed or stubbed.
+portable compatibility header preserves that exact namespace, type, and
+continuation API while implementing its behavior with standard C++ futures.
+`UnitConverter.h` and `UnitConverter.cpp` therefore compile unchanged on every
+host. This is a real asynchronous implementation; the conversion engine is not
+compiled with currency methods removed or stubbed.
 
 ## Portable unit catalog
 
-The original `CalcViewModel/DataLoaders/UnitConverterDataLoader.cpp` now builds
-inside `CalculatorCore` both with C++/CX on UWP and as standard C++20 elsewhere.
-The portable constructor takes a two-letter region code and a resource-lookup
+The original `CalcViewModel/DataLoaders/UnitConverterDataLoader.cpp` remains
+byte-for-byte identical to upstream. CMake copies it into the build tree and
+applies a deterministic portability transformation there. The generated
+standard-C++ constructor takes a two-letter region code and a resource-lookup
 function. This preserves one authoritative Microsoft table for unit IDs,
 ordering, factors, whimsical units, temperature offsets, and regional source/
-target defaults.
+target defaults. If the transformation no longer applies after an upstream
+change, configuration fails and requires an explicit adapter review.
 
 `UnitConverterDataLoaderPortableTests` loads the real English resources and
 verifies US customary, SI, Fahrenheit, and Japanese Pyeong selection along with
