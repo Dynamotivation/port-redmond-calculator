@@ -136,6 +136,13 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (!_viewModel.IsCalculatorMode)
+        {
+            _viewModel.History.SetDocked(false);
+            CalculatorResponsiveLayout.ColumnDefinitions = new ColumnDefinitions("*,0");
+            return;
+        }
+
         const double historyDockThreshold = 560;
         var isDocked = width >= historyDockThreshold;
         var usesFixedHistoryWidth = (width >= 768 && height >= 1366)
@@ -180,6 +187,10 @@ public partial class MainWindow : Window
 
             UpdateCalculatorModeLayout();
             UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
+            if (_viewModel.IsDateCalculatorMode)
+            {
+                Dispatcher.UIThread.Post(DateView.FocusDefault, DispatcherPriority.Input);
+            }
         }
         else if (e.PropertyName == nameof(CalculatorViewModel.IsAlwaysOnTop))
         {
@@ -191,7 +202,9 @@ public partial class MainWindow : Window
             Dispatcher.UIThread.Post(
                 _viewModel.IsNavigationPaneOpen
                     ? ShellNavigation.FocusSelectedItem
-                    : ShellNavigation.FocusToggle,
+                    : _viewModel.IsDateCalculatorMode
+                        ? DateView.FocusDefault
+                        : ShellNavigation.FocusToggle,
                 DispatcherPriority.Input);
         }
         else if (e.PropertyName == nameof(CalculatorViewModel.IsSettingsOpen))
@@ -199,7 +212,9 @@ public partial class MainWindow : Window
             Dispatcher.UIThread.Post(
                 _viewModel.IsSettingsOpen
                     ? SettingsPage.FocusFirstInteractiveControl
-                    : ShellNavigation.FocusToggle,
+                    : _viewModel.IsDateCalculatorMode
+                        ? DateView.FocusDefault
+                        : ShellNavigation.FocusToggle,
                 DispatcherPriority.Input);
         }
     }
@@ -534,9 +549,19 @@ public partial class MainWindow : Window
         switch (CalculatorShortcutRouter.Dispatch(_viewModel, shortcutId))
         {
             case CalculatorShortcutOutcome.CopyDisplay:
+                if (_viewModel.IsSettingsOpen || _viewModel.IsNavigationPaneOpen)
+                {
+                    return false;
+                }
                 _ = CopyDisplayToClipboardAsync();
                 return true;
             case CalculatorShortcutOutcome.PasteExpression:
+                if (_viewModel.IsSettingsOpen
+                    || _viewModel.IsNavigationPaneOpen
+                    || _viewModel.IsDateCalculatorMode)
+                {
+                    return false;
+                }
                 _ = PasteFromClipboardAsync();
                 return true;
             case CalculatorShortcutOutcome.EnterAlwaysOnTop:
@@ -566,6 +591,10 @@ public partial class MainWindow : Window
             await clipboard.SetTextAsync(
                 _viewModel.IsUnitConverterMode
                     ? _viewModel.Converter.FromDisplay
+                    : _viewModel.IsDateCalculatorMode
+                        ? _viewModel.DateCalculator.IsDateDiffMode
+                            ? _viewModel.DateCalculator.DateDiffResult
+                            : _viewModel.DateCalculator.DateResult
                     : _viewModel.PrimaryDisplay);
         }
     }

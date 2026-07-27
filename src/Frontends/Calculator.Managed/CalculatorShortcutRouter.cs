@@ -235,13 +235,13 @@ public static class CalculatorShortcutRouter
                 return viewModel.TrySelectNavigationMode(CalculatorViewMode.Programmer)
                     ? CalculatorShortcutOutcome.Handled
                     : CalculatorShortcutOutcome.NotHandled;
-            // Graphing and date calculation are represented in the source
-            // shortcut catalog, but their navigation items stay disabled until
-            // those pages are ported. Swallowing the accelerators matches the
-            // disabled UWP NavigationView items without routing into a stub.
             case "navigation.graphing":
+                return CalculatorShortcutOutcome.Handled;
             case "navigation.date":
-            case "navigation.dateCalculation": return CalculatorShortcutOutcome.Handled;
+            case "navigation.dateCalculation":
+                return viewModel.TrySelectNavigationMode(CalculatorViewMode.Date)
+                    ? CalculatorShortcutOutcome.Handled
+                    : CalculatorShortcutOutcome.NotHandled;
             case "navigation.pane.toggle":
                 viewModel.ToggleNavigationPaneCommand.Execute(null);
                 return CalculatorShortcutOutcome.Handled;

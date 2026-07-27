@@ -1,0 +1,122 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:managed="using:Calculator.Managed"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             x:Class="Calculator.Avalonia.Views.DateCalculatorView"
+             x:DataType="managed:CalculatorViewModel"
+             IsVisible="{Binding IsDateCalculatorMode}">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.dateCaption">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="{DynamicResource SettingsSecondaryForegroundBrush}" />
+    </Style>
+  </UserControl.Styles>
+  <!-- The source page is a 456-DIP, left-aligned workspace at widths >=480.
+       At narrower widths it consumes the available content column. -->
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto">
+    <Grid Margin="16,0,16,16"
+          MaxWidth="456"
+          HorizontalAlignment="Left"
+          RowDefinitions="Auto,*">
+      <ui:FAComboBox x:Name="CalculationModeSelector" Grid.Row="0"
+                     Width="300" MaxWidth="300"
+                     HorizontalAlignment="Left"
+                     TabIndex="1"
+                     AutomationProperties.Name="{Binding DateCalculator.Strings.CalculationModeAutomationName}"
+                     ItemsSource="{Binding DateCalculator.CalculationOptions}"
+                     SelectedIndex="{Binding DateCalculator.SelectedCalculationIndex}" />
+
+      <Grid Grid.Row="1" Margin="0,17,0,0"
+            IsVisible="{Binding DateCalculator.IsDateDiffMode}"
+            RowDefinitions="Auto,24,Auto,24,Auto,Auto,8,Auto">
+        <StackPanel Grid.Row="0" Spacing="6">
+          <TextBlock Classes="dateCaption" Text="{Binding DateCalculator.Strings.From}" />
+          <CalendarDatePicker TabIndex="2" HorizontalAlignment="Stretch"
+                              SelectedDate="{Binding DateCalculator.FromDate}"
+                              DisplayDateStart="{Binding DateCalculator.DisplayDateStart}"
+                              DisplayDateEnd="{Binding DateCalculator.DisplayDateEnd}"
+                              FirstDayOfWeek="{Binding DateCalculator.FirstDayOfWeek}"
+                              SelectedDateFormat="Custom"
+                              CustomDateFormatString="{Binding DateCalculator.DateFormat}" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Spacing="6">
+          <TextBlock Classes="dateCaption" Text="{Binding DateCalculator.Strings.To}" />
+          <CalendarDatePicker TabIndex="3" HorizontalAlignment="Stretch"
+                              SelectedDate="{Binding DateCalculator.ToDate}"
+                              DisplayDateStart="{Binding DateCalculator.DisplayDateStart}"
+                              DisplayDateEnd="{Binding DateCalculator.DisplayDateEnd}"
+                              FirstDayOfWeek="{Binding DateCalculator.FirstDayOfWeek}"
+                              SelectedDateFormat="Custom"
+                              CustomDateFormatString="{Binding DateCalculator.DateFormat}" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="4" Classes="dateCaption"
+                   Text="{Binding DateCalculator.Strings.Difference}" />
+        <SelectableTextBlock Grid.Row="5" Margin="0,4,0,0"
+                             FontSize="20"
+                             AutomationProperties.LiveSetting="Polite"
+                             AutomationProperties.Name="{Binding DateCalculator.DateDiffResultAutomationName}"
+                             Text="{Binding DateCalculator.DateDiffResult}" />
+        <SelectableTextBlock Grid.Row="7"
+                             FontSize="14"
+                             IsVisible="{Binding !DateCalculator.IsDiffInDays}"
+                             Text="{Binding DateCalculator.DateDiffResultInDays}" />
+      </Grid>
+
+      <Grid Grid.Row="1" Margin="0,17,0,0"
+            IsVisible="{Binding DateCalculator.IsAddSubtractMode}"
+            RowDefinitions="Auto,23,Auto,29,Auto,35,Auto,Auto">
+        <StackPanel Grid.Row="0" Spacing="6">
+          <TextBlock Classes="dateCaption" Text="{Binding DateCalculator.Strings.From}" />
+          <CalendarDatePicker TabIndex="2" HorizontalAlignment="Stretch"
+                              SelectedDate="{Binding DateCalculator.StartDate}"
+                              DisplayDateStart="{Binding DateCalculator.DisplayDateStart}"
+                              DisplayDateEnd="{Binding DateCalculator.DisplayDateEnd}"
+                              FirstDayOfWeek="{Binding DateCalculator.FirstDayOfWeek}"
+                              SelectedDateFormat="Custom"
+                              CustomDateFormatString="{Binding DateCalculator.DateFormat}" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="20">
+          <RadioButton GroupName="DateOperation" MinWidth="80" TabIndex="3"
+                       Content="{Binding DateCalculator.Strings.Add}"
+                       IsChecked="{Binding DateCalculator.IsAddMode}" />
+          <RadioButton GroupName="DateOperation" MinWidth="80" TabIndex="4"
+                       Content="{Binding DateCalculator.Strings.Subtract}"
+                       IsChecked="{Binding DateCalculator.IsSubtractMode}" />
+        </StackPanel>
+
+        <Grid Grid.Row="4" ColumnDefinitions="84,12,84,12,84">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="dateCaption" Text="{Binding DateCalculator.Strings.Years}" />
+            <ui:FAComboBox TabIndex="5"
+                           ItemsSource="{Binding DateCalculator.OffsetValues}"
+                           SelectedIndex="{Binding DateCalculator.YearsOffset}" />
+          </StackPanel>
+          <StackPanel Grid.Column="2" Spacing="6">
+            <TextBlock Classes="dateCaption" Text="{Binding DateCalculator.Strings.Months}" />
+            <ui:FAComboBox TabIndex="6"
+                           ItemsSource="{Binding DateCalculator.OffsetValues}"
+                           SelectedIndex="{Binding DateCalculator.MonthsOffset}" />
+          </StackPanel>
+          <StackPanel Grid.Column="4" Spacing="6">
+            <TextBlock Classes="dateCaption" Text="{Binding DateCalculator.Strings.Days}" />
+            <ui:FAComboBox TabIndex="7"
+                           ItemsSource="{Binding DateCalculator.OffsetValues}"
+                           SelectedIndex="{Binding DateCalculator.DaysOffset}" />
+          </StackPanel>
+        </Grid>
+
+        <TextBlock Grid.Row="6" Classes="dateCaption"
+                   Text="{Binding DateCalculator.Strings.Date}" />
+        <SelectableTextBlock Grid.Row="7" Margin="0,4,0,0"
+                             FontSize="20"
+                             AutomationProperties.LiveSetting="Polite"
+                             AutomationProperties.Name="{Binding DateCalculator.DateResultAutomationName}"
+                             Text="{Binding DateCalculator.DateResult}" />
+      </Grid>
+    </Grid>
+  </ScrollViewer>
+</UserControl>
