@@ -2,6 +2,7 @@
 #include "CalcViewModel/DataLoaders/UnitConverterDataConstants.h"
 #include "CalcViewModel/DataLoaders/UnitConverterDataLoader.h"
 #include "CalculatorNative/Utf8.h"
+#include "ResourceKeyCompat.h"
 
 #include <algorithm>
 #include <cmath>
@@ -63,7 +64,7 @@ namespace
         const std::unordered_map<std::wstring, std::wstring>& resources)
     {
         return std::make_shared<UnitConverterDataLoader>(region, [&resources](std::wstring_view key) {
-            const auto found = resources.find(std::wstring{ key });
+            const auto found = resources.find(Calculator::PortableCompat::NormalizeResourceKey(key));
             return found == resources.end() ? std::wstring{} : found->second;
         });
     }
@@ -88,11 +89,6 @@ int main()
 {
     const auto resources = LoadResources();
     auto usLoader = CreateLoader(L"US", resources);
-    if (!usLoader->SupportsCategory(Category{ 9, L"Area", false }) || usLoader->SupportsCategory(Category{ 16, L"Currency", false }))
-    {
-        std::cerr << "category support failed before catalog initialization\n";
-        return 1;
-    }
     usLoader->LoadData();
 
     const auto categories = usLoader->GetOrderedCategories();

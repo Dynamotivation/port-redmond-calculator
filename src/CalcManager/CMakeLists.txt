@@ -1,10 +1,12 @@
+include("${PROJECT_SOURCE_DIR}/src/PortableCompat/GenerateUnitConverterDataLoader.cmake")
+
 set(CALCULATOR_CORE_SOURCES
     CalculatorHistory.cpp
     CalculatorManager.cpp
     ExpressionCommand.cpp
     NumberFormattingUtils.cpp
     UnitConverter.cpp
-    ../CalcViewModel/DataLoaders/UnitConverterDataLoader.cpp
+    ${CALCULATOR_GENERATED_DATALOADER}
     CEngine/calc.cpp
     CEngine/CalcInput.cpp
     CEngine/CalcUtils.cpp
@@ -36,6 +38,21 @@ add_library(Calculator::Core ALIAS CalculatorCore)
 set_target_properties(CalculatorCore PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_compile_features(CalculatorCore PUBLIC cxx_std_20)
+target_include_directories(
+    CalculatorCore
+    BEFORE
+    PUBLIC
+        ${CALCULATOR_GENERATED_ROOT}/src
+        ${PROJECT_SOURCE_DIR}/src/PortableCompat/include
+)
+if(NOT WIN32)
+    target_include_directories(
+        CalculatorCore
+        BEFORE
+        PUBLIC
+            ${PROJECT_SOURCE_DIR}/src/PortableCompat/include/nonwindows
+    )
+endif()
 target_include_directories(
     CalculatorCore
     PUBLIC
