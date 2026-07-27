@@ -1,0 +1,205 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:managed="using:Calculator.Managed"
+             xmlns:graphing="using:Calculator.Avalonia.Views.Graphing"
+             x:Class="Calculator.Avalonia.Views.Graphing.GraphingCalculatorView"
+             x:DataType="managed:CalculatorViewModel"
+             IsVisible="{Binding IsGraphingMode}">
+  <Grid x:Name="Root" RowDefinitions="Auto,*">
+    <Grid Grid.Row="0" Height="44" Margin="8,0,8,4" ColumnDefinitions="*,Auto">
+      <ToggleButton x:Name="NarrowModeToggle"
+                    Grid.Column="1"
+                    MinWidth="40"
+                    Padding="10,6"
+                    IsVisible="False"
+                    Click="NarrowModeToggle_OnClick"
+                    ToolTip.Tip="{Binding Graphing.Strings.SwitchToEquationMode}">
+        <Grid Width="22" Height="22">
+          <TextBlock x:Name="NarrowModeGlyph"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center"
+                     FontFamily="{StaticResource CalculatorIconFont}"
+                     FontSize="16"
+                     Text="&#xF893;" />
+          <TextBlock x:Name="NarrowModeSubscript"
+                     Margin="0,0,1,1"
+                     HorizontalAlignment="Right"
+                     VerticalAlignment="Bottom"
+                     FontSize="9"
+                     FontWeight="Light"
+                     Text="x" />
+        </Grid>
+      </ToggleButton>
+    </Grid>
+
+    <Grid x:Name="ResponsiveLayout"
+          Grid.Row="1"
+          ColumnDefinitions="2*,360">
+      <Border Grid.Column="0"
+              Margin="0,0,4,0"
+              ClipToBounds="True"
+              Background="{DynamicResource GraphPlotBackgroundBrush}">
+        <Grid>
+          <graphing:GraphCanvas x:Name="Plot"
+                                Focusable="True"
+                                ViewModel="{Binding Graphing}"
+                                PlotBackground="{DynamicResource GraphPlotBackgroundBrush}"
+                                GridBrush="{DynamicResource GraphGridBrush}"
+                                AxisBrush="{DynamicResource GraphAxisBrush}" />
+
+          <Border Margin="0,8,8,0"
+                  Padding="2"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Top"
+                  CornerRadius="4"
+                  Background="{DynamicResource GraphCommandPanelBrush}">
+            <StackPanel Orientation="Horizontal">
+              <Button Classes="graphCommandButton"
+                      Click="ZoomIn_OnClick"
+                      ToolTip.Tip="{Binding Graphing.Strings.ZoomInTooltip}">
+                <TextBlock FontSize="20" Text="+" />
+              </Button>
+              <Button Classes="graphCommandButton"
+                      Click="ZoomOut_OnClick"
+                      ToolTip.Tip="{Binding Graphing.Strings.ZoomOutTooltip}">
+                <TextBlock FontSize="20" Text="−" />
+              </Button>
+              <Button Classes="graphCommandButton"
+                      Click="ResetView_OnClick"
+                      ToolTip.Tip="{Binding Graphing.Strings.ResetViewTooltip}">
+                <Grid Width="18" Height="18">
+                  <TextBlock HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             FontFamily="{StaticResource CalculatorIconFont}"
+                             FontSize="15"
+                             Text="&#xE45E;" />
+                  <TextBlock HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             FontFamily="{StaticResource CalculatorIconFont}"
+                             FontSize="15"
+                             Text="&#xE45D;" />
+                </Grid>
+              </Button>
+            </StackPanel>
+          </Border>
+        </Grid>
+      </Border>
+
+      <Border x:Name="EquationPanel"
+              Grid.Column="1"
+              Margin="4,0,0,0"
+              BorderBrush="{DynamicResource CalculatorBorderBrush}"
+              BorderThickness="1,0,0,0"
+              Background="{DynamicResource GraphEquationPanelBrush}">
+        <Grid RowDefinitions="*,Auto">
+          <ScrollViewer Grid.Row="0"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Graphing.Equations}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="managed:GraphEquationViewModel">
+                  <Border Margin="8,4"
+                          Padding="8"
+                          CornerRadius="4"
+                          BorderBrush="{DynamicResource CalculatorBorderBrush}"
+                          BorderThickness="1"
+                          Background="{DynamicResource GraphEquationCardBrush}">
+                    <Grid ColumnDefinitions="6,*,Auto" RowDefinitions="Auto,Auto">
+                      <Border Grid.RowSpan="2"
+                              Width="4"
+                              Margin="0,2,6,2"
+                              CornerRadius="2"
+                              Background="{Binding Color}" />
+                      <TextBox Grid.Column="1"
+                               MinHeight="42"
+                               Padding="8,8"
+                               VerticalContentAlignment="Center"
+                               Text="{Binding Expression, Mode=TwoWay}"
+                               PlaceholderText="{Binding Placeholder}" />
+                      <StackPanel Grid.Column="2"
+                                  Margin="4,0,0,0"
+                                  Orientation="Horizontal"
+                                  VerticalAlignment="Center">
+                        <ToggleButton MinWidth="34"
+                                      MinHeight="34"
+                                      Padding="6"
+                                      IsChecked="{Binding IsEnabled, Mode=TwoWay}">
+                          <TextBlock FontFamily="{StaticResource CalculatorIconFont}"
+                                     FontSize="14"
+                                     Text="&#xE890;" />
+                        </ToggleButton>
+                        <Button MinWidth="34"
+                                MinHeight="34"
+                                Padding="6"
+                                Command="{Binding $parent[UserControl].DataContext.Graphing.RemoveEquationCommand}"
+                                CommandParameter="{Binding}">
+                          <TextBlock FontFamily="{StaticResource CalculatorIconFont}"
+                                     FontSize="14"
+                                     Text="&#xE74D;" />
+                        </Button>
+                      </StackPanel>
+                      <TextBlock Grid.Row="1"
+                                 Grid.Column="1"
+                                 Grid.ColumnSpan="2"
+                                 Margin="8,3,4,0"
+                                 Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                 FontSize="12"
+                                 Text="{Binding ErrorMessage}"
+                                 TextWrapping="Wrap"
+                                 IsVisible="{Binding !!ErrorMessage}" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+
+          <StackPanel Grid.Row="1">
+            <ItemsControl Margin="8,4"
+                          ItemsSource="{Binding Graphing.Variables}"
+                          IsVisible="{Binding Graphing.HasVariables}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="managed:GraphVariableViewModel">
+                  <Border Margin="0,3"
+                          Padding="10,8"
+                          CornerRadius="4"
+                          Background="{DynamicResource GraphEquationCardBrush}">
+                    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
+                      <TextBlock FontSize="16"
+                                 FontStyle="Italic"
+                                 VerticalAlignment="Center"
+                                 Text="{Binding Name}" />
+                      <NumericUpDown Grid.Column="1"
+                                     Width="96"
+                                     HorizontalAlignment="Right"
+                                     Minimum="{Binding Minimum}"
+                                     Maximum="{Binding Maximum}"
+                                     Increment="{Binding Step}"
+                                     Value="{Binding Value, Mode=TwoWay}" />
+                      <Slider Grid.Row="1"
+                              Grid.ColumnSpan="2"
+                              Margin="0,8,0,0"
+                              Minimum="{Binding Minimum}"
+                              Maximum="{Binding Maximum}"
+                              TickFrequency="{Binding Step}"
+                              Value="{Binding Value, Mode=TwoWay}" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Button Margin="8"
+                    MinHeight="42"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding Graphing.AddEquationCommand}"
+                    ToolTip.Tip="{Binding Graphing.Strings.AddEquationTooltip}">
+              <TextBlock FontSize="20" Text="+" />
+            </Button>
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

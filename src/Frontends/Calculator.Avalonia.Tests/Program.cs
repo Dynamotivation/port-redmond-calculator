@@ -22,6 +22,7 @@ SnapshotRunner.ConfigureResources();
 // Behavioural guards first: they are fast, and a broken shortcut table makes
 // the snapshot diff much harder to read.
 foreach (var (name, run) in RouterTests.All
+             .Concat(GraphingTests.All)
              .Concat(DateCalculatorTests.All)
              .Concat(PressedStateTests.All)
              .Concat(ShellInteractionTests.All))

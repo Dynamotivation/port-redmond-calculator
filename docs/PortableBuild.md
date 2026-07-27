@@ -113,12 +113,22 @@ unrelated custom window-surface colors cannot leak into the flyout. History
 selection, clear, keyboard toggling, and empty state are wired on both
 responsive surfaces.
 
-Standard, Scientific, and all 12 static converter categories route to working native-backed
-surfaces. Settings routes to a functional cross-platform page with persisted
-Light, Dark, and system theme preferences. Graphing, Programmer, Date, and
-Currency remain present but disabled until their corresponding
-frontend or platform layer is ported. Currency remains unavailable until its
-Windows HTTP/cache implementation is replaced with a real cross-platform loader.
+Standard, Scientific, Programmer, Date calculation, and all 12 static converter
+categories route to working cross-platform surfaces. Settings routes to a
+functional cross-platform page with persisted Light, Dark, and system theme
+preferences.
+
+Graphing uses a platform-neutral managed contract modeled after the public
+`GraphingInterfaces` seam. `AngouriMathSolver` is the replaceable CAS adapter;
+AngouriMath types never enter the view models or Avalonia controls. The current
+surface supports explicit, implicit, polar, and inequality plots, multiple
+equations, parameter sliders, pan/zoom/reset, and the source 800-logical-pixel
+graph/equation-panel breakpoint. Structured math input, equation styling,
+tracing, graph settings, key-feature analysis, and the graphing numpad remain
+to be ported.
+
+Currency remains unavailable until its Windows HTTP/cache implementation is
+replaced with a real cross-platform loader.
 
 ## Cross-platform UWP resources
 

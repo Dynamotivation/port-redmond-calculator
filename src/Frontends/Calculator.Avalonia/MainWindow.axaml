@@ -6,6 +6,7 @@
         xmlns:shell="using:Calculator.Avalonia.Shell"
         xmlns:controls="using:Calculator.Avalonia.Controls"
         xmlns:views="using:Calculator.Avalonia.Views"
+        xmlns:graphing="using:Calculator.Avalonia.Views.Graphing"
         xmlns:shared="using:Redmond.Avalonia.Controls"
         x:Class="Calculator.Avalonia.MainWindow"
         x:DataType="managed:CalculatorViewModel"
@@ -98,6 +99,7 @@
 
       <views:UnitConverterView x:Name="ConverterView" Grid.Row="1" Grid.RowSpan="5" />
       <views:DateCalculatorView x:Name="DateView" Grid.Row="1" Grid.RowSpan="5" />
+      <graphing:GraphingCalculatorView x:Name="GraphingView" Grid.Row="1" Grid.RowSpan="5" />
 
       </local:NavigationCulledGrid>
 
