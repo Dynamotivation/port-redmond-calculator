@@ -26,6 +26,8 @@ internal static class RouterTests
         ("scientific error gating", ScientificErrorGating),
         ("programmer radix and word size", ProgrammerRadixAndWordSize),
         ("clipboard shortcuts defer to the host", ClipboardShortcutsDeferToHost),
+        ("navigation shortcuts route shell actions", NavigationShortcutsRouteShellActions),
+        ("converter shortcuts reach converter engine", ConverterShortcutsReachConverterEngine),
         ("memory shortcuts are safe when empty", MemoryShortcutsAreSafeWhenEmpty),
         ("memory store shortcut stores", MemoryStoreShortcutStores),
     ];
@@ -186,6 +188,54 @@ internal static class RouterTests
         Assert(
             CalculatorShortcutRouter.Dispatch(viewModel, "pasteButton") == CalculatorShortcutOutcome.PasteExpression,
             "pasteButton should ask the host to paste");
+    }
+
+    private static void NavigationShortcutsRouteShellActions()
+    {
+        var viewModel = CreateViewModel();
+        viewModel.OpenSettingsCommand.Execute(null);
+        Assert(viewModel.IsSettingsOpen, "settings should be open before navigation");
+
+        Assert(
+            CalculatorShortcutRouter.Dispatch(viewModel, "navigation.scientific")
+                == CalculatorShortcutOutcome.Handled,
+            "Alt+2 should route to scientific");
+        Assert(viewModel.IsScientificMode, "Alt+2 should select scientific mode");
+        Assert(!viewModel.IsSettingsOpen, "mode navigation should leave settings");
+
+        Assert(
+            CalculatorShortcutRouter.Dispatch(viewModel, "window.alwaysOnTop.enter")
+                == CalculatorShortcutOutcome.EnterAlwaysOnTop,
+            "Alt+Up should be delegated to the window host");
+        Assert(
+            CalculatorShortcutRouter.Dispatch(viewModel, "window.alwaysOnTop.exit")
+                == CalculatorShortcutOutcome.ExitAlwaysOnTop,
+            "Alt+Down should be delegated to the window host");
+        Assert(
+            CalculatorShortcutRouter.Dispatch(viewModel, "navigation.copy")
+                == CalculatorShortcutOutcome.CopyDisplay,
+            "navigation copy should be delegated to the clipboard host");
+    }
+
+    private static void ConverterShortcutsReachConverterEngine()
+    {
+        var viewModel = CreateViewModel();
+        var converterMode = viewModel.ConverterNavigationItems.First(item => item.IsEnabled);
+        viewModel.SelectNavigationItemCommand.Execute(converterMode);
+
+        foreach (var shortcutId in new[] { "num1Button", "num2Button", "num3Button" })
+        {
+            Assert(
+                viewModel.Converter.TryDispatchShortcut(shortcutId),
+                $"{shortcutId} should route in converter mode");
+        }
+        Assert(
+            viewModel.Converter.FromDisplay.Contains("123", StringComparison.Ordinal),
+            $"converter display should contain 123, was '{viewModel.Converter.FromDisplay}'");
+
+        Assert(
+            !viewModel.Converter.TryDispatchShortcut("plusButton"),
+            "calculator-only operators must not leak into the converter engine");
     }
 
 

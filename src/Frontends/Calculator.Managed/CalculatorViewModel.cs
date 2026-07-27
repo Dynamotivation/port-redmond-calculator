@@ -606,6 +606,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         }
 
         CurrentViewMode = item.Mode;
+        IsSettingsOpen = false;
         History.CloseOverlay();
         ModeDisplayName = item.Name;
         SetSelectedNavigationItem(item.Mode);
@@ -635,6 +636,25 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         }
 
         await SetNavigationPaneOpenAsync(false);
+    }
+
+    /// <summary>
+    /// Selects an enabled shell destination from a keyboard accelerator.
+    /// Keeping lookup and enabled-state enforcement here makes keyboard and
+    /// pointer navigation pass through the same command path.
+    /// </summary>
+    public bool TrySelectNavigationMode(CalculatorViewMode mode)
+    {
+        var item = CalculatorNavigationItems
+            .Concat(ConverterNavigationItems)
+            .FirstOrDefault(candidate => candidate.Mode == mode);
+        if (item is null || !item.IsEnabled)
+        {
+            return false;
+        }
+
+        SelectNavigationItemCommand.Execute(item);
+        return true;
     }
 
 
@@ -752,7 +772,14 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         string glyph,
         bool isEnabled = true)
     {
-        ConverterNavigationItems.Add(new(mode, CalculatorNavigationGroup.Converter, resources.GetString(resourceKey), glyph, isEnabled));
+        var accessKeyResource = resourceKey.Replace("Text", "AccessKey", StringComparison.Ordinal);
+        ConverterNavigationItems.Add(new(
+            mode,
+            CalculatorNavigationGroup.Converter,
+            resources.GetString(resourceKey),
+            glyph,
+            isEnabled,
+            resources.GetString(accessKeyResource)));
     }
 
     private void SetSelectedNavigationItem(CalculatorViewMode mode)

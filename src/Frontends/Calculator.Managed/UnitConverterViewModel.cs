@@ -71,6 +71,99 @@ public sealed partial class UnitConverterViewModel : ObservableObject, IDisposab
         SynchronizeDisplays();
     }
 
+    /// <summary>
+    /// Maps the shared Microsoft shortcut identifiers onto the converter
+    /// engine. The converter deliberately accepts only its numeric editing
+    /// subset even though digits live in the shared calculator catalog.
+    /// </summary>
+    public bool TryDispatchShortcut(string shortcutId)
+    {
+        var command = shortcutId switch
+        {
+            "num0Button" => UnitConverterCommand.Zero,
+            "num1Button" => UnitConverterCommand.One,
+            "num2Button" => UnitConverterCommand.Two,
+            "num3Button" => UnitConverterCommand.Three,
+            "num4Button" => UnitConverterCommand.Four,
+            "num5Button" => UnitConverterCommand.Five,
+            "num6Button" => UnitConverterCommand.Six,
+            "num7Button" => UnitConverterCommand.Seven,
+            "num8Button" => UnitConverterCommand.Eight,
+            "num9Button" => UnitConverterCommand.Nine,
+            "decimalSeparatorButton" => UnitConverterCommand.Decimal,
+            "converterNegateButton" => UnitConverterCommand.Negate,
+            "backSpaceButton" => UnitConverterCommand.Backspace,
+            "clearButton" or "clearEntryButton" => UnitConverterCommand.Clear,
+            _ => (UnitConverterCommand?)null,
+        };
+        if (command is null)
+        {
+            return false;
+        }
+
+        _converter.SendCommand(command.Value);
+        SynchronizeDisplays();
+        return true;
+    }
+
+    /// <summary>
+    /// Replays pasted numeric text through the converter engine instead of
+    /// parsing it into a framework-specific numeric type. This preserves the
+    /// same locale-aware decimal and precision behavior as keypad entry.
+    /// </summary>
+    public bool TryPaste(string? text, string decimalSeparator)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return false;
+        }
+
+        var acceptedAny = false;
+        var pendingNegate = false;
+        var negateApplied = false;
+        foreach (var character in text)
+        {
+            UnitConverterCommand? command = character switch
+            {
+                >= '0' and <= '9' => (UnitConverterCommand)(character - '0'),
+                '.' or ',' when decimalSeparator.Contains(character, StringComparison.Ordinal)
+                    => UnitConverterCommand.Decimal,
+                '-' or '\u2212' => null,
+                _ => null,
+            };
+            var isNegate = character is '-' or '\u2212';
+            if (command is null && !isNegate)
+            {
+                continue;
+            }
+
+            if (!acceptedAny)
+            {
+                _converter.SendCommand(UnitConverterCommand.Clear);
+                acceptedAny = true;
+            }
+
+            if (isNegate)
+            {
+                pendingNegate = !negateApplied;
+                continue;
+            }
+
+            _converter.SendCommand(command!.Value);
+            if (pendingNegate && !negateApplied)
+            {
+                _converter.SendCommand(UnitConverterCommand.Negate);
+                negateApplied = true;
+            }
+        }
+
+        if (acceptedAny)
+        {
+            SynchronizeDisplays();
+        }
+        return acceptedAny;
+    }
+
     [RelayCommand]
     private void Swap()
     {

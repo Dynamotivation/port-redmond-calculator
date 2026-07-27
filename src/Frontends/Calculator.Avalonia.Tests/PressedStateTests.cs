@@ -24,6 +24,7 @@ internal static class PressedStateTests
         ("digit key marks exactly one button", DigitKeyMarksExactlyOneButton),
         ("key release clears the pressed button", KeyReleaseClearsPressedButton),
         ("pressed state follows the active mode", PressedStateFollowsActiveMode),
+        ("converter digit shows pressed feedback", ConverterDigitShowsPressedFeedback),
     ];
 
     private static void Assert(bool condition, string message)
@@ -125,5 +126,26 @@ internal static class PressedStateTests
             Pump();
             Assert(PressedButtons(window).Count == 0, $"{mode}: key up should clear the pressed button");
         }
+    });
+
+    private static void ConverterDigitShowsPressedFeedback() => Run((window, viewModel) =>
+    {
+        var item = viewModel.ConverterNavigationItems.First(candidate => candidate.IsEnabled);
+        viewModel.SelectNavigationItemCommand.Execute(item);
+        Pump();
+
+        window.KeyPressQwerty(PhysicalKey.Digit5, RawInputModifiers.None);
+        Pump();
+
+        var pressed = PressedButtons(window);
+        Assert(pressed.Count == 1, $"converter: expected one pressed button, found {pressed.Count}");
+        Assert(pressed[0].Content is "5", "converter: expected the 5 button to be pressed");
+        Assert(
+            viewModel.Converter.FromDisplay.Contains('5'),
+            $"converter key should update its display, was '{viewModel.Converter.FromDisplay}'");
+
+        window.KeyReleaseQwerty(PhysicalKey.Digit5, RawInputModifiers.None);
+        Pump();
+        Assert(PressedButtons(window).Count == 0, "converter: key up should clear pressed feedback");
     });
 }
