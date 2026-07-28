@@ -18,7 +18,16 @@ public sealed record GraphingStrings(
 public sealed record GraphEquationRenderModel(
     uint ExpressionId,
     string Color,
+    GraphLineStyle LineStyle,
+    double LineWidth,
     IGraphExpressionEvaluator Evaluator);
+
+public enum GraphLineStyle
+{
+    Solid,
+    Dash,
+    Dot,
+}
 
 public partial class GraphVariableViewModel(
     string name,
@@ -64,18 +73,37 @@ public partial class GraphEquationViewModel : ObservableObject
         Placeholder = placeholder;
     }
 
-    public int FunctionIndex { get; }
-    public string Color { get; }
+    public int FunctionIndex { get; private set; }
     public string Placeholder { get; }
+    public string FunctionLabel => HasExpression ? $"f{ToSubscript(FunctionIndex + 1)}" : "f";
+    public string FunctionIndexLabel => HasExpression ? (FunctionIndex + 1).ToString() : string.Empty;
+    public string TileColor => !HasExpression || !IsEnabled ? "#A6A6A6" : Color;
+    public string VisibilityAutomationName =>
+        $"{(IsEnabled ? "Hide" : "Show")} equation {FunctionIndex + 1}";
+    public bool CanToggleVisibility => HasExpression;
 
     [ObservableProperty]
     public partial string Expression { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string DraftExpression { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string Color { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial GraphLineStyle LineStyle { get; set; } = GraphLineStyle.Solid;
+
+    [ObservableProperty]
+    public partial double LineWidth { get; set; } = 2;
 
     [ObservableProperty]
     public partial bool IsEnabled { get; set; } = true;
 
     [ObservableProperty]
     public partial string ErrorMessage { get; private set; } = string.Empty;
+
+    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
     [ObservableProperty]
     public partial bool IsValid { get; private set; }
@@ -84,14 +112,59 @@ public partial class GraphEquationViewModel : ObservableObject
 
     public event EventHandler? EquationChanged;
 
+    internal void SetFunctionIndex(int functionIndex)
+    {
+        if (FunctionIndex == functionIndex)
+        {
+            return;
+        }
+
+        FunctionIndex = functionIndex;
+        OnPropertyChanged(nameof(FunctionIndex));
+        OnPropertyChanged(nameof(FunctionLabel));
+        OnPropertyChanged(nameof(FunctionIndexLabel));
+        OnPropertyChanged(nameof(VisibilityAutomationName));
+    }
+
+    public bool CommitDraft()
+    {
+        if (!string.Equals(Expression, DraftExpression, StringComparison.Ordinal))
+        {
+            Expression = DraftExpression;
+        }
+        return HasExpression && IsValid;
+    }
+
     partial void OnExpressionChanged(string value)
     {
+        if (!string.Equals(DraftExpression, value, StringComparison.Ordinal))
+        {
+            DraftExpression = value;
+        }
         OnPropertyChanged(nameof(HasExpression));
+        OnPropertyChanged(nameof(FunctionLabel));
+        OnPropertyChanged(nameof(FunctionIndexLabel));
+        OnPropertyChanged(nameof(CanToggleVisibility));
+        OnPropertyChanged(nameof(TileColor));
         Parse();
         EquationChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    partial void OnIsEnabledChanged(bool value) => EquationChanged?.Invoke(this, EventArgs.Empty);
+    partial void OnIsEnabledChanged(bool value)
+    {
+        OnPropertyChanged(nameof(VisibilityAutomationName));
+        OnPropertyChanged(nameof(TileColor));
+        EquationChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    partial void OnColorChanged(string value)
+    {
+        OnPropertyChanged(nameof(TileColor));
+        EquationChanged?.Invoke(this, EventArgs.Empty);
+    }
+    partial void OnErrorMessageChanged(string value) => OnPropertyChanged(nameof(HasError));
+    partial void OnLineStyleChanged(GraphLineStyle value) => EquationChanged?.Invoke(this, EventArgs.Empty);
+    partial void OnLineWidthChanged(double value) => EquationChanged?.Invoke(this, EventArgs.Empty);
 
     internal IEnumerable<string> GetVariables() => _parsedExpression?.Variables ?? [];
 
@@ -126,8 +199,26 @@ public partial class GraphEquationViewModel : ObservableObject
         return new GraphEquationRenderModel(
             _parsedExpression.ExpressionId,
             Color,
+            LineStyle,
+            LineWidth,
             _evaluator);
     }
+
+    private static string ToSubscript(int value) =>
+        string.Concat(value.ToString().Select(character => character switch
+        {
+            '0' => '₀',
+            '1' => '₁',
+            '2' => '₂',
+            '3' => '₃',
+            '4' => '₄',
+            '5' => '₅',
+            '6' => '₆',
+            '7' => '₇',
+            '8' => '₈',
+            '9' => '₉',
+            _ => character,
+        }));
 
     private void Parse()
     {
@@ -156,22 +247,25 @@ public partial class GraphEquationViewModel : ObservableObject
 
 public partial class GraphingViewModel : ObservableObject
 {
-    private static readonly string[] EquationColors =
+    public static readonly string[] EquationColors =
     [
-        "#0078D4",
-        "#E81123",
+        "#0063B1",
         "#107C10",
-        "#881798",
-        "#FF8C00",
-        "#038387",
-        "#C239B3",
-        "#498205",
-        "#4F6BED",
+        "#E81123",
+        "#FFB900",
+        "#00B7C3",
+        "#00CC6A",
+        "#E3008C",
+        "#F7630C",
+        "#6600CC",
+        "#008055",
+        "#B31564",
         "#8E562E",
+        "#58595B",
+        "#000000",
     ];
 
     private readonly IMathSolver _solver;
-    private int _nextFunctionIndex;
 
     public GraphingViewModel(GraphingStrings strings, IMathSolver? solver = null)
     {
@@ -194,11 +288,11 @@ public partial class GraphingViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanAddEquation))]
     private void AddEquation()
     {
-        var functionIndex = _nextFunctionIndex++;
+        var functionIndex = Equations.Count;
         var equation = new GraphEquationViewModel(
             _solver,
             functionIndex,
-            EquationColors[functionIndex % EquationColors.Length],
+            GetNextUnusedColor(),
             Strings.EnterExpressionPlaceholder);
         equation.EquationChanged += OnEquationChanged;
         Equations.Add(equation);
@@ -218,11 +312,20 @@ public partial class GraphingViewModel : ObservableObject
 
         equation.EquationChanged -= OnEquationChanged;
         Equations.Remove(equation);
+        RenumberEquations();
         if (Equations.Count == 0)
         {
             AddEquation();
             return;
         }
+
+        if (CanAddEquation && Equations.All(item => item.HasExpression))
+        {
+            AddEquation();
+            return;
+        }
+
+        AssignUnusedColorsToPlaceholders();
 
         if (ReferenceEquals(SelectedEquation, equation))
         {
@@ -234,8 +337,56 @@ public partial class GraphingViewModel : ObservableObject
         RefreshGraph();
     }
 
+    private string GetNextUnusedColor(IEnumerable<GraphEquationViewModel>? equations = null)
+    {
+        var usedColors = (equations ?? Equations)
+            .Select(item => item.Color)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return EquationColors.FirstOrDefault(color => !usedColors.Contains(color))
+            ?? EquationColors[0];
+    }
+
+    private void RenumberEquations()
+    {
+        for (var index = 0; index < Equations.Count; index++)
+        {
+            Equations[index].SetFunctionIndex(index);
+        }
+    }
+
+    private void AssignUnusedColorsToPlaceholders()
+    {
+        var assignedEquations = new List<GraphEquationViewModel>(
+            Equations.Where(item => item.HasExpression));
+        foreach (var placeholder in Equations.Where(item => !item.HasExpression))
+        {
+            placeholder.Color = GetNextUnusedColor(assignedEquations);
+            assignedEquations.Add(placeholder);
+        }
+    }
+
+    public bool CommitEquation(GraphEquationViewModel equation)
+    {
+        if (!Equations.Contains(equation))
+        {
+            return false;
+        }
+
+        var convertedPlaceholder = !equation.HasExpression;
+        if (!equation.CommitDraft() || !convertedPlaceholder
+            || !ReferenceEquals(Equations.LastOrDefault(), equation)
+            || !AddEquationCommand.CanExecute(null))
+        {
+            return false;
+        }
+
+        AddEquationCommand.Execute(null);
+        return true;
+    }
+
     public IReadOnlyList<GraphEquationRenderModel> GetRenderableEquations() =>
         Equations
+            .OrderBy(equation => equation.FunctionIndex)
             .Select(equation => equation.CreateRenderModel())
             .Where(model => model is not null)
             .Cast<GraphEquationRenderModel>()

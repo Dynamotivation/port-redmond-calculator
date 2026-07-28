@@ -23,6 +23,8 @@ var resources = ResourceLoader.GetForViewIndependentUse();
 var engineResources = ResourceLoader.GetForViewIndependentUse("CEngineStrings");
 
 Require(resources.GetString("AppName") == "Rechner", "Exact-culture resource lookup failed.");
+Require(resources.GetString("mathRichEditBox.PlaceholderText") == "Ausdruck eingeben",
+    "The graph equation placeholder was not loaded from the localized Calculator resources.");
 Require(resources.GetString("MemoryLabel/Text") == resources.GetString("MemoryLabel.Text"), "Uid/property key normalization failed.");
 Require(resources.GetUidProperties("MemoryLabel")["Text"] == resources.GetString("MemoryLabel.Text"), "Uid property projection failed.");
 const string memoryTooltipPath = "MemoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip";

@@ -1,9 +1,12 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Calculator.Managed;
 using Calculator.Managed.Graphing;
 
@@ -28,10 +31,31 @@ public sealed class GraphCanvas : Control
     private const double MinimumRange = 1e-5;
     private const double MaximumRange = 1e8;
     private Point? _lastPointerPosition;
+    private Point? _pointerPressedPosition;
+    private Vector _panVelocity;
+    private DateTime _lastPointerMoveTime;
+    private readonly DispatcherTimer _inertiaTimer;
+    private bool _isTracing;
+    private Point? _traceScreenPoint;
+    private string _traceText = string.Empty;
     private double _xMinimum = DefaultMinimum;
     private double _xMaximum = DefaultMaximum;
     private double _yMinimum = DefaultMinimum;
     private double _yMaximum = DefaultMaximum;
+
+    public GraphCanvas()
+    {
+        _inertiaTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(16), DispatcherPriority.Render, OnInertiaTick);
+    }
+
+    public event EventHandler? ViewportChanged;
+    public event EventHandler? TraceChanged;
+    public double XMinimum => _xMinimum;
+    public double XMaximum => _xMaximum;
+    public double YMinimum => _yMinimum;
+    public double YMaximum => _yMaximum;
+    public bool IsTracing => _isTracing;
+    public string TraceText => _traceText;
 
     public GraphingViewModel? ViewModel
     {
@@ -57,17 +81,51 @@ public sealed class GraphCanvas : Control
         set => SetValue(AxisBrushProperty, value);
     }
 
-    public void ZoomIn() => ZoomAt(new Point(Bounds.Width / 2, Bounds.Height / 2), 0.8);
+    public void ZoomIn() => ZoomAt(new Point(Bounds.Width / 2, Bounds.Height / 2), 16d / 17d);
 
-    public void ZoomOut() => ZoomAt(new Point(Bounds.Width / 2, Bounds.Height / 2), 1.25);
+    public void ZoomOut() => ZoomAt(new Point(Bounds.Width / 2, Bounds.Height / 2), 17d / 16d);
+
+    public void SetViewport(double xMinimum, double xMaximum, double yMinimum, double yMaximum)
+    {
+        if (!double.IsFinite(xMinimum) || !double.IsFinite(xMaximum)
+            || !double.IsFinite(yMinimum) || !double.IsFinite(yMaximum)
+            || xMinimum >= xMaximum || yMinimum >= yMaximum)
+        {
+            return;
+        }
+
+        StopInertia();
+        _xMinimum = xMinimum;
+        _xMaximum = xMaximum;
+        _yMinimum = yMinimum;
+        _yMaximum = yMaximum;
+        NotifyViewportChanged();
+    }
+
+    public void SetTracing(bool enabled)
+    {
+        _isTracing = enabled;
+        if (!enabled)
+        {
+            _traceScreenPoint = null;
+            _traceText = string.Empty;
+        }
+        else
+        {
+            UpdateTrace(new Point(GraphToScreenX(0), GraphToScreenY(0)));
+        }
+        TraceChanged?.Invoke(this, EventArgs.Empty);
+        InvalidateVisual();
+    }
 
     public void ResetView()
     {
+        StopInertia();
         _xMinimum = DefaultMinimum;
         _xMaximum = DefaultMaximum;
         _yMinimum = DefaultMinimum;
         _yMaximum = DefaultMaximum;
-        InvalidateVisual();
+        NotifyViewportChanged();
     }
 
     public override void Render(DrawingContext context)
@@ -96,7 +154,13 @@ public sealed class GraphCanvas : Control
                      equation.Evaluator.Kind != GraphEquationKind.Inequality))
         {
             var color = ParseColor(equation.Color);
-            var pen = new Pen(new SolidColorBrush(color), 2);
+            var dashStyle = equation.LineStyle switch
+            {
+                GraphLineStyle.Dash => DashStyle.Dash,
+                GraphLineStyle.Dot => DashStyle.Dot,
+                _ => null,
+            };
+            var pen = new Pen(new SolidColorBrush(color), equation.LineWidth, dashStyle);
             switch (equation.Evaluator.Kind)
             {
                 case GraphEquationKind.Explicit:
@@ -110,6 +174,13 @@ public sealed class GraphCanvas : Control
                     break;
             }
         }
+
+        if (_traceScreenPoint is { } tracePoint && _isTracing)
+        {
+            DrawTrace(context, tracePoint);
+        }
+
+        UpdateAutomationDescription();
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -139,6 +210,10 @@ public sealed class GraphCanvas : Control
         }
 
         _lastPointerPosition = point.Position;
+        _pointerPressedPosition = point.Position;
+        _panVelocity = default;
+        _lastPointerMoveTime = DateTime.UtcNow;
+        StopInertia();
         e.Pointer.Capture(this);
         e.Handled = true;
     }
@@ -154,6 +229,10 @@ public sealed class GraphCanvas : Control
 
         var current = e.GetPosition(this);
         var delta = current - previous;
+        var now = DateTime.UtcNow;
+        var elapsed = Math.Max(0.001, (now - _lastPointerMoveTime).TotalSeconds);
+        _lastPointerMoveTime = now;
+        _panVelocity = new Vector(delta.X / elapsed, delta.Y / elapsed);
         _lastPointerPosition = current;
         var xDelta = -delta.X / Bounds.Width * (_xMaximum - _xMinimum);
         var yDelta = delta.Y / Bounds.Height * (_yMaximum - _yMinimum);
@@ -161,7 +240,7 @@ public sealed class GraphCanvas : Control
         _xMaximum += xDelta;
         _yMinimum += yDelta;
         _yMaximum += yDelta;
-        InvalidateVisual();
+        NotifyViewportChanged();
         e.Handled = true;
     }
 
@@ -172,13 +251,28 @@ public sealed class GraphCanvas : Control
         {
             e.Pointer.Capture(null);
         }
+        var releasePosition = e.GetPosition(this);
+        var wasClick = _pointerPressedPosition is { } pressed
+            && Math.Sqrt(
+                Math.Pow(releasePosition.X - pressed.X, 2)
+                + Math.Pow(releasePosition.Y - pressed.Y, 2)) < 5;
+        if (_isTracing && wasClick)
+        {
+            UpdateTrace(releasePosition);
+        }
+        else if (!wasClick && _panVelocity.Length > 80)
+        {
+            _inertiaTimer.Start();
+        }
         _lastPointerPosition = null;
+        _pointerPressedPosition = null;
     }
 
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
     {
         base.OnPointerCaptureLost(e);
         _lastPointerPosition = null;
+        _pointerPressedPosition = null;
     }
 
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
@@ -206,14 +300,17 @@ public sealed class GraphCanvas : Control
         _yMaximum = graphCenterY + newYRange * yRatio;
         _yMinimum = _yMaximum - newYRange;
         InvalidateVisual();
+        ViewportChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void DrawGrid(DrawingContext context)
     {
         var gridPen = new Pen(GridBrush ?? Brushes.Gray, 1);
         var axisPen = new Pen(AxisBrush ?? Brushes.Black, 1.25);
-        var xStep = NiceStep((_xMaximum - _xMinimum) / 8);
-        var yStep = NiceStep((_yMaximum - _yMinimum) / 8);
+        var xDivisions = Math.Clamp(Bounds.Width / 40, 4, 20);
+        var yDivisions = Math.Clamp(Bounds.Height / 40, 4, 20);
+        var xStep = NiceStep((_xMaximum - _xMinimum) / xDivisions);
+        var yStep = NiceStep((_yMaximum - _yMinimum) / yDivisions);
 
         var firstX = Math.Ceiling(_xMinimum / xStep) * xStep;
         for (var x = firstX; x <= _xMaximum; x += xStep)
@@ -232,7 +329,176 @@ public sealed class GraphCanvas : Control
                 new Point(0, screenY),
                 new Point(Bounds.Width, screenY));
         }
+
+        DrawAxisDecorations(context, xStep, yStep);
     }
+
+    private void DrawAxisDecorations(DrawingContext context, double xStep, double yStep)
+    {
+        var axisBrush = AxisBrush ?? Brushes.Black;
+        var axisPen = new Pen(axisBrush, 1.25);
+        var xAxisY = Math.Clamp(GraphToScreenY(0), 10, Math.Max(10, Bounds.Height - 10));
+        var yAxisX = Math.Clamp(GraphToScreenX(0), 10, Math.Max(10, Bounds.Width - 10));
+
+        if (_xMaximum > 0)
+        {
+            var tip = new Point(Bounds.Width - 5, xAxisY);
+            context.DrawLine(axisPen, tip, new Point(tip.X - 7, tip.Y - 4));
+            context.DrawLine(axisPen, tip, new Point(tip.X - 7, tip.Y + 4));
+            DrawLabel(context, "x", new Point(tip.X - 15, tip.Y + 5), axisBrush, 13, FontStyle.Italic);
+        }
+        if (_yMaximum > 0)
+        {
+            var tip = new Point(yAxisX, 5);
+            context.DrawLine(axisPen, tip, new Point(tip.X - 4, tip.Y + 7));
+            context.DrawLine(axisPen, tip, new Point(tip.X + 4, tip.Y + 7));
+            DrawLabel(context, "y", new Point(tip.X + 7, tip.Y + 2), axisBrush, 13, FontStyle.Italic);
+        }
+
+        var labelEveryX = NiceStep((_xMaximum - _xMinimum) / 4);
+        var labelEveryY = NiceStep((_yMaximum - _yMinimum) / 4);
+        for (var x = Math.Ceiling(_xMinimum / labelEveryX) * labelEveryX;
+             x <= _xMaximum; x += labelEveryX)
+        {
+            if (Math.Abs(x) < labelEveryX * 1e-6)
+            {
+                continue;
+            }
+            var labelX = GraphToScreenX(x);
+            if (labelX is > 18 && labelX < Bounds.Width - 18)
+            {
+                DrawLabel(context, FormatCoordinate(x),
+                    new Point(labelX - 8, xAxisY + 4), axisBrush, 11);
+            }
+        }
+        for (var y = Math.Ceiling(_yMinimum / labelEveryY) * labelEveryY;
+             y <= _yMaximum; y += labelEveryY)
+        {
+            if (Math.Abs(y) < labelEveryY * 1e-6)
+            {
+                continue;
+            }
+            var labelY = GraphToScreenY(y);
+            if (labelY is > 12 && labelY < Bounds.Height - 12)
+            {
+                DrawLabel(context, FormatCoordinate(y),
+                    new Point(yAxisX + 4, labelY - 8), axisBrush, 11);
+            }
+        }
+        if (_xMinimum <= 0 && _xMaximum >= 0 && _yMinimum <= 0 && _yMaximum >= 0)
+        {
+            DrawLabel(context, "0", new Point(yAxisX + 4, xAxisY + 4), axisBrush, 11);
+        }
+    }
+
+    private static void DrawLabel(
+        DrawingContext context,
+        string text,
+        Point origin,
+        IBrush brush,
+        double size,
+        FontStyle style = FontStyle.Normal)
+    {
+        var formatted = new FormattedText(
+            text,
+            CultureInfo.CurrentCulture,
+            FlowDirection.LeftToRight,
+            new Typeface(FontFamily.Default, style),
+            size,
+            brush);
+        context.DrawText(formatted, origin);
+    }
+
+    private void DrawTrace(DrawingContext context, Point point)
+    {
+        var accent = new SolidColorBrush(Color.Parse("#0078D4"));
+        var marker = new StreamGeometry();
+        using (var geometry = marker.Open())
+        {
+            geometry.BeginFigure(new Point(point.X, point.Y - 7), true);
+            geometry.LineTo(new Point(point.X - 6, point.Y + 5));
+            geometry.LineTo(new Point(point.X + 6, point.Y + 5));
+            geometry.EndFigure(true);
+        }
+        context.DrawGeometry(Brushes.White, new Pen(accent, 2), marker);
+
+        var tooltipOrigin = new Point(
+            Math.Clamp(point.X + 10, 4, Math.Max(4, Bounds.Width - 180)),
+            Math.Clamp(point.Y - 34, 4, Math.Max(4, Bounds.Height - 32)));
+        context.DrawRectangle(
+            new SolidColorBrush(Color.Parse("#E6202020")),
+            null,
+            new RoundedRect(new Rect(tooltipOrigin, new Size(174, 28)), 4));
+        DrawLabel(context, _traceText, tooltipOrigin + new Vector(8, 6), Brushes.White, 11);
+    }
+
+    private void UpdateTrace(Point pointerPosition)
+    {
+        var equation = ViewModel?.GetRenderableEquations()
+            .FirstOrDefault(model => model.Evaluator.Kind == GraphEquationKind.Explicit);
+        if (equation is null)
+        {
+            _traceScreenPoint = null;
+            _traceText = string.Empty;
+            TraceChanged?.Invoke(this, EventArgs.Empty);
+            InvalidateVisual();
+            return;
+        }
+
+        var x = ScreenToGraphX(pointerPosition.X);
+        var y = SafeEvaluate(() => equation.Evaluator.EvaluateExplicit(x));
+        if (!double.IsFinite(y))
+        {
+            return;
+        }
+        _traceScreenPoint = new Point(GraphToScreenX(x), GraphToScreenY(y));
+        _traceText = $"({x:0.###############}, {y:0.000000000000000})";
+        TraceChanged?.Invoke(this, EventArgs.Empty);
+        InvalidateVisual();
+    }
+
+    private void OnInertiaTick(object? sender, EventArgs e)
+    {
+        const double seconds = 0.016;
+        var delta = _panVelocity * seconds;
+        var xDelta = -delta.X / Math.Max(1, Bounds.Width) * (_xMaximum - _xMinimum);
+        var yDelta = delta.Y / Math.Max(1, Bounds.Height) * (_yMaximum - _yMinimum);
+        _xMinimum += xDelta;
+        _xMaximum += xDelta;
+        _yMinimum += yDelta;
+        _yMaximum += yDelta;
+        _panVelocity *= 0.88;
+        if (_panVelocity.Length < 10)
+        {
+            StopInertia();
+        }
+        NotifyViewportChanged();
+    }
+
+    private void StopInertia()
+    {
+        _inertiaTimer.Stop();
+        _panVelocity = default;
+    }
+
+    private void NotifyViewportChanged()
+    {
+        InvalidateVisual();
+        ViewportChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void UpdateAutomationDescription()
+    {
+        var count = ViewModel?.Equations.Count(equation => equation.HasExpression) ?? 0;
+        AutomationProperties.SetName(this,
+            $"Graph viewing window, x-axis bounded by {FormatCoordinate(_xMinimum)} and {FormatCoordinate(_xMaximum)}, " +
+            $"y-axis bounded by {FormatCoordinate(_yMinimum)} and {FormatCoordinate(_yMaximum)}, displaying {count} equations");
+    }
+
+    private static string FormatCoordinate(double value) =>
+        Math.Abs(value) < 1e-12
+            ? "0"
+            : value.ToString("0.###############", CultureInfo.InvariantCulture);
 
     private void DrawExplicit(
         DrawingContext context,

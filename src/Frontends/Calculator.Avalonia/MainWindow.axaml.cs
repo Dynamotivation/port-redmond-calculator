@@ -128,6 +128,9 @@ public partial class MainWindow : Window
     private void UpdateResponsiveCalculatorLayout(double width, double height)
     {
         Display.IsCompactOverlay = _viewModel.IsAlwaysOnTop;
+        GraphingModeSwitch.IsVisible = _viewModel.IsGraphingMode && width < 760;
+        GraphingHeaderGraphButton.IsChecked = !GraphingView.ShowsEquationPanelOnNarrow;
+        GraphingHeaderEquationButton.IsChecked = GraphingView.ShowsEquationPanelOnNarrow;
 
         if (_viewModel.IsAlwaysOnTop)
         {
@@ -179,6 +182,18 @@ public partial class MainWindow : Window
             : CalculatorDisplaySize.Small;
     }
 
+    private void GraphingHeaderGraphButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        GraphingView.ShowCompactGraph();
+        UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
+    }
+
+    private void GraphingHeaderEquationButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        GraphingView.ShowCompactEquation();
+        UpdateResponsiveCalculatorLayout(Bounds.Width, Bounds.Height);
+    }
+
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(CalculatorViewModel.CurrentViewMode))
@@ -228,6 +243,12 @@ public partial class MainWindow : Window
 
     private void UpdateCalculatorModeLayout()
     {
+        if (!_viewModel.IsAlwaysOnTop)
+        {
+            MinWidth = _viewModel.IsGraphingMode ? 322 : 320;
+            MinHeight = _viewModel.IsGraphingMode ? 588 : 500;
+        }
+
         if (_viewModel.IsAlwaysOnTop)
         {
             CalculatorPageContent.RowDefinitions[0].Height = new GridLength(0);
