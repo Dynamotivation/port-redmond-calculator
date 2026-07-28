@@ -26,6 +26,12 @@ public sealed class AngouriMathSolver : IMathSolver
             if (comparison is null)
             {
                 var explicitEntity = MathS.FromString(normalized);
+                if (explicitEntity.Vars.Any(variable =>
+                    IsReservedCoordinate(variable.ToString())))
+                {
+                    throw new GraphingParseException(
+                        "A function expression must be written in terms of x.");
+                }
                 return Create(
                     input,
                     GraphEquationKind.Explicit,
@@ -52,15 +58,6 @@ public sealed class AngouriMathSolver : IMathSolver
                         GraphEquationKind.Explicit,
                         comparisonKind,
                         right);
-                }
-
-                if (IsVariable(rightText, "y"))
-                {
-                    return Create(
-                        input,
-                        GraphEquationKind.Explicit,
-                        comparisonKind,
-                        left);
                 }
 
                 if (IsVariable(leftText, "r"))
@@ -97,6 +94,53 @@ public sealed class AngouriMathSolver : IMathSolver
 
     public string Serialize(IExpression expression) => expression.Source;
 
+    public Task<GraphFunctionAnalysisResult> AnalyzeAsync(
+        IExpression expression,
+        IReadOnlyDictionary<string, double> arguments,
+        CancellationToken cancellationToken)
+    {
+        if (expression is not AngouriExpression angouriExpression)
+        {
+            return Task.FromResult(GraphFunctionAnalysisResult.Unsupported(
+                "Analysis is not supported for this function."));
+        }
+
+        if (angouriExpression.Kind != GraphEquationKind.Explicit)
+        {
+            if (IsReverseOrientedYEquality(angouriExpression.Source))
+            {
+                return Task.FromResult(GraphFunctionAnalysisResult.Unsupported(
+                    "Analysis is only supported for functions in the f(x) format. Example: y=x"));
+            }
+            return Task.FromResult(GraphFunctionAnalysisResult.Unsupported(
+                "Analysis is not supported for this function."));
+        }
+
+        if (!IsAcceptedAnalysisForm(angouriExpression.Source))
+        {
+            return Task.FromResult(GraphFunctionAnalysisResult.Unsupported(
+                "Analysis is only supported for functions in the f(x) format. Example: y=x"));
+        }
+
+        Entity prepared;
+        try
+        {
+            prepared = angouriExpression.Prepare(arguments);
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(GraphFunctionAnalysisResult.Unsupported(
+                "Analysis could not be performed for the function."));
+        }
+
+        return Task.Run(
+            () => AngouriFunctionAnalyzer.Analyze(
+                prepared,
+                angouriExpression.Source,
+                cancellationToken),
+            cancellationToken);
+    }
+
     private static AngouriExpression Create(
         string source,
         GraphEquationKind kind,
@@ -117,6 +161,34 @@ public sealed class AngouriMathSolver : IMathSolver
 
     private static bool IsVariable(string value, string expected) =>
         string.Equals(value.Trim(), expected, StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsReservedCoordinate(string value) =>
+        IsVariable(value, "y")
+        || IsVariable(value, "r")
+        || IsVariable(value, "theta");
+
+    private static bool IsAcceptedAnalysisForm(string source)
+    {
+        var comparison = FindTopLevelComparison(NormalizeInput(source));
+        return comparison is null
+            || comparison.Value.Comparison == GraphComparison.Equal
+            && IsVariable(
+                NormalizeInput(source)[..comparison.Value.Index],
+                "y");
+    }
+
+    private static bool IsReverseOrientedYEquality(string source)
+    {
+        var normalized = NormalizeInput(source);
+        var comparison = FindTopLevelComparison(normalized);
+        if (comparison is null || comparison.Value.Comparison != GraphComparison.Equal)
+        {
+            return false;
+        }
+        var (index, token, _) = comparison.Value;
+        return IsVariable(normalized[(index + token.Length)..], "y")
+            && !IsVariable(normalized[..index], "y");
+    }
 
     private static bool IsFunctionOfX(string value)
     {
@@ -216,19 +288,7 @@ public sealed class AngouriMathSolver : IMathSolver
         {
             try
             {
-                var prepared = entity;
-                foreach (var variable in Variables)
-                {
-                    if (!arguments.TryGetValue(variable, out var value))
-                    {
-                        evaluator = null!;
-                        error = $"Variable {variable} does not have a value.";
-                        return false;
-                    }
-
-                    var replacement = MathS.FromString(value.ToString("R", CultureInfo.InvariantCulture));
-                    prepared = prepared.Substitute(variable, replacement);
-                }
+                var prepared = Prepare(arguments);
 
                 evaluator = Kind switch
                 {
@@ -252,6 +312,22 @@ public sealed class AngouriMathSolver : IMathSolver
                 error = ToUserFacingParseError(exception);
                 return false;
             }
+        }
+
+        internal Entity Prepare(IReadOnlyDictionary<string, double> arguments)
+        {
+            var prepared = entity;
+            foreach (var variable in Variables)
+            {
+                if (!arguments.TryGetValue(variable, out var value))
+                {
+                    throw new InvalidOperationException($"Variable {variable} does not have a value.");
+                }
+
+                var replacement = MathS.FromString(value.ToString("R", CultureInfo.InvariantCulture));
+                prepared = prepared.Substitute(variable, replacement);
+            }
+            return prepared;
         }
 
         private static Func<double, double> CompilePolar(Entity prepared)

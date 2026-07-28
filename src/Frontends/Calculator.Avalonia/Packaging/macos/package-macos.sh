@@ -7,6 +7,13 @@ publish_dir=$(CDPATH= cd -- "$publish_dir" && pwd)
 bundle="$publish_dir/Redmond Calculator.app"
 contents="$bundle/Contents"
 
+if [ ! -f "$publish_dir/libhostfxr.dylib" ] ||
+   [ ! -f "$publish_dir/libcoreclr.dylib" ]; then
+    echo "Refusing to package a framework-dependent build." >&2
+    echo "Publish with '-r osx-arm64 --self-contained true' first." >&2
+    exit 1
+fi
+
 if [ -e "$bundle" ]; then
     echo "Bundle already exists: $bundle" >&2
     exit 1

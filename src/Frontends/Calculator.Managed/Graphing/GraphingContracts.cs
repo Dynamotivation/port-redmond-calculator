@@ -17,6 +17,48 @@ public enum GraphComparison
     GreaterOrEqual,
 }
 
+public enum GraphAnalysisCategory
+{
+    Domain,
+    Range,
+    XIntercept,
+    YIntercept,
+    Minima,
+    Maxima,
+    InflectionPoints,
+    VerticalAsymptotes,
+    HorizontalAsymptotes,
+    ObliqueAsymptotes,
+    Parity,
+    Monotonicity,
+    Complexity,
+}
+
+public enum GraphAnalysisStatus
+{
+    Value,
+    None,
+    Unknown,
+    Unsupported,
+    Error,
+}
+
+public sealed record GraphAnalysisValue(string Text, string Annotation = "");
+
+public sealed record GraphAnalysisFeature(
+    GraphAnalysisCategory Category,
+    GraphAnalysisStatus Status,
+    IReadOnlyList<GraphAnalysisValue> Values);
+
+public sealed record GraphFunctionAnalysisResult(
+    bool IsSupported,
+    string ErrorMessage,
+    IReadOnlyList<GraphAnalysisFeature> Features)
+{
+    public static GraphFunctionAnalysisResult Unsupported(string message) =>
+        new(false, message, []);
+}
+
 /// <summary>
 /// Platform-neutral counterpart of the expression object exposed by
 /// GraphingInterfaces/Common.h. Third-party CAS types intentionally do not
@@ -57,6 +99,10 @@ public interface IMathSolver
 {
     IExpression ParseInput(string input);
     string Serialize(IExpression expression);
+    Task<GraphFunctionAnalysisResult> AnalyzeAsync(
+        IExpression expression,
+        IReadOnlyDictionary<string, double> arguments,
+        CancellationToken cancellationToken);
 }
 
 public sealed class GraphingParseException(string message, int errorOffset = -1)

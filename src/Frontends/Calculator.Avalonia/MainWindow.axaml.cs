@@ -128,7 +128,7 @@ public partial class MainWindow : Window
     private void UpdateResponsiveCalculatorLayout(double width, double height)
     {
         Display.IsCompactOverlay = _viewModel.IsAlwaysOnTop;
-        GraphingModeSwitch.IsVisible = _viewModel.IsGraphingMode && width < 760;
+        GraphingModeSwitch.IsVisible = _viewModel.IsGraphingMode && width < 800;
         GraphingHeaderGraphButton.IsChecked = !GraphingView.ShowsEquationPanelOnNarrow;
         GraphingHeaderEquationButton.IsChecked = GraphingView.ShowsEquationPanelOnNarrow;
 

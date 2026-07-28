@@ -20,6 +20,7 @@ internal static class SnapshotRunner
 {
     private const int SettleTickSleepMilliseconds = 8;
     private const int NavigationTransitionTimeoutMilliseconds = 2000;
+    private const int GraphAnalysisTimeoutMilliseconds = 12000;
 
     /// <summary>
     /// Largest per-channel difference treated as compositing noise. Measured
@@ -108,6 +109,7 @@ internal static class SnapshotRunner
             // it out explicitly — a tick budget alone leaves the capture racing
             // that timer and the toggle renders enabled or disabled at random.
             WaitForNavigationTransition(viewModel);
+            WaitForGraphAnalysis(viewModel);
             Settle(ticks: 80);
 
             using var bitmap = window.CaptureRenderedFrame()
@@ -175,6 +177,22 @@ internal static class SnapshotRunner
         }
 
         Dispatcher.UIThread.RunJobs();
+    }
+
+    private static void WaitForGraphAnalysis(CalculatorViewModel viewModel)
+    {
+        var deadline = Environment.TickCount64 + GraphAnalysisTimeoutMilliseconds;
+        while (viewModel.Graphing.IsAnalyzing && Environment.TickCount64 < deadline)
+        {
+            Dispatcher.UIThread.RunJobs();
+            Thread.Sleep(SettleTickSleepMilliseconds);
+        }
+
+        Dispatcher.UIThread.RunJobs();
+        if (viewModel.Graphing.IsAnalyzing)
+        {
+            throw new TimeoutException("Graph analysis did not complete before snapshot capture.");
+        }
     }
 
     private static void Settle(int ticks)
