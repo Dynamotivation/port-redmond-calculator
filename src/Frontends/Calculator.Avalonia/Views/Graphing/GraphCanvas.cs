@@ -156,8 +156,8 @@ public sealed class GraphCanvas : Control
             var color = ParseColor(equation.Color);
             var dashStyle = equation.LineStyle switch
             {
-                GraphLineStyle.Dash => DashStyle.Dash,
-                GraphLineStyle.Dot => DashStyle.Dot,
+                GraphLineStyle.Dash => new DashStyle([2d, 1d], 0),
+                GraphLineStyle.Dot => new DashStyle([1d], 0),
                 _ => null,
             };
             var pen = new Pen(new SolidColorBrush(color), equation.LineWidth, dashStyle);

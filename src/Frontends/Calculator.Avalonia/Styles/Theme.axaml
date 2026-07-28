@@ -55,6 +55,7 @@
         <SolidColorBrush x:Key="GraphEquationPanelBrush" Color="#DD202020" />
         <SolidColorBrush x:Key="GraphEquationCardBrush" Color="#E62B2B2B" />
         <SolidColorBrush x:Key="GraphCommandPanelBrush" Color="#E62B2B2B" />
+        <SolidColorBrush x:Key="GraphCommandPanelBorderBrush" Color="#24FFFFFF" />
         <SolidColorBrush x:Key="GraphGridBrush" Color="#28FFFFFF" />
         <SolidColorBrush x:Key="GraphAxisBrush" Color="#B3FFFFFF" />
       </ResourceDictionary>
@@ -116,6 +117,7 @@
         <SolidColorBrush x:Key="GraphEquationPanelBrush" Color="#DDF9F9F9" />
         <SolidColorBrush x:Key="GraphEquationCardBrush" Color="#E6FBFBFB" />
         <SolidColorBrush x:Key="GraphCommandPanelBrush" Color="#E6FBFBFB" />
+        <SolidColorBrush x:Key="GraphCommandPanelBorderBrush" Color="#24000000" />
         <SolidColorBrush x:Key="GraphGridBrush" Color="#22000000" />
         <SolidColorBrush x:Key="GraphAxisBrush" Color="#99000000" />
       </ResourceDictionary>

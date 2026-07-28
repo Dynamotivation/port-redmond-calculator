@@ -14,7 +14,17 @@ internal static class GraphingTests
         ("graphing view model tracks parameters", ViewModelTracksParameters),
         ("graphing equation presentation state is preserved", EquationPresentationStateIsPreserved),
         ("graphing commits drafts and maintains a placeholder", DraftsCommitAtTheFourteenFunctionLimit),
+        ("graphing invalid rows consume slots and colors", InvalidRowsConsumeSlotsAndColors),
         ("graphing renumbers equations and reuses released colors", DeletionRenumbersAndReusesColors),
+        ("graphing analyzes documented elementary functions", AnalyzesDocumentedElementaryFunctions),
+        ("graphing preserves category-specific complexity limits", PreservesDocumentedComplexityLimits),
+        ("graphing enforces the documented analysis format gate", EnforcesDocumentedAnalysisFormatGate),
+        ("graphing analyzes a quadratic", AnalyzesQuadratic),
+        ("graphing analyzes a high even power", AnalyzesHighEvenPower),
+        ("graphing analysis preserves removable discontinuities", AnalysisPreservesRemovableDiscontinuities),
+        ("graphing analysis distinguishes unknown from none", AnalysisDistinguishesUnknownFromNone),
+        ("graphing analyzes the rational stress expression", AnalyzesRationalStressExpression),
+        ("graphing analysis rejects implicit relations safely", AnalysisRejectsImplicitRelationsSafely),
     ];
 
     private static void EvaluatesExplicitExpressions()
@@ -178,6 +188,241 @@ internal static class GraphingTests
             "the next committed equation should use the released color");
         Assert(viewModel.Equations[^1].Color == GraphingViewModel.EquationColors[3],
             "the following placeholder should advance to the next unused palette color");
+    }
+
+    private static void InvalidRowsConsumeSlotsAndColors()
+    {
+        var viewModel = new GraphingViewModel(CreateStrings());
+        var invalid = viewModel.Equations.Single();
+        var allocatedColor = invalid.Color;
+        invalid.DraftExpression = "y";
+
+        Assert(viewModel.CommitEquation(invalid),
+            "committing a populated invalid placeholder should allocate the next row");
+        Assert(invalid.HasExpression && !invalid.IsValid && invalid.HasError,
+            "the invalid row should remain committed and visibly invalid");
+        Assert(invalid.Color == allocatedColor,
+            "a parse failure must retain its allocated color");
+        Assert(viewModel.Equations.Count == 2 && !viewModel.Equations[^1].HasExpression,
+            "an invalid committed row should still be followed by a placeholder");
+        Assert(viewModel.GetRenderableEquations().Count == 0,
+            "invalid allocated rows must not count as plotted equations");
+    }
+
+    private static void AnalyzesDocumentedElementaryFunctions()
+    {
+        var identity = Analyze("x");
+        AssertFeatureContains(identity, GraphAnalysisCategory.Domain, "x ∈ ℝ");
+        AssertFeatureContains(identity, GraphAnalysisCategory.Parity, "odd");
+
+        var reciprocal = Analyze("1/x");
+        AssertFeatureContains(reciprocal, GraphAnalysisCategory.Domain, "x ≠ 0");
+        AssertFeatureContains(reciprocal, GraphAnalysisCategory.Range, "y ≠ 0");
+        AssertFeatureContains(reciprocal, GraphAnalysisCategory.VerticalAsymptotes, "x = 0");
+
+        var constant = Analyze("5");
+        AssertFeatureContains(constant, GraphAnalysisCategory.Range, "{5}");
+        AssertFeatureContains(constant, GraphAnalysisCategory.Monotonicity, "(-∞, ∞)");
+        AssertFeatureContains(constant, GraphAnalysisCategory.Monotonicity, "Constant");
+
+        var squareRoot = Analyze("sqrt(x)");
+        AssertFeatureContains(squareRoot, GraphAnalysisCategory.Domain, "x ≥ 0");
+        AssertFeatureContains(squareRoot, GraphAnalysisCategory.Range, "[0, ∞)");
+        AssertFeatureContains(squareRoot, GraphAnalysisCategory.Minima, "(0, 0)");
+
+        var logarithm = Analyze("log(x)");
+        AssertFeatureContains(logarithm, GraphAnalysisCategory.Domain, "x > 0");
+        AssertFeatureContains(logarithm, GraphAnalysisCategory.Range, "y ∈ ℝ");
+        AssertFeatureContains(logarithm, GraphAnalysisCategory.VerticalAsymptotes, "x = 0");
+
+        var sine = Analyze("sin(x)");
+        AssertFeatureContains(sine, GraphAnalysisCategory.Range, "[-1, 1]");
+        AssertFeatureContains(sine, GraphAnalysisCategory.XIntercept, "πn");
+        AssertFeatureContains(sine, GraphAnalysisCategory.InflectionPoints, "πn");
+    }
+
+    private static void PreservesDocumentedComplexityLimits()
+    {
+        var chirp = Analyze("sin(x^2)");
+        foreach (var category in new[]
+                 {
+                     GraphAnalysisCategory.Range,
+                     GraphAnalysisCategory.Minima,
+                     GraphAnalysisCategory.Maxima,
+                     GraphAnalysisCategory.InflectionPoints,
+                     GraphAnalysisCategory.Monotonicity,
+                 })
+        {
+            Assert(Feature(chirp, category).Status == GraphAnalysisStatus.Unknown,
+                $"sin(x^2) {category} should remain too complex, not none");
+        }
+        AssertFeatureContains(chirp, GraphAnalysisCategory.XIntercept, "√(πn)");
+        AssertFeatureContains(chirp, GraphAnalysisCategory.Parity, "even");
+        AssertFeatureContains(chirp, GraphAnalysisCategory.Complexity, "Period");
+
+        var variableExponent = Analyze("x^x");
+        AssertFeatureContains(variableExponent, GraphAnalysisCategory.Domain, "x > 0");
+        AssertFeatureContains(variableExponent, GraphAnalysisCategory.Range, "e^(-1/e)");
+        AssertFeatureContains(variableExponent, GraphAnalysisCategory.Minima, "(1/e, e^(-1/e))");
+        Assert(Feature(variableExponent, GraphAnalysisCategory.InflectionPoints).Status
+                == GraphAnalysisStatus.Unknown,
+            "x^x inflection points should be too complex");
+        AssertFeatureContains(variableExponent, GraphAnalysisCategory.Complexity, "Inflection points");
+    }
+
+    private static void EnforcesDocumentedAnalysisFormatGate()
+    {
+        var solver = new AngouriMathSolver();
+        var reversed = solver.ParseInput("x=y");
+        Assert(reversed.Kind == GraphEquationKind.Implicit,
+            "x=y must retain its top-level orientation for analysis compatibility");
+        var rejected = solver.AnalyzeAsync(
+                reversed,
+                new Dictionary<string, double>(),
+                CancellationToken.None)
+            .GetAwaiter()
+            .GetResult();
+        Assert(!rejected.IsSupported && rejected.ErrorMessage.Contains("f(x)"),
+            "x=y should open the f(x)-format rejection");
+
+        Assert(Analyze("y=x").IsSupported, "exact y=f(x) syntax should be supported");
+
+        var inequality = solver.ParseInput("x<1");
+        var unsupported = solver.AnalyzeAsync(
+                inequality,
+                new Dictionary<string, double>(),
+                CancellationToken.None)
+            .GetAwaiter()
+            .GetResult();
+        Assert(!unsupported.IsSupported
+            && unsupported.ErrorMessage.Contains("not supported", StringComparison.OrdinalIgnoreCase),
+            "an inequality should retain the generic unsupported page");
+
+        try
+        {
+            solver.ParseInput("y");
+            throw new InvalidOperationException("bare y should not parse as a function of x");
+        }
+        catch (GraphingParseException)
+        {
+        }
+    }
+
+    private static void AnalyzesQuadratic()
+    {
+        var result = Analyze("(x+1)(x-1)");
+        Assert(result.IsSupported, "the quadratic should be analyzable");
+        Assert(result.Features.Count(feature => feature.Category != GraphAnalysisCategory.Complexity) == 12,
+            "analysis should expose all twelve feature categories");
+        AssertFeatureContains(result, GraphAnalysisCategory.Domain, "x ∈ ℝ");
+        AssertFeatureContains(result, GraphAnalysisCategory.Range, "[-1, ∞)");
+        AssertFeatureContains(result, GraphAnalysisCategory.XIntercept, "x = -1");
+        AssertFeatureContains(result, GraphAnalysisCategory.XIntercept, "x = 1");
+        AssertFeatureContains(result, GraphAnalysisCategory.YIntercept, "y = -1");
+        AssertFeatureContains(result, GraphAnalysisCategory.Minima, "(0, -1)");
+        Assert(Feature(result, GraphAnalysisCategory.Maxima).Status == GraphAnalysisStatus.None,
+            "the quadratic should have no maxima");
+        AssertFeatureContains(result, GraphAnalysisCategory.Parity, "even");
+    }
+
+    private static void AnalyzesHighEvenPower()
+    {
+        var result = Analyze("x^100");
+        Assert(result.IsSupported, "x^100 should complete analysis");
+        AssertFeatureContains(result, GraphAnalysisCategory.Range, "[0, ∞)");
+        AssertFeatureContains(result, GraphAnalysisCategory.Minima, "(0, 0)");
+        Assert(Feature(result, GraphAnalysisCategory.InflectionPoints).Status == GraphAnalysisStatus.None,
+            "x^100 should not misclassify its stationary point as an inflection");
+    }
+
+    private static void AnalysisPreservesRemovableDiscontinuities()
+    {
+        var result = Analyze("x/x");
+        AssertFeatureContains(result, GraphAnalysisCategory.Domain, "x ≠ 0");
+        AssertFeatureContains(result, GraphAnalysisCategory.Range, "{1}");
+        Assert(Feature(result, GraphAnalysisCategory.XIntercept).Status == GraphAnalysisStatus.None,
+            "x/x should have no x-intercept");
+        Assert(Feature(result, GraphAnalysisCategory.YIntercept).Status == GraphAnalysisStatus.None,
+            "x/x should retain the missing y-intercept");
+        Assert(Feature(result, GraphAnalysisCategory.VerticalAsymptotes).Status == GraphAnalysisStatus.None,
+            "a removable hole is not a vertical asymptote");
+        AssertFeatureContains(result, GraphAnalysisCategory.HorizontalAsymptotes, "y = 1");
+    }
+
+    private static void AnalysisDistinguishesUnknownFromNone()
+    {
+        var result = Analyze("sin(1/x)");
+        AssertFeatureContains(result, GraphAnalysisCategory.Domain, "x ≠ 0");
+        Assert(Feature(result, GraphAnalysisCategory.Range).Status == GraphAnalysisStatus.Unknown,
+            "an uncalculated range must remain unknown");
+        Assert(Feature(result, GraphAnalysisCategory.InflectionPoints).Status == GraphAnalysisStatus.Unknown,
+            "uncalculated inflections must not become none");
+        Assert(Feature(result, GraphAnalysisCategory.Monotonicity).Status == GraphAnalysisStatus.Unknown,
+            "uncalculated monotonicity must remain unknown");
+        AssertFeatureContains(result, GraphAnalysisCategory.HorizontalAsymptotes, "y = 0");
+        AssertFeatureContains(result, GraphAnalysisCategory.Parity, "odd");
+        Assert(result.Features.Any(feature => feature.Category == GraphAnalysisCategory.Complexity),
+            "partial analysis should include a complexity summary");
+    }
+
+    private static void AnalyzesRationalStressExpression()
+    {
+        var result = Analyze(string.Concat(Enumerable.Repeat("(x+1/x)", 10)));
+        AssertFeatureContains(result, GraphAnalysisCategory.Domain, "x ≠ 0");
+        AssertFeatureContains(result, GraphAnalysisCategory.Range, "[1024, ∞)");
+        Assert(Feature(result, GraphAnalysisCategory.XIntercept).Status == GraphAnalysisStatus.None,
+            "complex roots must not be exposed as real graph intercepts");
+        AssertFeatureContains(result, GraphAnalysisCategory.Minima, "(-1, 1024)");
+        AssertFeatureContains(result, GraphAnalysisCategory.Minima, "(1, 1024)");
+        AssertFeatureContains(result, GraphAnalysisCategory.VerticalAsymptotes, "x = 0");
+        Assert(Feature(result, GraphAnalysisCategory.Monotonicity).Values.Count == 4,
+            "the rational stress function should have four monotonic intervals");
+    }
+
+    private static void AnalysisRejectsImplicitRelationsSafely()
+    {
+        var solver = new AngouriMathSolver();
+        foreach (var source in new[] { "x=2", "x^2+y^2=25" })
+        {
+            var expression = solver.ParseInput(source);
+            var result = solver.AnalyzeAsync(
+                    expression,
+                    new Dictionary<string, double>(),
+                    CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+            Assert(!result.IsSupported && result.ErrorMessage.Contains("not supported"),
+                $"{source} should return an explained unsupported result");
+        }
+    }
+
+    private static GraphFunctionAnalysisResult Analyze(string source)
+    {
+        var solver = new AngouriMathSolver();
+        var expression = solver.ParseInput(source);
+        return solver.AnalyzeAsync(
+                expression,
+                new Dictionary<string, double>(),
+                CancellationToken.None)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    private static GraphAnalysisFeature Feature(
+        GraphFunctionAnalysisResult result,
+        GraphAnalysisCategory category) =>
+        result.Features.Single(feature => feature.Category == category);
+
+    private static void AssertFeatureContains(
+        GraphFunctionAnalysisResult result,
+        GraphAnalysisCategory category,
+        string expected)
+    {
+        Assert(
+            Feature(result, category).Values.Any(value =>
+                value.Text.Contains(expected, StringComparison.OrdinalIgnoreCase)
+                || value.Annotation.Contains(expected, StringComparison.OrdinalIgnoreCase)),
+            $"{category} should contain '{expected}'");
     }
 
     private static IGraphExpressionEvaluator CreateEvaluator(

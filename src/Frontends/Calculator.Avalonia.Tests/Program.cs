@@ -23,6 +23,7 @@ SnapshotRunner.ConfigureResources();
 // the snapshot diff much harder to read.
 foreach (var (name, run) in RouterTests.All
              .Concat(GraphingTests.All)
+             .Concat(GraphingInteractionTests.All)
              .Concat(DateCalculatorTests.All)
              .Concat(PressedStateTests.All)
              .Concat(ShellInteractionTests.All))

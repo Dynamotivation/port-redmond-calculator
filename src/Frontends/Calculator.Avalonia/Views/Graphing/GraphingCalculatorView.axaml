@@ -18,40 +18,56 @@
                                 AxisBrush="{DynamicResource GraphAxisBrush}" />
 
           <!-- Sharing is intentionally absent: it is not a hidden or disabled command. -->
-          <Border Margin="0,8,8,0" Padding="2"
+          <Border MinHeight="40" Margin="0,8,8,0"
                   HorizontalAlignment="Right" VerticalAlignment="Top"
-                  CornerRadius="5" Background="{DynamicResource GraphCommandPanelBrush}">
+                  CornerRadius="8"
+                  Background="{DynamicResource GraphCommandPanelBrush}"
+                  BorderBrush="{DynamicResource GraphCommandPanelBorderBrush}"
+                  BorderThickness="1">
             <StackPanel Orientation="Horizontal">
               <ToggleButton x:Name="TraceButton" Classes="graphCommandButton"
+                            Margin="4"
                             Click="TraceButton_OnClick"
-                            AutomationProperties.Name="Start tracing"
-                            ToolTip.Tip="Start tracing">
-                <Path Width="18" Height="18" Stretch="Uniform" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
-                      Data="M 3,2 L 16,9 L 10,11 L 14,17 L 11,19 L 7,12 L 3,16 Z" />
+                            AutomationProperties.Name="{Binding Graphing.Strings.StartTracingTooltip}"
+                            ToolTip.Tip="{Binding Graphing.Strings.StartTracingTooltip}">
+                <TextBlock FontFamily="{StaticResource CalculatorIconFont}"
+                           FontSize="16" Text="&#xE3B3;" />
               </ToggleButton>
               <Button x:Name="GraphOptionsButton" Classes="graphCommandButton"
+                      Margin="4"
                       Click="GraphOptionsButton_OnClick"
-                      AutomationProperties.Name="Graph options"
-                      ToolTip.Tip="Graph options">
-                <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="16" Text="&#xE713;" />
+                      AutomationProperties.Name="{Binding Graphing.Strings.GraphOptionsHeading}"
+                      ToolTip.Tip="{Binding Graphing.Strings.GraphOptionsHeading}">
+                <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="16" Text="&#xE3B4;" />
               </Button>
             </StackPanel>
           </Border>
 
-          <Border Margin="0,0,8,8" Padding="2"
+          <Border MinWidth="40" Margin="0,0,8,8"
                   HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                  CornerRadius="5" Background="{DynamicResource GraphCommandPanelBrush}">
+                  CornerRadius="8"
+                  Background="{DynamicResource GraphCommandPanelBrush}"
+                  BorderBrush="{DynamicResource GraphCommandPanelBorderBrush}"
+                  BorderThickness="1">
             <StackPanel>
               <Button Classes="graphCommandButton" Click="ZoomIn_OnClick"
-                      AutomationProperties.Name="Zoom in" ToolTip.Tip="Zoom in">
-                <TextBlock FontSize="20" Text="+" />
+                      Margin="4"
+                      AutomationProperties.Name="Zoom in"
+                      ToolTip.Tip="{Binding Graphing.Strings.ZoomInTooltip}">
+                <TextBlock FontFamily="{StaticResource CalculatorIconFont}"
+                           FontSize="14" Text="&#xE948;" />
               </Button>
               <Button Classes="graphCommandButton" Click="ZoomOut_OnClick"
-                      AutomationProperties.Name="Zoom out" ToolTip.Tip="Zoom out">
-                <TextBlock FontSize="20" Text="−" />
+                      Margin="4,0"
+                      AutomationProperties.Name="Zoom out"
+                      ToolTip.Tip="{Binding Graphing.Strings.ZoomOutTooltip}">
+                <TextBlock FontFamily="{StaticResource CalculatorIconFont}"
+                           FontSize="14" Text="&#xE949;" />
               </Button>
               <Button Classes="graphCommandButton" Click="ResetView_OnClick"
-                      AutomationProperties.Name="Graph view" ToolTip.Tip="Graph view">
+                      Margin="4"
+                      AutomationProperties.Name="Graph view"
+                      ToolTip.Tip="{Binding Graphing.Strings.ResetViewTooltip}">
                 <Grid Width="18" Height="18">
                   <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
                              FontFamily="{StaticResource CalculatorIconFont}" FontSize="15" Text="&#xE45E;" />
@@ -69,53 +85,66 @@
                   Background="{DynamicResource CardBrush}" BoxShadow="0 6 18 0 #70000000">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
               <StackPanel Spacing="9">
+                <TextBlock FontSize="20" FontWeight="Medium"
+                           Text="{Binding Graphing.Strings.GraphOptionsHeading}" />
                 <Grid ColumnDefinitions="*,Auto">
-                  <TextBlock FontSize="22" FontWeight="SemiBold" Text="Graph options" />
-                  <Button Grid.Column="1" Width="32" Height="30" Padding="2"
-                          Click="CloseGraphOptionsButton_OnClick"
-                          AutomationProperties.Name="Close graph options"
-                          Content="×" />
-                </Grid>
-                <Grid ColumnDefinitions="*,Auto">
-                  <TextBlock VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" Text="Window" />
-                  <Button Grid.Column="1" Classes="graphLinkButton" Click="ResetView_OnClick" Content="Reset view" />
+                  <TextBlock VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold"
+                             Text="{Binding Graphing.Strings.WindowHeading}" />
+                  <Button Grid.Column="1" Classes="graphLinkButton" Click="ResetView_OnClick"
+                          Content="{Binding Graphing.Strings.ResetViewText}" />
                 </Grid>
                 <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
                   <StackPanel>
-                    <TextBlock Opacity="0.72" Text="X-Min" />
+                    <TextBlock Opacity="0.72" Text="{Binding Graphing.Strings.XMinimumHeading}" />
                     <TextBox x:Name="XMinimumBox" Text="-10" LostFocus="BoundsBox_OnLostFocus" />
                   </StackPanel>
                   <StackPanel Grid.Column="1">
-                    <TextBlock Opacity="0.72" Text="X-Max" />
+                    <TextBlock Opacity="0.72" Text="{Binding Graphing.Strings.XMaximumHeading}" />
                     <TextBox x:Name="XMaximumBox" Text="10" LostFocus="BoundsBox_OnLostFocus" />
                   </StackPanel>
                   <StackPanel Grid.Row="1">
-                    <TextBlock Opacity="0.72" Text="Y-Min" />
+                    <TextBlock Opacity="0.72" Text="{Binding Graphing.Strings.YMinimumHeading}" />
                     <TextBox x:Name="YMinimumBox" Text="-10" LostFocus="BoundsBox_OnLostFocus" />
                   </StackPanel>
                   <StackPanel Grid.Row="1" Grid.Column="1">
-                    <TextBlock Opacity="0.72" Text="Y-Max" />
+                    <TextBlock Opacity="0.72" Text="{Binding Graphing.Strings.YMaximumHeading}" />
                     <TextBox x:Name="YMaximumBox" Text="10" LostFocus="BoundsBox_OnLostFocus" />
                   </StackPanel>
                 </Grid>
-                <TextBlock Margin="0,4,0,0" FontSize="15" FontWeight="SemiBold" Text="Units" />
+                <TextBlock Margin="0,4,0,0" FontSize="15" FontWeight="SemiBold"
+                           Text="{Binding Graphing.Strings.UnitsHeading}" />
                 <UniformGrid Columns="3">
-                  <RadioButton Classes="graphSegment" GroupName="GraphUnits" IsChecked="True" Content="Radians" />
-                  <RadioButton Classes="graphSegment" GroupName="GraphUnits" Content="Degrees" />
-                  <RadioButton Classes="graphSegment" GroupName="GraphUnits" Content="Gradians" />
+                  <RadioButton Classes="graphSegment" GroupName="GraphUnits" IsChecked="True"
+                               Content="{Binding Graphing.Strings.RadiansText}" />
+                  <RadioButton Classes="graphSegment" GroupName="GraphUnits"
+                               Content="{Binding Graphing.Strings.DegreesText}" />
+                  <RadioButton Classes="graphSegment" GroupName="GraphUnits"
+                               Content="{Binding Graphing.Strings.GradiansText}" />
                 </UniformGrid>
-                <TextBlock Margin="0,4,0,0" FontSize="15" FontWeight="SemiBold" Text="Line thickness" />
+                <TextBlock Margin="0,4,0,0" FontSize="15" FontWeight="SemiBold"
+                           Text="{Binding Graphing.Strings.LineThicknessHeading}" />
                 <ComboBox x:Name="LineWidthBox" SelectedIndex="1" SelectionChanged="LineWidthBox_OnSelectionChanged">
-                  <ComboBoxItem AutomationProperties.Name="Small line width" Content="━━━━  Small" Tag="1" />
-                  <ComboBoxItem AutomationProperties.Name="Medium line width" Content="━━━━  Medium" Tag="2" />
-                  <ComboBoxItem AutomationProperties.Name="Large line width" Content="━━━━  Large" Tag="3" />
-                  <ComboBoxItem AutomationProperties.Name="Extra large line width" Content="━━━━  Extra large" Tag="4" />
+                  <ComboBoxItem AutomationProperties.Name="{Binding Graphing.Strings.SmallLineWidthName}" Tag="1">
+                    <Border Width="200" Height="1" Background="{DynamicResource ChromeForegroundBrush}" />
+                  </ComboBoxItem>
+                  <ComboBoxItem AutomationProperties.Name="{Binding Graphing.Strings.MediumLineWidthName}" Tag="2">
+                    <Border Width="200" Height="2" Background="{DynamicResource ChromeForegroundBrush}" />
+                  </ComboBoxItem>
+                  <ComboBoxItem AutomationProperties.Name="{Binding Graphing.Strings.LargeLineWidthName}" Tag="3">
+                    <Border Width="200" Height="3" Background="{DynamicResource ChromeForegroundBrush}" />
+                  </ComboBoxItem>
+                  <ComboBoxItem AutomationProperties.Name="{Binding Graphing.Strings.ExtraLargeLineWidthName}" Tag="4">
+                    <Border Width="200" Height="4" Background="{DynamicResource ChromeForegroundBrush}" />
+                  </ComboBoxItem>
                 </ComboBox>
-                <TextBlock Margin="0,4,0,0" FontSize="15" FontWeight="SemiBold" Text="Graph theme" />
+                <TextBlock Margin="0,4,0,0" FontSize="15" FontWeight="SemiBold"
+                           Text="{Binding Graphing.Strings.GraphThemeHeading}" />
                 <RadioButton x:Name="AlwaysLightThemeButton" GroupName="GraphTheme" IsChecked="True"
-                             IsCheckedChanged="GraphTheme_OnChanged" Content="Always light" />
+                             IsCheckedChanged="GraphTheme_OnChanged"
+                             Content="{Binding Graphing.Strings.AlwaysLightText}" />
                 <RadioButton x:Name="MatchAppThemeButton" GroupName="GraphTheme"
-                             IsCheckedChanged="GraphTheme_OnChanged" Content="Match app theme" />
+                             IsCheckedChanged="GraphTheme_OnChanged"
+                             Content="{Binding Graphing.Strings.MatchAppThemeText}" />
               </StackPanel>
             </ScrollViewer>
           </Border>
@@ -127,10 +156,16 @@
       </Border>
 
       <Border x:Name="EquationPanel" Grid.Column="1" Background="{DynamicResource GraphEquationPanelBrush}">
-        <Grid RowDefinitions="*,Auto">
+        <Grid>
+        <Grid x:Name="EquationEditorSurface" IsVisible="{Binding !Graphing.IsAnalysisVisible}">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="2.2*" MaxHeight="400" />
+          </Grid.RowDefinitions>
           <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <ItemsControl Margin="0" VerticalAlignment="Top"
-                          ItemsSource="{Binding Graphing.Equations}">
+            <StackPanel>
+              <ItemsControl Margin="0" VerticalAlignment="Top"
+                            ItemsSource="{Binding Graphing.Equations}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="managed:GraphEquationViewModel">
                   <Grid Margin="1.75,1.75,1.75,0" RowDefinitions="44,Auto" VerticalAlignment="Top">
@@ -171,7 +206,8 @@
                             </Grid>
                           </Border>
                         </ToggleButton>
-                        <TextBox Grid.Column="1" Height="44" Padding="10,0"
+                        <TextBox x:Name="EquationExpressionTextBox"
+                                 Grid.Column="1" Height="44" Padding="10,0"
                                  Classes="graphEquationInput"
                                  VerticalContentAlignment="Center"
                                  Background="Transparent" BorderThickness="0"
@@ -182,7 +218,7 @@
                                  KeyDown="EquationTextBox_OnKeyDown"
                                  GotFocus="EquationTextBox_OnGotFocus"
                                  LostFocus="EquationTextBox_OnLostFocus"
-                                 ContextRequested="EquationTextBox_OnContextRequested">
+                                 Loaded="EquationTextBox_OnLoaded">
                           <TextBox.Resources>
                             <SolidColorBrush x:Key="TextControlBorderBrush" Color="Transparent" />
                             <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="Transparent" />
@@ -191,29 +227,36 @@
                           </TextBox.Resources>
                         </TextBox>
                         <StackPanel Grid.Column="2" Orientation="Horizontal"
-                                    IsVisible="{Binding HasExpression}">
-                          <Button Classes="graphEquationAction"
-                                  IsEnabled="False"
-                                  AutomationProperties.Name="Analyze function"
-                                  ToolTip.Tip="Analyze function">
+                                    IsVisible="{Binding ShowCommittedActions}">
+                          <Button x:Name="AnalyzeEquationButton" Classes="graphEquationAction"
+                                  IsEnabled="{Binding CanAnalyze}"
+                                  Click="AnalyzeEquation_OnClick"
+                                  AutomationProperties.Name="{Binding $parent[UserControl].DataContext.Graphing.Strings.AnalyzeFunctionTooltip}"
+                                  ToolTip.Tip="{Binding $parent[UserControl].DataContext.Graphing.Strings.AnalyzeFunctionTooltip}">
                             <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="15"
                                        Text="&#xE945;" />
                           </Button>
-                          <Button Classes="graphEquationAction"
+                          <Button x:Name="EquationStyleButton" Classes="graphEquationAction"
                                   Click="StyleEquation_OnClick"
-                                  AutomationProperties.Name="Change equation style"
-                                  ToolTip.Tip="Change equation style">
+                                  AutomationProperties.Name="{Binding $parent[UserControl].DataContext.Graphing.Strings.ChangeEquationStyleTooltip}"
+                                  ToolTip.Tip="{Binding $parent[UserControl].DataContext.Graphing.Strings.ChangeEquationStyleTooltip}">
                             <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="15"
                                        Text="&#xE790;" />
                           </Button>
                           <Button Classes="graphEquationAction"
                                   Click="RemoveEquation_OnClick"
-                                  AutomationProperties.Name="Remove equation"
-                                  ToolTip.Tip="Remove equation">
+                                  AutomationProperties.Name="{Binding $parent[UserControl].DataContext.Graphing.Strings.RemoveEquationTooltip}"
+                                  ToolTip.Tip="{Binding $parent[UserControl].DataContext.Graphing.Strings.RemoveEquationTooltip}">
                             <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="13"
                                        Text="&#xE74D;" />
                           </Button>
                         </StackPanel>
+                        <Button Grid.Column="2" Classes="graphEquationClear"
+                                IsVisible="{Binding ShowEditingClear}"
+                                Click="ClearEditingEquation_OnClick"
+                                AutomationProperties.Name="Clear">
+                          <TextBlock FontSize="20" FontWeight="Light" Text="×" />
+                        </Button>
                         <Border Grid.ColumnSpan="3" Classes="graphEquationOutline"
                                 IsHitTestVisible="False" CornerRadius="5"
                                 BorderBrush="{Binding TileColor}" BorderThickness="1" />
@@ -226,17 +269,85 @@
                   </Grid>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
-            </ItemsControl>
+              </ItemsControl>
+
+              <StackPanel IsVisible="{Binding Graphing.HasVariables}">
+                <Rectangle Height="1" Margin="12"
+                           Fill="{DynamicResource GraphCommandPanelBorderBrush}" />
+                <TextBlock Margin="12,0,12,4" FontSize="15" FontWeight="SemiBold"
+                           Text="{Binding Graphing.Strings.VariablesHeader}" />
+                <ItemsControl ItemsSource="{Binding Graphing.Variables}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="managed:GraphVariableViewModel">
+                      <Border Margin="4,3" Padding="12,0,12,6" CornerRadius="5"
+                              Background="{DynamicResource GraphEquationCardBrush}">
+                        <StackPanel>
+                          <Grid ColumnDefinitions="Auto,Auto,*,Auto" FlowDirection="LeftToRight">
+                            <TextBlock MinWidth="16" Margin="8,8,0,0"
+                                       VerticalAlignment="Center" FontSize="16"
+                                       FontStyle="Italic" Text="{Binding Name}" />
+                            <TextBlock Grid.Column="1" MinWidth="16" Margin="6,8,0,0"
+                                       VerticalAlignment="Center" FontSize="16"
+                                       FontStyle="Italic" Text="=" />
+                            <TextBox Grid.Column="2" MinWidth="32" Margin="6,0,0,0"
+                                     Padding="2,10,2,2" HorizontalAlignment="Left"
+                                     VerticalAlignment="Center" TextAlignment="Center"
+                                     Background="Transparent" FontStyle="Italic"
+                                     Text="{Binding Value, Mode=TwoWay}" />
+                            <ToggleButton Grid.Column="3" Width="32" Height="32"
+                                          Margin="4,6,0,0" Padding="4"
+                                          Background="Transparent" BorderThickness="0"
+                                          IsChecked="{Binding AreSettingsVisible, Mode=TwoWay}"
+                                          AutomationProperties.Name="{Binding $parent[UserControl].DataContext.Graphing.Strings.VariableOptionsTooltip}"
+                                          ToolTip.Tip="{Binding $parent[UserControl].DataContext.Graphing.Strings.VariableOptionsTooltip}">
+                              <TextBlock FontFamily="{StaticResource CalculatorIconFont}"
+                                         FontSize="12" Text="&#xE70D;" />
+                            </ToggleButton>
+                          </Grid>
+                          <Slider Margin="8,0,8,-2"
+                                  Minimum="{Binding Minimum}"
+                                  Maximum="{Binding Maximum}"
+                                  TickFrequency="{Binding Step}"
+                                  Value="{Binding Value, Mode=TwoWay}" />
+                          <Grid Margin="8,4,8,0" ColumnDefinitions="*,*,*" ColumnSpacing="8"
+                                IsVisible="{Binding AreSettingsVisible}">
+                            <StackPanel>
+                              <TextBlock Opacity="0.72" FontSize="12"
+                                         Text="{Binding $parent[UserControl].DataContext.Graphing.Strings.VariableMinimumHeading}" />
+                              <TextBox Text="{Binding Minimum, Mode=TwoWay}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                              <TextBlock Opacity="0.72" FontSize="12"
+                                         Text="{Binding $parent[UserControl].DataContext.Graphing.Strings.VariableStepHeading}" />
+                              <TextBox Text="{Binding Step, Mode=TwoWay}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                              <TextBlock Opacity="0.72" FontSize="12"
+                                         Text="{Binding $parent[UserControl].DataContext.Graphing.Strings.VariableMaximumHeading}" />
+                              <TextBox Text="{Binding Maximum, Mode=TwoWay}" />
+                            </StackPanel>
+                          </Grid>
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </StackPanel>
           </ScrollViewer>
 
-          <Grid Grid.Row="1" RowDefinitions="52,350">
+          <Grid Grid.Row="1" Margin="2,0,2,2" RowDefinitions="50,*">
             <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
               <StackPanel Orientation="Horizontal">
                 <Button x:Name="TrigButton" Classes="graphSelectorButton">
                   <Button.Content>
                     <StackPanel Orientation="Horizontal">
-                      <TextBlock VerticalAlignment="Center" Text="Trigonometry" />
-                      <TextBlock Margin="10,2,0,0" VerticalAlignment="Center"
+                      <TextBlock Margin="0,2,8,0" VerticalAlignment="Center"
+                                 FontFamily="{StaticResource CalculatorIconFont}"
+                                 Text="&#xF892;" />
+                      <TextBlock VerticalAlignment="Center"
+                                 Text="{Binding Graphing.Strings.TrigonometryText}" />
+                      <TextBlock Margin="8,4,0,0" VerticalAlignment="Center"
                                  FontFamily="{StaticResource CalculatorIconFont}" Text="&#xE70D;" />
                     </StackPanel>
                   </Button.Content>
@@ -260,8 +371,12 @@
                 <Button Classes="graphSelectorButton">
                   <Button.Content>
                     <StackPanel Orientation="Horizontal">
-                      <TextBlock VerticalAlignment="Center" Text="Inequalities" />
-                      <TextBlock Margin="10,2,0,0" VerticalAlignment="Center"
+                      <TextBlock Margin="0,2,8,0" VerticalAlignment="Center"
+                                 FontFamily="{StaticResource CalculatorIconFont}"
+                                 Text="&#xF894;" />
+                      <TextBlock VerticalAlignment="Center"
+                                 Text="{Binding Graphing.Strings.InequalitiesText}" />
+                      <TextBlock Margin="8,4,0,0" VerticalAlignment="Center"
                                  FontFamily="{StaticResource CalculatorIconFont}" Text="&#xE70D;" />
                     </StackPanel>
                   </Button.Content>
@@ -280,8 +395,12 @@
                 <Button Classes="graphSelectorButton">
                   <Button.Content>
                     <StackPanel Orientation="Horizontal">
-                      <TextBlock VerticalAlignment="Center" Text="Function" />
-                      <TextBlock Margin="10,2,0,0" VerticalAlignment="Center"
+                      <TextBlock Margin="0,2,8,0" VerticalAlignment="Center"
+                                 FontFamily="{StaticResource CalculatorIconFont}"
+                                 Text="&#xF893;" />
+                      <TextBlock VerticalAlignment="Center"
+                                 Text="{Binding Graphing.Strings.FunctionText}" />
+                      <TextBlock Margin="8,4,0,0" VerticalAlignment="Center"
                                  FontFamily="{StaticResource CalculatorIconFont}" Text="&#xE70D;" />
                     </StackPanel>
                   </Button.Content>
@@ -298,7 +417,7 @@
               </StackPanel>
             </ScrollViewer>
 
-            <Grid x:Name="GraphKeypad" Grid.Row="1" Margin="3" RowDefinitions="*,*,*,*,*,*,*" ColumnDefinitions="*,*,*,*,*">
+            <Grid x:Name="GraphKeypad" Grid.Row="1" Margin="1" RowDefinitions="*,*,*,*,*,*,*" ColumnDefinitions="*,*,*,*,*">
               <Button x:Name="SecondButton" Classes="calcButton operator symbolOperator graphSecond" Content="&#xF897;" Click="SecondButton_OnClick" AutomationProperties.Name="Inverse function" />
               <Button Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xF7CF;" Tag="pi" Click="InputButton_OnClick" AutomationProperties.Name="Pi" />
               <Button Grid.Column="2" Classes="calcButton operator graphOperatorText" Content="e" Tag="e" Click="InputButton_OnClick" AutomationProperties.Name="Euler's number" />
@@ -348,6 +467,92 @@
               <Button Grid.Row="6" Grid.Column="4" Classes="calcButton equalsButton" Content="&#xE94E;" Tag="submit-input" Click="InputButton_OnClick" AutomationProperties.Name="Submit" />
             </Grid>
           </Grid>
+        </Grid>
+
+        <Grid x:Name="AnalysisSurface"
+              RowDefinitions="Auto,Auto,*"
+              IsVisible="{Binding Graphing.IsAnalysisVisible}"
+              AutomationProperties.Name="{Binding Graphing.Strings.AnalysisHeading}">
+          <Border Margin="4,4,4,0" MinHeight="44" CornerRadius="5"
+                  Background="{DynamicResource GraphEquationCardBrush}">
+            <Grid ColumnDefinitions="Auto,*">
+              <Button x:Name="AnalysisBackButton"
+                      MinWidth="74" MinHeight="44" Padding="8,0"
+                      HorizontalContentAlignment="Center"
+                      VerticalContentAlignment="Stretch"
+                      Background="{Binding Graphing.SelectedEquation.Color}"
+                      BorderThickness="0" CornerRadius="5"
+                      Click="CloseAnalysis_OnClick"
+                      AutomationProperties.Name="{Binding Graphing.Strings.AnalysisBackTooltip}"
+                      ToolTip.Tip="{Binding Graphing.Strings.AnalysisBackTooltip}">
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <TextBlock Margin="0,0,7,0"
+                             FontFamily="{StaticResource CalculatorIconFont}"
+                             FontSize="16" Foreground="White" Text="&#xE72B;" />
+                  <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight">
+                    <TextBlock FontFamily="{StaticResource CalculatorIconFont}"
+                               FontSize="19" Foreground="White" Text="&#xF893;" />
+                    <TextBlock Margin="-4,13,0,0" FontSize="12" Foreground="White"
+                               Text="{Binding Graphing.SelectedEquation.FunctionIndexLabel}" />
+                  </StackPanel>
+                </StackPanel>
+              </Button>
+              <TextBlock Grid.Column="1" MinHeight="44" Padding="10,8,8,8"
+                         VerticalAlignment="Center"
+                         FontSize="14" FontStyle="Italic"
+                         Text="{Binding Graphing.SelectedEquation.Expression}"
+                         TextWrapping="Wrap"
+                         AutomationProperties.Name="{Binding Graphing.Strings.AnalysisEquationAutomationName}" />
+            </Grid>
+          </Border>
+
+          <TextBlock Grid.Row="1" Margin="12,12,10,0"
+                     FontSize="20" FontWeight="Medium"
+                     Text="{Binding Graphing.Strings.AnalysisHeading}" />
+
+          <ScrollViewer Grid.Row="2" Margin="0,4,0,0"
+                        HorizontalScrollBarVisibility="Disabled"
+                        VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+              <ItemsControl x:Name="AnalysisFeatureList"
+                            Margin="12,0,10,12"
+                            ItemsSource="{Binding Graphing.AnalysisItems}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="managed:GraphAnalysisDisplayItem">
+                    <StackPanel Margin="0,8,0,7"
+                                AutomationProperties.Name="{Binding Title}">
+                      <TextBlock FontSize="12" Opacity="0.68"
+                                 Text="{Binding Title}" TextWrapping="Wrap" />
+                      <ItemsControl ItemsSource="{Binding Values}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="managed:GraphAnalysisDisplayValue">
+                            <Grid MinHeight="24" ColumnDefinitions="Auto,*">
+                              <TextBlock VerticalAlignment="Center"
+                                         FontSize="14"
+                                         Classes.analysisMath="{Binding IsMath}"
+                                         Text="{Binding Text}" TextWrapping="Wrap"
+                                         AutomationProperties.Name="{Binding Text}" />
+                              <TextBlock Grid.Column="1" Margin="10,0,0,0"
+                                         VerticalAlignment="Center"
+                                         FontSize="14" Text="{Binding Annotation}"
+                                         TextWrapping="Wrap" />
+                            </Grid>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <TextBlock x:Name="AnalysisErrorTextBlock"
+                         Margin="12,6,10,0" FontSize="14"
+                         Text="{Binding Graphing.AnalysisError}"
+                         TextWrapping="Wrap"
+                         IsVisible="{Binding Graphing.HasAnalysisError}" />
+            </StackPanel>
+          </ScrollViewer>
+        </Grid>
         </Grid>
       </Border>
     </Grid>

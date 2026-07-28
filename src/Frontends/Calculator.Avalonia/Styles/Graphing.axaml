@@ -1,19 +1,19 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <Style Selector="Button.graphCommandButton">
-    <Setter Property="MinWidth" Value="36" />
-    <Setter Property="MinHeight" Value="36" />
-    <Setter Property="Padding" Value="6" />
-    <Setter Property="Margin" Value="1" />
+    <Setter Property="MinWidth" Value="32" />
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Padding" Value="8" />
+    <Setter Property="Margin" Value="0" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}" />
   </Style>
   <Style Selector="ToggleButton.graphCommandButton">
-    <Setter Property="MinWidth" Value="36" />
-    <Setter Property="MinHeight" Value="36" />
-    <Setter Property="Padding" Value="6" />
-    <Setter Property="Margin" Value="1" />
+    <Setter Property="MinWidth" Value="32" />
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Padding" Value="8" />
+    <Setter Property="Margin" Value="0" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}" />
@@ -47,6 +47,22 @@
   </Style>
   <Style Selector="Border.graphEquationCard:pointerover Button.graphEquationAction">
     <Setter Property="Opacity" Value="1" />
+  </Style>
+  <Style Selector="Border.graphEquationCard Button.graphEquationClear">
+    <Setter Property="Width" Value="32" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="MinWidth" Value="32" />
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Margin" Value="2" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="4" />
+  </Style>
+  <Style Selector="Border.graphEquationCard Button.graphEquationClear:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaqueHoverBrush}" />
   </Style>
   <Style Selector="Border.graphEquationCard Border.graphEquationOutline">
     <Setter Property="Opacity" Value="0" />
@@ -90,18 +106,19 @@
     <Setter Property="Margin" Value="1" />
   </Style>
   <Style Selector="Button.graphSelectorButton">
-    <Setter Property="MinWidth" Value="132" />
+    <Setter Property="MinWidth" Value="32" />
     <Setter Property="MinHeight" Value="48" />
-    <Setter Property="Padding" Value="14,6" />
-    <Setter Property="FontSize" Value="15" />
-    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Padding" Value="8,6" />
+    <Setter Property="Margin" Value="1" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="Normal" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}" />
   </Style>
   <Style Selector="ToggleButton.graphModeButton">
-    <Setter Property="Width" Value="42" />
-    <Setter Property="Height" Value="34" />
+    <Setter Property="Width" Value="32" />
+    <Setter Property="Height" Value="30" />
     <Setter Property="Padding" Value="4" />
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}" />
     <Setter Property="Background" Value="Transparent" />
@@ -158,39 +175,7 @@
     <Setter Property="BorderBrush" Value="{DynamicResource ChromeForegroundBrush}" />
     <Setter Property="Opacity" Value="1" />
   </Style>
-  <Style Selector="RadioButton.graphLineStyle">
-    <Setter Property="Width" Value="104" />
-    <Setter Property="Height" Value="42" />
-    <Setter Property="MinWidth" Value="104" />
-    <Setter Property="MinHeight" Value="42" />
-    <Setter Property="Margin" Value="2" />
-    <Setter Property="Padding" Value="10" />
-    <Setter Property="Background" Value="Transparent" />
-    <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonBorderBrush}" />
-    <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="CornerRadius" Value="4" />
-    <Setter Property="HorizontalContentAlignment" Value="Center" />
-    <Setter Property="VerticalContentAlignment" Value="Center" />
-    <Setter Property="Template">
-      <ControlTemplate>
-        <Border x:Name="StyleBorder"
-                Padding="{TemplateBinding Padding}"
-                Background="{TemplateBinding Background}"
-                BorderBrush="{TemplateBinding BorderBrush}"
-                BorderThickness="{TemplateBinding BorderThickness}"
-                CornerRadius="{TemplateBinding CornerRadius}">
-          <ContentPresenter Content="{TemplateBinding Content}"
-                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
-        </Border>
-      </ControlTemplate>
-    </Setter>
-  </Style>
-  <Style Selector="RadioButton.graphLineStyle:pointerover">
-    <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaqueHoverBrush}" />
-  </Style>
-  <Style Selector="RadioButton.graphLineStyle:checked">
-    <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBrush}" />
-    <Setter Property="BorderThickness" Value="2" />
+  <Style Selector="TextBlock.analysisMath">
+    <Setter Property="FontStyle" Value="Italic" />
   </Style>
 </Styles>

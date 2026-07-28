@@ -91,6 +91,43 @@ internal static class Scenarios
 
         Graphing("graphing-dark-wide", 1204, 720, ThemeVariant.Dark),
         Graphing("graphing-light-wide", 1204, 720, ThemeVariant.Light),
+        new("graphing-dark-variables", 1204, 720, ThemeVariant.Dark, Opaque,
+            vm =>
+            {
+                SwitchTo(vm, CalculatorViewMode.Graphing);
+                vm.Graphing.Equations[0].Expression = "a*x + b";
+                vm.Graphing.AddEquationCommand.Execute(null);
+            }),
+        Graphing("graphing-dark-line-options", 1204, 720, ThemeVariant.Dark) with
+        {
+            ArrangeView = (window, viewModel) =>
+            {
+                viewModel.Graphing.Equations[0].LineStyle = GraphLineStyle.Dash;
+                Click(window, "EquationStyleButton");
+            },
+        },
+        GraphingAnalysis(
+            "graphing-dark-analysis-wide",
+            "(x+1)(x-1)",
+            1204,
+            720),
+        GraphingAnalysis(
+            "graphing-dark-analysis-unsupported",
+            "x=2",
+            1204,
+            720),
+        GraphingAnalysis(
+            "graphing-dark-analysis-compact",
+            "(x+1)(x-1)",
+            322,
+            588,
+            showEquationSide: true),
+        GraphingAnalysis(
+            "graphing-dark-analysis-compact-long",
+            string.Concat(Enumerable.Repeat("(x+1/x)", 10)),
+            322,
+            588,
+            showEquationSide: true),
         Graphing("graphing-dark-compact-graph", 701, 588, ThemeVariant.Dark),
         Graphing("graphing-dark-compact-equation", 322, 588, ThemeVariant.Dark) with
         {
@@ -264,6 +301,30 @@ internal static class Scenarios
                 vm.Graphing.Equations[0].Expression = "x";
                 vm.Graphing.AddEquationCommand.Execute(null);
             });
+
+    private static Scenario GraphingAnalysis(
+        string name,
+        string expression,
+        double width,
+        double height,
+        bool showEquationSide = false) =>
+        new(name, width, height, ThemeVariant.Dark, Opaque,
+            vm =>
+            {
+                SwitchTo(vm, CalculatorViewMode.Graphing);
+                vm.Graphing.Equations[0].Expression = expression;
+                vm.Graphing.AddEquationCommand.Execute(null);
+            })
+        {
+            ArrangeView = (window, viewModel) =>
+            {
+                _ = viewModel.Graphing.AnalyzeEquationAsync(viewModel.Graphing.Equations[0]);
+                if (showEquationSide)
+                {
+                    Click(window, "GraphingHeaderEquationButton");
+                }
+            },
+        };
 
     private static void SwitchTo(CalculatorViewModel viewModel, CalculatorViewMode mode)
     {

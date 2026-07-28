@@ -13,7 +13,74 @@ public sealed record GraphingStrings(
     string ZoomOutTooltip,
     string ResetViewTooltip,
     string SwitchToEquationMode,
-    string SwitchToGraphMode);
+    string SwitchToGraphMode,
+    string StartTracingTooltip = "Start tracing",
+    string StopTracingTooltip = "Stop tracing",
+    string GraphOptionsHeading = "Graph options",
+    string WindowHeading = "Window",
+    string ResetViewText = "Reset view",
+    string UnitsHeading = "Units",
+    string RadiansText = "Radians",
+    string DegreesText = "Degrees",
+    string GradiansText = "Gradians",
+    string LineThicknessHeading = "Line thickness",
+    string GraphThemeHeading = "Graph theme",
+    string AlwaysLightText = "Always light",
+    string MatchAppThemeText = "Match app theme",
+    string TrigonometryText = "Trigonometry",
+    string InequalitiesText = "Inequalities",
+    string FunctionText = "Function",
+    string AnalyzeFunctionTooltip = "Analyze function",
+    string ChangeEquationStyleTooltip = "Change equation style",
+    string RemoveEquationTooltip = "Remove equation",
+    string LineOptionsHeading = "Line options",
+    string ColorHeading = "Color",
+    string StyleHeading = "Style",
+    string XMinimumHeading = "X-Min",
+    string XMaximumHeading = "X-Max",
+    string YMinimumHeading = "Y-Min",
+    string YMaximumHeading = "Y-Max",
+    string VariableMinimumHeading = "Min",
+    string VariableStepHeading = "Step",
+    string VariableMaximumHeading = "Max",
+    string VariableOptionsTooltip = "Toggle variable options",
+    string SmallLineWidthName = "Small line width",
+    string MediumLineWidthName = "Medium line width",
+    string LargeLineWidthName = "Large line width",
+    string ExtraLargeLineWidthName = "Extra large line width",
+    string AnalysisHeading = "Function analysis",
+    string AnalysisBackTooltip = "Back to function list",
+    string AnalysisEquationAutomationName = "Function analysis equation box",
+    string AnalysisNotSupported = "Analysis is not supported for this function.",
+    string AnalysisVariableIsNotX =
+        "Analysis is only supported for functions in the f(x) format. Example: y=x",
+    string AnalysisCouldNotBePerformed = "Analysis could not be performed for the function.",
+    string DomainHeading = "Domain",
+    string RangeHeading = "Range",
+    string XInterceptHeading = "X-Intercept",
+    string YInterceptHeading = "Y-Intercept",
+    string MinimaHeading = "Minima",
+    string MaximaHeading = "Maxima",
+    string InflectionPointsHeading = "Inflection points",
+    string VerticalAsymptotesHeading = "Vertical asymptotes",
+    string HorizontalAsymptotesHeading = "Horizontal asymptotes",
+    string ObliqueAsymptotesHeading = "Oblique asymptotes",
+    string ParityHeading = "Parity",
+    string MonotonicityHeading = "Monotonicity",
+    string RangeUnknown = "Unable to calculate the range for this function.",
+    string MinimaNone = "The function does not have any minima points.",
+    string MaximaNone = "The function does not have any maxima points.",
+    string InflectionPointsNone = "The function does not have any inflection points.",
+    string VerticalAsymptotesNone = "The function does not have any vertical asymptotes.",
+    string HorizontalAsymptotesNone = "The function does not have any horizontal asymptotes.",
+    string ObliqueAsymptotesNone = "The function does not have any oblique asymptotes.",
+    string MonotonicityUnknown = "Unable to determine the monotonicity of the function.",
+    string TooComplexFeatures = "These features are too complex for Calculator to calculate:",
+    string CutEquationText = "Cut",
+    string CopyEquationText = "Copy",
+    string PasteEquationText = "Paste",
+    string UndoEquationText = "Undo",
+    string SelectAllEquationText = "Select all");
 
 public sealed record GraphEquationRenderModel(
     uint ExpressionId,
@@ -28,6 +95,16 @@ public enum GraphLineStyle
     Dash,
     Dot,
 }
+
+public sealed record GraphAnalysisDisplayValue(
+    string Text,
+    string Annotation,
+    bool IsMath = false);
+
+public sealed record GraphAnalysisDisplayItem(
+    string Title,
+    GraphAnalysisStatus Status,
+    IReadOnlyList<GraphAnalysisDisplayValue> Values);
 
 public partial class GraphVariableViewModel(
     string name,
@@ -49,6 +126,9 @@ public partial class GraphVariableViewModel(
 
     [ObservableProperty]
     public partial double Step { get; set; } = step;
+
+    [ObservableProperty]
+    public partial bool AreSettingsVisible { get; set; }
 
     public event EventHandler? ValueChanged;
 
@@ -109,6 +189,13 @@ public partial class GraphEquationViewModel : ObservableObject
     public partial bool IsValid { get; private set; }
 
     public bool HasExpression => !string.IsNullOrWhiteSpace(Expression);
+    public bool CanAnalyze => HasExpression && IsValid;
+    public bool ShowCommittedActions => HasExpression && !IsEditing;
+    public bool ShowEditingClear =>
+        IsEditing && !string.IsNullOrWhiteSpace(DraftExpression);
+
+    [ObservableProperty]
+    public partial bool IsEditing { get; set; }
 
     public event EventHandler? EquationChanged;
 
@@ -132,7 +219,7 @@ public partial class GraphEquationViewModel : ObservableObject
         {
             Expression = DraftExpression;
         }
-        return HasExpression && IsValid;
+        return HasExpression;
     }
 
     partial void OnExpressionChanged(string value)
@@ -145,6 +232,8 @@ public partial class GraphEquationViewModel : ObservableObject
         OnPropertyChanged(nameof(FunctionLabel));
         OnPropertyChanged(nameof(FunctionIndexLabel));
         OnPropertyChanged(nameof(CanToggleVisibility));
+        OnPropertyChanged(nameof(CanAnalyze));
+        OnPropertyChanged(nameof(ShowCommittedActions));
         OnPropertyChanged(nameof(TileColor));
         Parse();
         EquationChanged?.Invoke(this, EventArgs.Empty);
@@ -163,6 +252,14 @@ public partial class GraphEquationViewModel : ObservableObject
         EquationChanged?.Invoke(this, EventArgs.Empty);
     }
     partial void OnErrorMessageChanged(string value) => OnPropertyChanged(nameof(HasError));
+    partial void OnIsValidChanged(bool value) => OnPropertyChanged(nameof(CanAnalyze));
+    partial void OnDraftExpressionChanged(string value) =>
+        OnPropertyChanged(nameof(ShowEditingClear));
+    partial void OnIsEditingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowCommittedActions));
+        OnPropertyChanged(nameof(ShowEditingClear));
+    }
     partial void OnLineStyleChanged(GraphLineStyle value) => EquationChanged?.Invoke(this, EventArgs.Empty);
     partial void OnLineWidthChanged(double value) => EquationChanged?.Invoke(this, EventArgs.Empty);
 
@@ -202,6 +299,16 @@ public partial class GraphEquationViewModel : ObservableObject
             LineStyle,
             LineWidth,
             _evaluator);
+    }
+
+    internal Task<GraphFunctionAnalysisResult> AnalyzeAsync(
+        IReadOnlyDictionary<string, double> arguments,
+        CancellationToken cancellationToken)
+    {
+        return _parsedExpression is null
+            ? Task.FromResult(GraphFunctionAnalysisResult.Unsupported(
+                "Analysis could not be performed for the function."))
+            : _solver.AnalyzeAsync(_parsedExpression, arguments, cancellationToken);
     }
 
     private static string ToSubscript(int value) =>
@@ -277,10 +384,25 @@ public partial class GraphingViewModel : ObservableObject
     public GraphingStrings Strings { get; }
     public ObservableCollection<GraphEquationViewModel> Equations { get; } = [];
     public ObservableCollection<GraphVariableViewModel> Variables { get; } = [];
+    public ObservableCollection<GraphAnalysisDisplayItem> AnalysisItems { get; } = [];
     public bool HasVariables => Variables.Count > 0;
+    private CancellationTokenSource? _analysisCancellation;
 
     [ObservableProperty]
     public partial GraphEquationViewModel? SelectedEquation { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsAnalysisVisible { get; private set; }
+
+    [ObservableProperty]
+    public partial bool IsAnalyzing { get; private set; }
+
+    [ObservableProperty]
+    public partial string AnalysisError { get; private set; } = string.Empty;
+
+    public bool HasAnalysisError => !string.IsNullOrEmpty(AnalysisError);
+    partial void OnAnalysisErrorChanged(string value) =>
+        OnPropertyChanged(nameof(HasAnalysisError));
 
     public bool CanAddEquation => Equations.Count < EquationColors.Length;
     public event EventHandler? GraphInvalidated;
@@ -329,6 +451,7 @@ public partial class GraphingViewModel : ObservableObject
 
         if (ReferenceEquals(SelectedEquation, equation))
         {
+            CloseAnalysis();
             SelectedEquation = Equations[^1];
         }
 
@@ -392,7 +515,81 @@ public partial class GraphingViewModel : ObservableObject
             .Cast<GraphEquationRenderModel>()
             .ToArray();
 
-    private void OnEquationChanged(object? sender, EventArgs e) => RefreshGraph();
+    public async Task AnalyzeEquationAsync(GraphEquationViewModel equation)
+    {
+        if (!Equations.Contains(equation) || !equation.CanAnalyze)
+        {
+            return;
+        }
+
+        _analysisCancellation?.Cancel();
+        _analysisCancellation?.Dispose();
+        _analysisCancellation = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+        var cancellationToken = _analysisCancellation.Token;
+
+        SelectedEquation = equation;
+        AnalysisItems.Clear();
+        AnalysisError = string.Empty;
+        IsAnalysisVisible = true;
+        IsAnalyzing = true;
+
+        try
+        {
+            var arguments = Variables.ToDictionary(
+                variable => variable.Name,
+                variable => variable.Value,
+                StringComparer.OrdinalIgnoreCase);
+            var result = await equation.AnalyzeAsync(arguments, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!result.IsSupported)
+            {
+                AnalysisError = string.IsNullOrWhiteSpace(result.ErrorMessage)
+                    ? Strings.AnalysisNotSupported
+                    : LocalizeAnalysisError(result.ErrorMessage);
+                return;
+            }
+
+            foreach (var feature in result.Features)
+            {
+                AnalysisItems.Add(ToDisplayItem(feature));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            if (IsAnalysisVisible)
+            {
+                AnalysisError = Strings.AnalysisCouldNotBePerformed;
+            }
+        }
+        catch (Exception)
+        {
+            AnalysisError = Strings.AnalysisCouldNotBePerformed;
+        }
+        finally
+        {
+            IsAnalyzing = false;
+        }
+    }
+
+    public void CloseAnalysis()
+    {
+        _analysisCancellation?.Cancel();
+        _analysisCancellation?.Dispose();
+        _analysisCancellation = null;
+        IsAnalyzing = false;
+        IsAnalysisVisible = false;
+        AnalysisError = string.Empty;
+        AnalysisItems.Clear();
+    }
+
+    private void OnEquationChanged(object? sender, EventArgs e)
+    {
+        if (IsAnalysisVisible && ReferenceEquals(sender, SelectedEquation))
+        {
+            CloseAnalysis();
+        }
+        RefreshGraph();
+    }
 
     private void OnVariableValueChanged(object? sender, EventArgs e) => RefreshEvaluators();
 
@@ -442,4 +639,87 @@ public partial class GraphingViewModel : ObservableObject
         }
         GraphInvalidated?.Invoke(this, EventArgs.Empty);
     }
+
+    private GraphAnalysisDisplayItem ToDisplayItem(GraphAnalysisFeature feature)
+    {
+        var title = GetAnalysisTitle(feature.Category);
+        var values = feature.Values
+            .Select(value => new GraphAnalysisDisplayValue(
+                value.Text,
+                value.Annotation,
+                feature.Category is not (GraphAnalysisCategory.Parity
+                    or GraphAnalysisCategory.Complexity)))
+            .ToList();
+
+        if (feature.Status == GraphAnalysisStatus.None)
+        {
+            values.Add(new GraphAnalysisDisplayValue(GetAnalysisNoneText(feature.Category), string.Empty));
+        }
+        else if (feature.Status is GraphAnalysisStatus.Unknown
+                 or GraphAnalysisStatus.Unsupported
+                 or GraphAnalysisStatus.Error)
+        {
+            values.Add(new GraphAnalysisDisplayValue(GetAnalysisUnknownText(feature.Category), string.Empty));
+        }
+
+        if (feature.Category == GraphAnalysisCategory.Complexity)
+        {
+            values.Insert(0, new GraphAnalysisDisplayValue(Strings.TooComplexFeatures, string.Empty));
+        }
+
+        return new GraphAnalysisDisplayItem(title, feature.Status, values);
+    }
+
+    private string GetAnalysisTitle(GraphAnalysisCategory category) =>
+        category switch
+        {
+            GraphAnalysisCategory.Domain => Strings.DomainHeading,
+            GraphAnalysisCategory.Range => Strings.RangeHeading,
+            GraphAnalysisCategory.XIntercept => Strings.XInterceptHeading,
+            GraphAnalysisCategory.YIntercept => Strings.YInterceptHeading,
+            GraphAnalysisCategory.Minima => Strings.MinimaHeading,
+            GraphAnalysisCategory.Maxima => Strings.MaximaHeading,
+            GraphAnalysisCategory.InflectionPoints => Strings.InflectionPointsHeading,
+            GraphAnalysisCategory.VerticalAsymptotes => Strings.VerticalAsymptotesHeading,
+            GraphAnalysisCategory.HorizontalAsymptotes => Strings.HorizontalAsymptotesHeading,
+            GraphAnalysisCategory.ObliqueAsymptotes => Strings.ObliqueAsymptotesHeading,
+            GraphAnalysisCategory.Parity => Strings.ParityHeading,
+            GraphAnalysisCategory.Monotonicity => Strings.MonotonicityHeading,
+            _ => string.Empty,
+        };
+
+    private string GetAnalysisNoneText(GraphAnalysisCategory category) =>
+        category switch
+        {
+            GraphAnalysisCategory.XIntercept or GraphAnalysisCategory.YIntercept => "∅",
+            GraphAnalysisCategory.Minima => Strings.MinimaNone,
+            GraphAnalysisCategory.Maxima => Strings.MaximaNone,
+            GraphAnalysisCategory.InflectionPoints => Strings.InflectionPointsNone,
+            GraphAnalysisCategory.VerticalAsymptotes => Strings.VerticalAsymptotesNone,
+            GraphAnalysisCategory.HorizontalAsymptotes => Strings.HorizontalAsymptotesNone,
+            GraphAnalysisCategory.ObliqueAsymptotes => Strings.ObliqueAsymptotesNone,
+            _ => Strings.AnalysisCouldNotBePerformed,
+        };
+
+    private string GetAnalysisUnknownText(GraphAnalysisCategory category) =>
+        category switch
+        {
+            GraphAnalysisCategory.Range => Strings.RangeUnknown,
+            GraphAnalysisCategory.Monotonicity => Strings.MonotonicityUnknown,
+            // Windows exposes these definite-looking rows while retaining the
+            // categories in its too-complex summary. Keep the internal status
+            // Unknown even though the compatibility text says "does not have".
+            GraphAnalysisCategory.Minima => Strings.MinimaNone,
+            GraphAnalysisCategory.Maxima => Strings.MaximaNone,
+            GraphAnalysisCategory.InflectionPoints => Strings.InflectionPointsNone,
+            GraphAnalysisCategory.Complexity => string.Empty,
+            _ => Strings.AnalysisCouldNotBePerformed,
+        };
+
+    private string LocalizeAnalysisError(string error) =>
+        error.Contains("f(x)", StringComparison.OrdinalIgnoreCase)
+            ? Strings.AnalysisVariableIsNotX
+            : error.Contains("not supported", StringComparison.OrdinalIgnoreCase)
+            ? Strings.AnalysisNotSupported
+            : Strings.AnalysisCouldNotBePerformed;
 }

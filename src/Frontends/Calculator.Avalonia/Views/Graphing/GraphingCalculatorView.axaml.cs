@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
@@ -19,7 +20,7 @@ namespace Calculator.Avalonia.Views.Graphing;
 
 public partial class GraphingCalculatorView : UserControl
 {
-    private const double ColumnsThreshold = 760;
+    private const double ColumnsThreshold = 800;
     private bool _showsEquationPanelOnNarrow;
     private bool _showsInverseKeypad;
     private bool _plotEventsAttached;
@@ -39,6 +40,7 @@ public partial class GraphingCalculatorView : UserControl
             }
             UpdateResponsiveLayout(Bounds.Width);
             UpdateBoundsEditors();
+            GraphTheme_OnChanged(null, new RoutedEventArgs());
         };
     }
 
@@ -59,7 +61,7 @@ public partial class GraphingCalculatorView : UserControl
         UpdateResponsiveLayout(Bounds.Width);
         if (EquationPanel.IsVisible)
         {
-            FocusEquationInput();
+            FocusEquationSide();
         }
         else
         {
@@ -109,7 +111,17 @@ public partial class GraphingCalculatorView : UserControl
     {
         _showsEquationPanelOnNarrow = true;
         UpdateResponsiveLayout(Bounds.Width);
-        Dispatcher.UIThread.Post(FocusEquationInput, DispatcherPriority.Input);
+        Dispatcher.UIThread.Post(FocusEquationSide, DispatcherPriority.Input);
+    }
+
+    private void FocusEquationSide()
+    {
+        if (Graphing?.IsAnalysisVisible == true)
+        {
+            AnalysisBackButton.Focus();
+            return;
+        }
+        FocusEquationInput();
     }
 
     private void ZoomIn_OnClick(object? sender, RoutedEventArgs e) => Plot.ZoomIn();
@@ -124,7 +136,9 @@ public partial class GraphingCalculatorView : UserControl
     private void TraceButton_OnClick(object? sender, RoutedEventArgs e)
     {
         Plot.SetTracing(TraceButton.IsChecked == true);
-        var label = Plot.IsTracing ? "Stop tracing" : "Start tracing";
+        var label = Plot.IsTracing
+            ? Graphing?.Strings.StopTracingTooltip ?? "Stop tracing"
+            : Graphing?.Strings.StartTracingTooltip ?? "Start tracing";
         AutomationProperties.SetName(TraceButton, label);
         ToolTip.SetTip(TraceButton, label);
     }
@@ -142,12 +156,6 @@ public partial class GraphingCalculatorView : UserControl
         {
             UpdateBoundsEditors();
         }
-    }
-
-    private void CloseGraphOptionsButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        GraphOptionsPanel.IsVisible = false;
-        UpdateResponsiveLayout(Bounds.Width);
     }
 
     private void Plot_OnViewportChanged(object? sender, EventArgs e) => UpdateBoundsEditors();
@@ -211,6 +219,7 @@ public partial class GraphingCalculatorView : UserControl
             if (textBox.DataContext is GraphEquationViewModel equation && Graphing is not null)
             {
                 Graphing.SelectedEquation = equation;
+                equation.IsEditing = true;
             }
         }
     }
@@ -226,8 +235,28 @@ public partial class GraphingCalculatorView : UserControl
                     return;
                 }
                 CommitEquation(textBox);
+                if (textBox.DataContext is GraphEquationViewModel equation)
+                {
+                    equation.IsEditing = false;
+                }
                 SetEquationCardFocused(textBox, false);
             }, DispatcherPriority.Background);
+        }
+    }
+
+    private void ClearEditingEquation_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button { DataContext: GraphEquationViewModel equation })
+        {
+            equation.DraftExpression = string.Empty;
+            equation.Expression = string.Empty;
+
+            var editor = this.GetVisualDescendants()
+                .OfType<TextBox>()
+                .FirstOrDefault(textBox =>
+                    textBox.Name == "EquationExpressionTextBox"
+                    && ReferenceEquals(textBox.DataContext, equation));
+            editor?.Focus();
         }
     }
 
@@ -383,23 +412,25 @@ public partial class GraphingCalculatorView : UserControl
         }
     }
 
-    private void EquationTextBox_OnContextRequested(object? sender, ContextRequestedEventArgs e)
+    private void EquationTextBox_OnLoaded(object? sender, RoutedEventArgs e)
     {
-        if (sender is not TextBox textBox || textBox.DataContext is not GraphEquationViewModel equation)
+        if (sender is not TextBox textBox || textBox.ContextMenu is not null)
         {
             return;
         }
 
-        _activeTextBox = textBox;
         var menu = new ContextMenu();
-        menu.Items.Add(CreateMenuItem("Cut", async (_, _) =>
+        var strings = Graphing?.Strings;
+        var cutItem = CreateMenuItem(strings?.CutEquationText ?? "Cut", async (_, _) =>
         {
             await CopySelection(textBox);
             DeleteSelection(textBox);
-        }, textBox.SelectionEnd > textBox.SelectionStart));
-        menu.Items.Add(CreateMenuItem("Copy", async (_, _) => await CopySelection(textBox),
-            textBox.SelectionEnd > textBox.SelectionStart));
-        menu.Items.Add(CreateMenuItem("Paste", async (_, _) =>
+        }, glyph: "\uE8C6");
+        var copyItem = CreateMenuItem(
+            strings?.CopyEquationText ?? "Copy",
+            async (_, _) => await CopySelection(textBox),
+            glyph: "\uE8C8");
+        var pasteItem = CreateMenuItem(strings?.PasteEquationText ?? "Paste", async (_, _) =>
         {
             var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
             var pasted = clipboard is null ? null : await clipboard.TryGetTextAsync();
@@ -407,17 +438,71 @@ public partial class GraphingCalculatorView : UserControl
             {
                 InsertText(textBox, pasted);
             }
-        }));
-        menu.Items.Add(CreateMenuItem("Undo", (_, _) => textBox.Undo(), textBox.CanUndo));
-        menu.Items.Add(CreateMenuItem("Select all", (_, _) => textBox.SelectAll()));
+        }, glyph: "\uE77F");
+        var undoItem = CreateMenuItem(
+            strings?.UndoEquationText ?? "Undo",
+            (_, _) => textBox.Undo(),
+            glyph: "\uE7A7");
+        var selectAllItem = CreateMenuItem(
+            strings?.SelectAllEquationText ?? "Select all",
+            (_, _) => textBox.SelectAll(),
+            glyph: "\uE8B3");
+        var analyzeItem = CreateMenuItem(
+            strings?.AnalyzeFunctionTooltip ?? "Analyze function",
+            (_, _) =>
+            {
+                if (textBox.DataContext is GraphEquationViewModel equation)
+                {
+                    _ = OpenAnalysisAsync(equation);
+                }
+            },
+            glyph: "\uE945");
+        var styleItem = CreateMenuItem(
+            strings?.ChangeEquationStyleTooltip ?? "Change equation style",
+            (_, _) =>
+            {
+                if (textBox.DataContext is GraphEquationViewModel equation)
+                {
+                    ShowLineOptions(textBox, equation);
+                }
+            },
+            glyph: "\uE790");
+        var removeItem = CreateMenuItem(
+            strings?.RemoveEquationTooltip ?? "Remove equation",
+            (_, _) =>
+            {
+                if (textBox.DataContext is GraphEquationViewModel equation)
+                {
+                    Graphing?.RemoveEquationCommand.Execute(equation);
+                }
+            },
+            glyph: "\uECC9");
+
+        menu.Items.Add(cutItem);
+        menu.Items.Add(copyItem);
+        menu.Items.Add(pasteItem);
+        menu.Items.Add(undoItem);
+        menu.Items.Add(selectAllItem);
         menu.Items.Add(new Separator());
-        menu.Items.Add(CreateMenuItem("Analyze function", (_, _) => { }, false));
-        menu.Items.Add(CreateMenuItem("Change equation style", (_, _) => ShowLineOptions(textBox, equation)));
-        menu.Items.Add(CreateMenuItem("Remove equation", (_, _) =>
-            Graphing?.RemoveEquationCommand.Execute(equation)));
+        menu.Items.Add(analyzeItem);
+        menu.Items.Add(styleItem);
+        menu.Items.Add(removeItem);
+        menu.Opening += (_, _) =>
+        {
+            _activeTextBox = textBox;
+            var hasSelection = textBox.SelectionEnd > textBox.SelectionStart;
+            cutItem.IsEnabled = hasSelection;
+            copyItem.IsEnabled = hasSelection;
+            undoItem.IsEnabled = textBox.CanUndo;
+            selectAllItem.IsEnabled = textBox.Text?.Length > 0;
+
+            var equation = textBox.DataContext as GraphEquationViewModel;
+            analyzeItem.IsEnabled = equation?.CanAnalyze == true;
+            styleItem.IsEnabled = equation is { HasExpression: true, IsValid: true };
+            removeItem.IsEnabled = equation is not null
+                && Graphing?.RemoveEquationCommand.CanExecute(equation) == true;
+        };
         textBox.ContextMenu = menu;
-        menu.Open(textBox);
-        e.Handled = true;
     }
 
     private void StyleEquation_OnClick(object? sender, RoutedEventArgs e)
@@ -426,6 +511,33 @@ public partial class GraphingCalculatorView : UserControl
         {
             ShowLineOptions(button, equation);
         }
+    }
+
+    private void AnalyzeEquation_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button { DataContext: GraphEquationViewModel equation })
+        {
+            _ = OpenAnalysisAsync(equation);
+        }
+    }
+
+    private async Task OpenAnalysisAsync(GraphEquationViewModel equation)
+    {
+        if (Graphing is null)
+        {
+            return;
+        }
+        await Graphing.AnalyzeEquationAsync(equation);
+        if (Graphing.IsAnalysisVisible && EquationPanel.IsVisible)
+        {
+            AnalysisBackButton.Focus();
+        }
+    }
+
+    private void CloseAnalysis_OnClick(object? sender, RoutedEventArgs e)
+    {
+        Graphing?.CloseAnalysis();
+        Dispatcher.UIThread.Post(FocusEquationInput, DispatcherPriority.Input);
     }
 
     private void RemoveEquation_OnClick(object? sender, RoutedEventArgs e)
@@ -473,17 +585,20 @@ public partial class GraphingCalculatorView : UserControl
             swatches.Children.Add(swatch);
         }
 
-        var styleChoices = new UniformGrid { Columns = 3 };
+        var styleBox = new ComboBox
+        {
+            MinWidth = 200,
+            Margin = new Thickness(8, 0),
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+        };
         for (var index = 0; index < 3; index++)
         {
             var lineStyle = (GraphLineStyle)index;
-            var styleChoice = new RadioButton
+            var styleChoice = new ComboBoxItem
             {
-                GroupName = "EquationLineStyle",
-                IsChecked = equation.LineStyle == lineStyle,
+                Tag = lineStyle,
                 Content = CreateLineStylePreview(lineStyle),
             };
-            styleChoice.Classes.Add("graphLineStyle");
             AutomationProperties.SetName(
                 styleChoice,
                 lineStyle switch
@@ -492,15 +607,16 @@ public partial class GraphingCalculatorView : UserControl
                     GraphLineStyle.Dot => "Short segmented line",
                     _ => "Solid line",
                 });
-            styleChoice.IsCheckedChanged += (_, _) =>
-            {
-                if (styleChoice.IsChecked == true)
-                {
-                    equation.LineStyle = lineStyle;
-                }
-            };
-            styleChoices.Children.Add(styleChoice);
+            styleBox.Items.Add(styleChoice);
         }
+        styleBox.SelectedIndex = (int)equation.LineStyle;
+        styleBox.SelectionChanged += (_, _) =>
+        {
+            if (styleBox.SelectedItem is ComboBoxItem { Tag: GraphLineStyle lineStyle })
+            {
+                equation.LineStyle = lineStyle;
+            }
+        };
 
         var content = new StackPanel
         {
@@ -508,14 +624,27 @@ public partial class GraphingCalculatorView : UserControl
             Spacing = 10,
             Children =
             {
-                new TextBlock { Text = "Line options", FontSize = 20, FontWeight = FontWeight.SemiBold },
-                new TextBlock { Text = "Color", Margin = new Thickness(0, 5, 0, 0) },
+                new TextBlock
+                {
+                    Text = Graphing?.Strings.LineOptionsHeading ?? "Line options",
+                    FontSize = 20,
+                    FontWeight = FontWeight.Medium,
+                },
+                new TextBlock
+                {
+                    Text = Graphing?.Strings.ColorHeading ?? "Color",
+                    Margin = new Thickness(8, 5, 0, 0),
+                },
                 swatches,
-                new TextBlock { Text = "Style", Margin = new Thickness(0, 5, 0, 0) },
-                styleChoices,
+                new TextBlock
+                {
+                    Text = Graphing?.Strings.StyleHeading ?? "Style",
+                    Margin = new Thickness(8, 5, 0, 0),
+                },
+                styleBox,
             },
         };
-        var flyout = new Flyout { Content = content, Placement = PlacementMode.Left };
+        var flyout = new Flyout { Content = content, Placement = PlacementMode.Bottom };
         flyout.ShowAt(placementTarget);
     }
 
@@ -525,29 +654,30 @@ public partial class GraphingCalculatorView : UserControl
         {
             return new Border
             {
-                Width = 72,
-                Height = 2,
+                Width = 200,
+                Height = 2.5,
                 Background = new SolidColorBrush(Color.Parse("#808080")),
             };
         }
 
         var segments = new StackPanel
         {
-            Width = 72,
+            Width = 200,
+            Height = 20,
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        var segmentWidth = lineStyle == GraphLineStyle.Dash ? 10d : 5d;
-        var segmentHeight = lineStyle == GraphLineStyle.Dash ? 2d : 1d;
-        var segmentCount = lineStyle == GraphLineStyle.Dash ? 6 : 9;
+        var segmentWidth = lineStyle == GraphLineStyle.Dash ? 5d : 2.5d;
+        var segmentGap = 2.5d;
+        var segmentCount = lineStyle == GraphLineStyle.Dash ? 27 : 40;
         for (var index = 0; index < segmentCount; index++)
         {
             segments.Children.Add(new Border
             {
                 Width = segmentWidth,
-                Height = segmentHeight,
-                Margin = new Thickness(0, 0, 3, 0),
+                Height = 2.5,
+                Margin = new Thickness(0, 0, segmentGap, 0),
                 Background = new SolidColorBrush(Color.Parse("#808080")),
             });
         }
@@ -560,12 +690,24 @@ public partial class GraphingCalculatorView : UserControl
             ? width
             : 2;
 
-    private static MenuItem CreateMenuItem(
+    private MenuItem CreateMenuItem(
         string header,
         EventHandler<RoutedEventArgs> handler,
-        bool isEnabled = true)
+        bool isEnabled = true,
+        string? glyph = null)
     {
         var item = new MenuItem { Header = header, IsEnabled = isEnabled };
+        if (!string.IsNullOrEmpty(glyph)
+            && this.TryFindResource("CalculatorIconFont", out var fontResource)
+            && fontResource is FontFamily fontFamily)
+        {
+            item.Icon = new TextBlock
+            {
+                FontFamily = fontFamily,
+                FontSize = 14,
+                Text = glyph,
+            };
+        }
         item.Click += handler;
         return item;
     }
