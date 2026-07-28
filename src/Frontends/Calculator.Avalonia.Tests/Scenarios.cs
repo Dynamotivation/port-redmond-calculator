@@ -89,6 +89,18 @@ internal static class Scenarios
                 vm.Scientific.IsInverse = true;
             }),
 
+        Graphing("graphing-dark-wide", 1204, 720, ThemeVariant.Dark),
+        Graphing("graphing-light-wide", 1204, 720, ThemeVariant.Light),
+        Graphing("graphing-dark-compact-graph", 701, 588, ThemeVariant.Dark),
+        Graphing("graphing-dark-compact-equation", 322, 588, ThemeVariant.Dark) with
+        {
+            ArrangeView = (window, _) => Click(window, "GraphingHeaderEquationButton"),
+        },
+        Graphing("graphing-dark-compact-options", 322, 588, ThemeVariant.Dark) with
+        {
+            ArrangeView = (window, _) => Click(window, "GraphOptionsButton"),
+        },
+
         Mode("programmer-dark-default", CalculatorViewMode.Programmer, 524, 773, ThemeVariant.Dark, Opaque),
         Mode("programmer-light-default", CalculatorViewMode.Programmer, 524, 773, ThemeVariant.Light, Opaque),
         // The programmer operator panel drops its labels below 630 keypad DIPs.
@@ -242,6 +254,15 @@ internal static class Scenarios
                 SwitchTo(vm, CalculatorViewMode.Date);
                 vm.DateCalculator.FromDate = new DateTime(2024, 1, 1);
                 vm.DateCalculator.ToDate = new DateTime(2025, 2, 10);
+            });
+
+    private static Scenario Graphing(string name, double width, double height, ThemeVariant theme) =>
+        new(name, width, height, theme, Opaque,
+            vm =>
+            {
+                SwitchTo(vm, CalculatorViewMode.Graphing);
+                vm.Graphing.Equations[0].Expression = "x";
+                vm.Graphing.AddEquationCommand.Execute(null);
             });
 
     private static void SwitchTo(CalculatorViewModel viewModel, CalculatorViewMode mode)

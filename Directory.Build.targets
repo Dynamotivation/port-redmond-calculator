@@ -1,0 +1,6 @@
+<Project>
+  <!-- Avalonia.BuildServices injects build-time telemetry through a transitive
+       package. Directory.Build.targets is imported after package targets, so
+       this empty replacement guarantees that telemetry task never executes. -->
+  <Target Name="AvaloniaStats" />
+</Project>

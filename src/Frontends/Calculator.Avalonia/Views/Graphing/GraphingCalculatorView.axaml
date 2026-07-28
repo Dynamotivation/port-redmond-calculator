@@ -5,39 +5,9 @@
              x:Class="Calculator.Avalonia.Views.Graphing.GraphingCalculatorView"
              x:DataType="managed:CalculatorViewModel"
              IsVisible="{Binding IsGraphingMode}">
-  <Grid x:Name="Root" RowDefinitions="Auto,*">
-    <Grid Grid.Row="0" Height="44" Margin="8,0,8,4" ColumnDefinitions="*,Auto">
-      <ToggleButton x:Name="NarrowModeToggle"
-                    Grid.Column="1"
-                    MinWidth="40"
-                    Padding="10,6"
-                    IsVisible="False"
-                    Click="NarrowModeToggle_OnClick"
-                    ToolTip.Tip="{Binding Graphing.Strings.SwitchToEquationMode}">
-        <Grid Width="22" Height="22">
-          <TextBlock x:Name="NarrowModeGlyph"
-                     HorizontalAlignment="Center"
-                     VerticalAlignment="Center"
-                     FontFamily="{StaticResource CalculatorIconFont}"
-                     FontSize="16"
-                     Text="&#xF893;" />
-          <TextBlock x:Name="NarrowModeSubscript"
-                     Margin="0,0,1,1"
-                     HorizontalAlignment="Right"
-                     VerticalAlignment="Bottom"
-                     FontSize="9"
-                     FontWeight="Light"
-                     Text="x" />
-        </Grid>
-      </ToggleButton>
-    </Grid>
-
-    <Grid x:Name="ResponsiveLayout"
-          Grid.Row="1"
-          ColumnDefinitions="2*,360">
-      <Border Grid.Column="0"
-              Margin="0,0,4,0"
-              ClipToBounds="True"
+  <Grid x:Name="Root">
+    <Grid x:Name="ResponsiveLayout" ColumnDefinitions="2*,360">
+      <Border x:Name="GraphPanel" Grid.Column="0" ClipToBounds="True"
               Background="{DynamicResource GraphPlotBackgroundBrush}">
         <Grid>
           <graphing:GraphCanvas x:Name="Plot"
@@ -47,159 +17,340 @@
                                 GridBrush="{DynamicResource GraphGridBrush}"
                                 AxisBrush="{DynamicResource GraphAxisBrush}" />
 
-          <Border Margin="0,8,8,0"
-                  Padding="2"
-                  HorizontalAlignment="Right"
-                  VerticalAlignment="Top"
-                  CornerRadius="4"
-                  Background="{DynamicResource GraphCommandPanelBrush}">
+          <!-- Sharing is intentionally absent: it is not a hidden or disabled command. -->
+          <Border Margin="0,8,8,0" Padding="2"
+                  HorizontalAlignment="Right" VerticalAlignment="Top"
+                  CornerRadius="5" Background="{DynamicResource GraphCommandPanelBrush}">
             <StackPanel Orientation="Horizontal">
-              <Button Classes="graphCommandButton"
-                      Click="ZoomIn_OnClick"
-                      ToolTip.Tip="{Binding Graphing.Strings.ZoomInTooltip}">
+              <ToggleButton x:Name="TraceButton" Classes="graphCommandButton"
+                            Click="TraceButton_OnClick"
+                            AutomationProperties.Name="Start tracing"
+                            ToolTip.Tip="Start tracing">
+                <Path Width="18" Height="18" Stretch="Uniform" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
+                      Data="M 3,2 L 16,9 L 10,11 L 14,17 L 11,19 L 7,12 L 3,16 Z" />
+              </ToggleButton>
+              <Button x:Name="GraphOptionsButton" Classes="graphCommandButton"
+                      Click="GraphOptionsButton_OnClick"
+                      AutomationProperties.Name="Graph options"
+                      ToolTip.Tip="Graph options">
+                <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="16" Text="&#xE713;" />
+              </Button>
+            </StackPanel>
+          </Border>
+
+          <Border Margin="0,0,8,8" Padding="2"
+                  HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                  CornerRadius="5" Background="{DynamicResource GraphCommandPanelBrush}">
+            <StackPanel>
+              <Button Classes="graphCommandButton" Click="ZoomIn_OnClick"
+                      AutomationProperties.Name="Zoom in" ToolTip.Tip="Zoom in">
                 <TextBlock FontSize="20" Text="+" />
               </Button>
-              <Button Classes="graphCommandButton"
-                      Click="ZoomOut_OnClick"
-                      ToolTip.Tip="{Binding Graphing.Strings.ZoomOutTooltip}">
+              <Button Classes="graphCommandButton" Click="ZoomOut_OnClick"
+                      AutomationProperties.Name="Zoom out" ToolTip.Tip="Zoom out">
                 <TextBlock FontSize="20" Text="−" />
               </Button>
-              <Button Classes="graphCommandButton"
-                      Click="ResetView_OnClick"
-                      ToolTip.Tip="{Binding Graphing.Strings.ResetViewTooltip}">
+              <Button Classes="graphCommandButton" Click="ResetView_OnClick"
+                      AutomationProperties.Name="Graph view" ToolTip.Tip="Graph view">
                 <Grid Width="18" Height="18">
-                  <TextBlock HorizontalAlignment="Center"
-                             VerticalAlignment="Center"
-                             FontFamily="{StaticResource CalculatorIconFont}"
-                             FontSize="15"
-                             Text="&#xE45E;" />
-                  <TextBlock HorizontalAlignment="Center"
-                             VerticalAlignment="Center"
-                             FontFamily="{StaticResource CalculatorIconFont}"
-                             FontSize="15"
-                             Text="&#xE45D;" />
+                  <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                             FontFamily="{StaticResource CalculatorIconFont}" FontSize="15" Text="&#xE45E;" />
+                  <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                             FontFamily="{StaticResource CalculatorIconFont}" FontSize="15" Text="&#xE45D;" />
                 </Grid>
               </Button>
             </StackPanel>
           </Border>
+
+          <Border x:Name="GraphOptionsPanel" Width="318" MaxHeight="468" ZIndex="20"
+                  Margin="0,8,8,0" Padding="18,14"
+                  HorizontalAlignment="Right" VerticalAlignment="Top"
+                  IsVisible="False" CornerRadius="8"
+                  Background="{DynamicResource CardBrush}" BoxShadow="0 6 18 0 #70000000">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+              <StackPanel Spacing="9">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock FontSize="22" FontWeight="SemiBold" Text="Graph options" />
+                  <Button Grid.Column="1" Width="32" Height="30" Padding="2"
+                          Click="CloseGraphOptionsButton_OnClick"
+                          AutomationProperties.Name="Close graph options"
+                          Content="×" />
+                </Grid>
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" Text="Window" />
+                  <Button Grid.Column="1" Classes="graphLinkButton" Click="ResetView_OnClick" Content="Reset view" />
+                </Grid>
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+                  <StackPanel>
+                    <TextBlock Opacity="0.72" Text="X-Min" />
+                    <TextBox x:Name="XMinimumBox" Text="-10" LostFocus="BoundsBox_OnLostFocus" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="1">
+                    <TextBlock Opacity="0.72" Text="X-Max" />
+                    <TextBox x:Name="XMaximumBox" Text="10" LostFocus="BoundsBox_OnLostFocus" />
+                  </StackPanel>
+                  <StackPanel Grid.Row="1">
+                    <TextBlock Opacity="0.72" Text="Y-Min" />
+                    <TextBox x:Name="YMinimumBox" Text="-10" LostFocus="BoundsBox_OnLostFocus" />
+                  </StackPanel>
+                  <StackPanel Grid.Row="1" Grid.Column="1">
+                    <TextBlock Opacity="0.72" Text="Y-Max" />
+                    <TextBox x:Name="YMaximumBox" Text="10" LostFocus="BoundsBox_OnLostFocus" />
+                  </StackPanel>
+                </Grid>
+                <TextBlock Margin="0,4,0,0" FontSize="15" FontWeight="SemiBold" Text="Units" />
+                <UniformGrid Columns="3">
+                  <RadioButton Classes="graphSegment" GroupName="GraphUnits" IsChecked="True" Content="Radians" />
+                  <RadioButton Classes="graphSegment" GroupName="GraphUnits" Content="Degrees" />
+                  <RadioButton Classes="graphSegment" GroupName="GraphUnits" Content="Gradians" />
+                </UniformGrid>
+                <TextBlock Margin="0,4,0,0" FontSize="15" FontWeight="SemiBold" Text="Line thickness" />
+                <ComboBox x:Name="LineWidthBox" SelectedIndex="1" SelectionChanged="LineWidthBox_OnSelectionChanged">
+                  <ComboBoxItem AutomationProperties.Name="Small line width" Content="━━━━  Small" Tag="1" />
+                  <ComboBoxItem AutomationProperties.Name="Medium line width" Content="━━━━  Medium" Tag="2" />
+                  <ComboBoxItem AutomationProperties.Name="Large line width" Content="━━━━  Large" Tag="3" />
+                  <ComboBoxItem AutomationProperties.Name="Extra large line width" Content="━━━━  Extra large" Tag="4" />
+                </ComboBox>
+                <TextBlock Margin="0,4,0,0" FontSize="15" FontWeight="SemiBold" Text="Graph theme" />
+                <RadioButton x:Name="AlwaysLightThemeButton" GroupName="GraphTheme" IsChecked="True"
+                             IsCheckedChanged="GraphTheme_OnChanged" Content="Always light" />
+                <RadioButton x:Name="MatchAppThemeButton" GroupName="GraphTheme"
+                             IsCheckedChanged="GraphTheme_OnChanged" Content="Match app theme" />
+              </StackPanel>
+            </ScrollViewer>
+          </Border>
+
+          <Border x:Name="TraceLiveRegion" Margin="10" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                  IsVisible="False" Opacity="0"
+                  AutomationProperties.LiveSetting="Polite" />
         </Grid>
       </Border>
 
-      <Border x:Name="EquationPanel"
-              Grid.Column="1"
-              Margin="4,0,0,0"
-              BorderBrush="{DynamicResource CalculatorBorderBrush}"
-              BorderThickness="1,0,0,0"
-              Background="{DynamicResource GraphEquationPanelBrush}">
+      <Border x:Name="EquationPanel" Grid.Column="1" Background="{DynamicResource GraphEquationPanelBrush}">
         <Grid RowDefinitions="*,Auto">
-          <ScrollViewer Grid.Row="0"
-                        HorizontalScrollBarVisibility="Disabled"
-                        VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding Graphing.Equations}">
+          <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <ItemsControl Margin="0" VerticalAlignment="Top"
+                          ItemsSource="{Binding Graphing.Equations}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="managed:GraphEquationViewModel">
-                  <Border Margin="8,4"
-                          Padding="8"
-                          CornerRadius="4"
-                          BorderBrush="{DynamicResource CalculatorBorderBrush}"
-                          BorderThickness="1"
-                          Background="{DynamicResource GraphEquationCardBrush}">
-                    <Grid ColumnDefinitions="6,*,Auto" RowDefinitions="Auto,Auto">
-                      <Border Grid.RowSpan="2"
-                              Width="4"
-                              Margin="0,2,6,2"
-                              CornerRadius="2"
-                              Background="{Binding Color}" />
-                      <TextBox Grid.Column="1"
-                               MinHeight="42"
-                               Padding="8,8"
-                               VerticalContentAlignment="Center"
-                               Text="{Binding Expression, Mode=TwoWay}"
-                               PlaceholderText="{Binding Placeholder}" />
-                      <StackPanel Grid.Column="2"
-                                  Margin="4,0,0,0"
-                                  Orientation="Horizontal"
-                                  VerticalAlignment="Center">
-                        <ToggleButton MinWidth="34"
-                                      MinHeight="34"
-                                      Padding="6"
-                                      IsChecked="{Binding IsEnabled, Mode=TwoWay}">
-                          <TextBlock FontFamily="{StaticResource CalculatorIconFont}"
-                                     FontSize="14"
-                                     Text="&#xE890;" />
+                  <Grid Margin="1.75,1.75,1.75,0" RowDefinitions="44,Auto" VerticalAlignment="Top">
+                    <Border Classes="graphEquationCard" Height="44"
+                            VerticalAlignment="Top" CornerRadius="5" ClipToBounds="True"
+                            Background="{DynamicResource GraphEquationCardBrush}">
+                      <Grid ColumnDefinitions="44,*,Auto">
+                        <ToggleButton Classes="graphEquationToggle"
+                                      Margin="0" Padding="0" CornerRadius="0"
+                                      HorizontalContentAlignment="Stretch"
+                                      VerticalContentAlignment="Stretch"
+                                      IsEnabled="{Binding CanToggleVisibility}"
+                                      IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                                      AutomationProperties.Name="{Binding VisibilityAutomationName}">
+                          <Border Width="44" Height="44" Background="{Binding TileColor}"
+                                  CornerRadius="5">
+                            <Grid>
+                              <StackPanel Classes="graphEquationFunction"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Orientation="Horizontal">
+                                <TextBlock FontFamily="{StaticResource CalculatorIconFont}"
+                                           FontSize="19" Foreground="White" Text="&#xF893;" />
+                                <TextBlock Margin="-4,13,0,0" FontSize="12"
+                                           Foreground="White" Text="{Binding FunctionIndexLabel}" />
+                              </StackPanel>
+                              <Border Classes="graphEquationTileShade"
+                                      Background="#48000000" CornerRadius="5" />
+                              <TextBlock Classes="graphEquationHideIcon"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center"
+                                         IsVisible="{Binding IsEnabled}"
+                                         FontFamily="{StaticResource CalculatorIconFont}"
+                                         FontSize="17" Foreground="White" Text="&#xF6AC;" />
+                              <TextBlock Classes="graphEquationShowIcon"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center"
+                                         IsVisible="{Binding !IsEnabled}"
+                                         FontFamily="{StaticResource CalculatorIconFont}"
+                                         FontSize="17" Foreground="White" Text="&#xE890;" />
+                            </Grid>
+                          </Border>
                         </ToggleButton>
-                        <Button MinWidth="34"
-                                MinHeight="34"
-                                Padding="6"
-                                Command="{Binding $parent[UserControl].DataContext.Graphing.RemoveEquationCommand}"
-                                CommandParameter="{Binding}">
-                          <TextBlock FontFamily="{StaticResource CalculatorIconFont}"
-                                     FontSize="14"
-                                     Text="&#xE74D;" />
-                        </Button>
-                      </StackPanel>
-                      <TextBlock Grid.Row="1"
-                                 Grid.Column="1"
-                                 Grid.ColumnSpan="2"
-                                 Margin="8,3,4,0"
-                                 Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                                 FontSize="12"
-                                 Text="{Binding ErrorMessage}"
-                                 TextWrapping="Wrap"
-                                 IsVisible="{Binding !!ErrorMessage}" />
-                    </Grid>
-                  </Border>
+                        <TextBox Grid.Column="1" Height="44" Padding="10,0"
+                                 Classes="graphEquationInput"
+                                 VerticalContentAlignment="Center"
+                                 Background="Transparent" BorderThickness="0"
+                                 FontSize="14" FontWeight="Normal"
+                                 Text="{Binding DraftExpression, Mode=TwoWay}"
+                                 PlaceholderText="{Binding Placeholder}"
+                                 AutomationProperties.Name="Open the context menu for available actions"
+                                 KeyDown="EquationTextBox_OnKeyDown"
+                                 GotFocus="EquationTextBox_OnGotFocus"
+                                 LostFocus="EquationTextBox_OnLostFocus"
+                                 ContextRequested="EquationTextBox_OnContextRequested">
+                          <TextBox.Resources>
+                            <SolidColorBrush x:Key="TextControlBorderBrush" Color="Transparent" />
+                            <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="Transparent" />
+                            <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="Transparent" />
+                            <SolidColorBrush x:Key="TextControlBorderBrushDisabled" Color="Transparent" />
+                          </TextBox.Resources>
+                        </TextBox>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal"
+                                    IsVisible="{Binding HasExpression}">
+                          <Button Classes="graphEquationAction"
+                                  IsEnabled="False"
+                                  AutomationProperties.Name="Analyze function"
+                                  ToolTip.Tip="Analyze function">
+                            <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="15"
+                                       Text="&#xE945;" />
+                          </Button>
+                          <Button Classes="graphEquationAction"
+                                  Click="StyleEquation_OnClick"
+                                  AutomationProperties.Name="Change equation style"
+                                  ToolTip.Tip="Change equation style">
+                            <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="15"
+                                       Text="&#xE790;" />
+                          </Button>
+                          <Button Classes="graphEquationAction"
+                                  Click="RemoveEquation_OnClick"
+                                  AutomationProperties.Name="Remove equation"
+                                  ToolTip.Tip="Remove equation">
+                            <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="13"
+                                       Text="&#xE74D;" />
+                          </Button>
+                        </StackPanel>
+                        <Border Grid.ColumnSpan="3" Classes="graphEquationOutline"
+                                IsHitTestVisible="False" CornerRadius="5"
+                                BorderBrush="{Binding TileColor}" BorderThickness="1" />
+                      </Grid>
+                    </Border>
+                    <TextBlock Grid.Row="1" Margin="54,2,4,5"
+                               Foreground="#FFFF6B6B" FontSize="11"
+                               Text="{Binding ErrorMessage}" TextWrapping="Wrap"
+                               IsVisible="{Binding HasError}" />
+                  </Grid>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
           </ScrollViewer>
 
-          <StackPanel Grid.Row="1">
-            <ItemsControl Margin="8,4"
-                          ItemsSource="{Binding Graphing.Variables}"
-                          IsVisible="{Binding Graphing.HasVariables}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="managed:GraphVariableViewModel">
-                  <Border Margin="0,3"
-                          Padding="10,8"
-                          CornerRadius="4"
-                          Background="{DynamicResource GraphEquationCardBrush}">
-                    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
-                      <TextBlock FontSize="16"
-                                 FontStyle="Italic"
-                                 VerticalAlignment="Center"
-                                 Text="{Binding Name}" />
-                      <NumericUpDown Grid.Column="1"
-                                     Width="96"
-                                     HorizontalAlignment="Right"
-                                     Minimum="{Binding Minimum}"
-                                     Maximum="{Binding Maximum}"
-                                     Increment="{Binding Step}"
-                                     Value="{Binding Value, Mode=TwoWay}" />
-                      <Slider Grid.Row="1"
-                              Grid.ColumnSpan="2"
-                              Margin="0,8,0,0"
-                              Minimum="{Binding Minimum}"
-                              Maximum="{Binding Maximum}"
-                              TickFrequency="{Binding Step}"
-                              Value="{Binding Value, Mode=TwoWay}" />
-                    </Grid>
-                  </Border>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
+          <Grid Grid.Row="1" RowDefinitions="52,350">
+            <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+              <StackPanel Orientation="Horizontal">
+                <Button x:Name="TrigButton" Classes="graphSelectorButton">
+                  <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                      <TextBlock VerticalAlignment="Center" Text="Trigonometry" />
+                      <TextBlock Margin="10,2,0,0" VerticalAlignment="Center"
+                                 FontFamily="{StaticResource CalculatorIconFont}" Text="&#xE70D;" />
+                    </StackPanel>
+                  </Button.Content>
+                  <Button.Flyout>
+                    <Flyout Placement="Top">
+                      <Grid Width="264" Height="96" RowDefinitions="*,*" ColumnDefinitions="64,*,*,*">
+                        <ToggleButton x:Name="TrigSecondButton" Content="2nd" Click="TrigModifier_OnClick"
+                                      AutomationProperties.Name="Inverse function" />
+                        <ToggleButton x:Name="TrigHypButton" Grid.Row="1" Content="hyp" Click="TrigModifier_OnClick"
+                                      AutomationProperties.Name="Hyperbolic function" />
+                        <Button x:Name="TrigSinButton" Grid.Column="1" Content="sin" Tag="sin(" Click="InputButton_OnClick" AutomationProperties.Name="Sine" />
+                        <Button x:Name="TrigCosButton" Grid.Column="2" Content="cos" Tag="cos(" Click="InputButton_OnClick" AutomationProperties.Name="Cosine" />
+                        <Button x:Name="TrigTanButton" Grid.Column="3" Content="tan" Tag="tan(" Click="InputButton_OnClick" AutomationProperties.Name="Tangent" />
+                        <Button x:Name="TrigSecButton" Grid.Row="1" Grid.Column="1" Content="sec" Tag="sec(" Click="InputButton_OnClick" AutomationProperties.Name="Secant" />
+                        <Button x:Name="TrigCscButton" Grid.Row="1" Grid.Column="2" Content="csc" Tag="csc(" Click="InputButton_OnClick" AutomationProperties.Name="Cosecant" />
+                        <Button x:Name="TrigCotButton" Grid.Row="1" Grid.Column="3" Content="cot" Tag="cot(" Click="InputButton_OnClick" AutomationProperties.Name="Cotangent" />
+                      </Grid>
+                    </Flyout>
+                  </Button.Flyout>
+                </Button>
+                <Button Classes="graphSelectorButton">
+                  <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                      <TextBlock VerticalAlignment="Center" Text="Inequalities" />
+                      <TextBlock Margin="10,2,0,0" VerticalAlignment="Center"
+                                 FontFamily="{StaticResource CalculatorIconFont}" Text="&#xE70D;" />
+                    </StackPanel>
+                  </Button.Content>
+                  <Button.Flyout>
+                    <Flyout Placement="Top">
+                      <UniformGrid Columns="5" Width="290" Height="58">
+                        <Button Content="&lt;" Tag="&lt;" Click="InputButton_OnClick" AutomationProperties.Name="Less than" />
+                        <Button Content="≤" Tag="&lt;=" Click="InputButton_OnClick" AutomationProperties.Name="Less than or equal" />
+                        <Button Content="=" Tag="=" Click="InputButton_OnClick" AutomationProperties.Name="Equal" />
+                        <Button Content="≥" Tag=">=" Click="InputButton_OnClick" AutomationProperties.Name="Greater than or equal" />
+                        <Button Content=">" Tag=">" Click="InputButton_OnClick" AutomationProperties.Name="Greater than" />
+                      </UniformGrid>
+                    </Flyout>
+                  </Button.Flyout>
+                </Button>
+                <Button Classes="graphSelectorButton">
+                  <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                      <TextBlock VerticalAlignment="Center" Text="Function" />
+                      <TextBlock Margin="10,2,0,0" VerticalAlignment="Center"
+                                 FontFamily="{StaticResource CalculatorIconFont}" Text="&#xE70D;" />
+                    </StackPanel>
+                  </Button.Content>
+                  <Button.Flyout>
+                    <Flyout Placement="Top">
+                      <UniformGrid Columns="3" Width="194" Height="58">
+                        <Button Content="|x|" Tag="abs(" Click="InputButton_OnClick" AutomationProperties.Name="Absolute value" />
+                        <Button Content="⌊x⌋" Tag="floor(" Click="InputButton_OnClick" AutomationProperties.Name="Floor" />
+                        <Button Content="⌈x⌉" Tag="ceil(" Click="InputButton_OnClick" AutomationProperties.Name="Ceiling" />
+                      </UniformGrid>
+                    </Flyout>
+                  </Button.Flyout>
+                </Button>
+              </StackPanel>
+            </ScrollViewer>
 
-            <Button Margin="8"
-                    MinHeight="42"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    Command="{Binding Graphing.AddEquationCommand}"
-                    ToolTip.Tip="{Binding Graphing.Strings.AddEquationTooltip}">
-              <TextBlock FontSize="20" Text="+" />
-            </Button>
-          </StackPanel>
+            <Grid x:Name="GraphKeypad" Grid.Row="1" Margin="3" RowDefinitions="*,*,*,*,*,*,*" ColumnDefinitions="*,*,*,*,*">
+              <Button x:Name="SecondButton" Classes="calcButton operator symbolOperator graphSecond" Content="&#xF897;" Click="SecondButton_OnClick" AutomationProperties.Name="Inverse function" />
+              <Button Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xF7CF;" Tag="pi" Click="InputButton_OnClick" AutomationProperties.Name="Pi" />
+              <Button Grid.Column="2" Classes="calcButton operator graphOperatorText" Content="e" Tag="e" Click="InputButton_OnClick" AutomationProperties.Name="Euler's number" />
+              <Button Grid.Column="3" Classes="calcButton operator graphOperatorText" Content="C" Tag="clear-input" Click="InputButton_OnClick" AutomationProperties.Name="Clear" />
+              <Button Grid.Column="4" Classes="calcButton operator symbolOperator" Content="&#xE94F;" Tag="backspace-input" Click="InputButton_OnClick" AutomationProperties.Name="Backspace" />
+
+              <Grid x:Name="PrimaryScientificKeys" Grid.Row="1" Grid.RowSpan="6" RowDefinitions="*,*,*,*,*,*" IsHitTestVisible="True">
+                <Button Classes="calcButton operator symbolOperator" Content="&#xF7C8;" Tag="^2" Click="InputButton_OnClick" AutomationProperties.Name="Square" />
+                <Button Grid.Row="1" Classes="calcButton operator symbolOperator" Content="&#xF899;" Tag="sqrt(" Click="InputButton_OnClick" AutomationProperties.Name="Square root" />
+                <Button Grid.Row="2" Classes="calcButton operator symbolOperator" Content="&#xF7CA;" Tag="^" Click="InputButton_OnClick" AutomationProperties.Name="'X' to the exponent" />
+                <Button Grid.Row="3" Classes="calcButton operator symbolOperator" Content="&#xF7CC;" Tag="10^(" Click="InputButton_OnClick" AutomationProperties.Name="Ten to the exponent" />
+                <Button Grid.Row="4" Classes="calcButton operator graphOperatorText" Content="log" Tag="log(" Click="InputButton_OnClick" AutomationProperties.Name="Log" />
+                <Button Grid.Row="5" Classes="calcButton operator graphOperatorText" Content="ln" Tag="ln(" Click="InputButton_OnClick" AutomationProperties.Name="Natural log" />
+              </Grid>
+              <Grid x:Name="InverseScientificKeys" Grid.Row="1" Grid.RowSpan="6" RowDefinitions="*,*,*,*,*,*" IsVisible="False">
+                <Button Classes="calcButton operator symbolOperator" Content="&#xF7CB;" Tag="^3" Click="InputButton_OnClick" AutomationProperties.Name="Cube" />
+                <Button Grid.Row="1" Classes="calcButton operator symbolOperator" Content="&#xF881;" Tag="cbrt(" Click="InputButton_OnClick" AutomationProperties.Name="Cube root" />
+                <Button Grid.Row="2" Classes="calcButton operator symbolOperator" Content="&#xF7CD;" Tag="root(" Click="InputButton_OnClick" AutomationProperties.Name="'y' root of 'x'" />
+                <Button Grid.Row="3" Classes="calcButton operator symbolOperator" Content="&#xF882;" Tag="2^(" Click="InputButton_OnClick" AutomationProperties.Name="Two to the exponent" />
+                <Button Grid.Row="4" Classes="calcButton operator symbolOperator" Content="&#xF883;" Tag="log(" Click="InputButton_OnClick" AutomationProperties.Name="Log base Y" />
+                <Button Grid.Row="5" Classes="calcButton operator symbolOperator" Content="&#xF7CE;" Tag="e^(" Click="InputButton_OnClick" AutomationProperties.Name="'e' to the exponent" />
+              </Grid>
+
+              <Button Grid.Row="1" Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xF7C9;" Tag="1/(" Click="InputButton_OnClick" AutomationProperties.Name="Reciprocal" />
+              <Button Grid.Row="1" Grid.Column="2" Classes="calcButton operator symbolOperator" Content="&#xF884;" Tag="abs(" Click="InputButton_OnClick" AutomationProperties.Name="Absolute value" />
+              <Button Grid.Row="1" Grid.Column="3" Classes="calcButton operator graphOperatorText" Content="𝑥" Tag="x" Click="InputButton_OnClick" AutomationProperties.Name="X" />
+              <Button Grid.Row="1" Grid.Column="4" Classes="calcButton operator graphOperatorText" Content="𝑦" Tag="y" Click="InputButton_OnClick" AutomationProperties.Name="Y" />
+              <Button Grid.Row="2" Grid.Column="1" Classes="calcButton operator graphParenthesis" Content="(" Tag="(" Click="InputButton_OnClick" AutomationProperties.Name="Left parenthesis" />
+              <Button Grid.Row="2" Grid.Column="2" Classes="calcButton operator graphParenthesis" Content=")" Tag=")" Click="InputButton_OnClick" AutomationProperties.Name="Right parenthesis" />
+              <Button Grid.Row="2" Grid.Column="3" Classes="calcButton operator symbolOperator" Content="&#xE94E;" Tag="=" Click="InputButton_OnClick" AutomationProperties.Name="Equals" />
+              <Button Grid.Row="2" Grid.Column="4" Classes="calcButton operator symbolOperator" Content="&#xE94A;" Tag="/" Click="InputButton_OnClick" AutomationProperties.Name="Divide by" />
+              <Button Grid.Row="3" Grid.Column="1" Classes="calcButton numeric" Content="7" Tag="7" Click="InputButton_OnClick" AutomationProperties.Name="Seven" />
+              <Button Grid.Row="3" Grid.Column="2" Classes="calcButton numeric" Content="8" Tag="8" Click="InputButton_OnClick" AutomationProperties.Name="Eight" />
+              <Button Grid.Row="3" Grid.Column="3" Classes="calcButton numeric" Content="9" Tag="9" Click="InputButton_OnClick" AutomationProperties.Name="Nine" />
+              <Button Grid.Row="3" Grid.Column="4" Classes="calcButton operator symbolOperator" Content="&#xE947;" Tag="*" Click="InputButton_OnClick" AutomationProperties.Name="Multiply by" />
+              <Button Grid.Row="4" Grid.Column="1" Classes="calcButton numeric" Content="4" Tag="4" Click="InputButton_OnClick" AutomationProperties.Name="Four" />
+              <Button Grid.Row="4" Grid.Column="2" Classes="calcButton numeric" Content="5" Tag="5" Click="InputButton_OnClick" AutomationProperties.Name="Five" />
+              <Button Grid.Row="4" Grid.Column="3" Classes="calcButton numeric" Content="6" Tag="6" Click="InputButton_OnClick" AutomationProperties.Name="Six" />
+              <Button Grid.Row="4" Grid.Column="4" Classes="calcButton operator symbolOperator" Content="&#xE949;" Tag="-" Click="InputButton_OnClick" AutomationProperties.Name="Minus" />
+              <Button Grid.Row="5" Grid.Column="1" Classes="calcButton numeric" Content="1" Tag="1" Click="InputButton_OnClick" AutomationProperties.Name="One" />
+              <Button Grid.Row="5" Grid.Column="2" Classes="calcButton numeric" Content="2" Tag="2" Click="InputButton_OnClick" AutomationProperties.Name="Two" />
+              <Button Grid.Row="5" Grid.Column="3" Classes="calcButton numeric" Content="3" Tag="3" Click="InputButton_OnClick" AutomationProperties.Name="Three" />
+              <Button Grid.Row="5" Grid.Column="4" Classes="calcButton operator symbolOperator" Content="&#xE948;" Tag="+" Click="InputButton_OnClick" AutomationProperties.Name="Plus" />
+              <Button Grid.Row="6" Grid.Column="1" Classes="calcButton numeric symbolOperator" Content="&#xF898;" Tag="-" Click="InputButton_OnClick" AutomationProperties.Name="Positive negative" />
+              <Button Grid.Row="6" Grid.Column="2" Classes="calcButton numeric" Content="0" Tag="0" Click="InputButton_OnClick" AutomationProperties.Name="Zero" />
+              <Button Grid.Row="6" Grid.Column="3" Classes="calcButton numeric" Content="{Binding DecimalSeparator}" Tag="." Click="InputButton_OnClick" AutomationProperties.Name="Decimal separator" />
+              <Button Grid.Row="6" Grid.Column="4" Classes="calcButton equalsButton" Content="&#xE94E;" Tag="submit-input" Click="InputButton_OnClick" AutomationProperties.Name="Submit" />
+            </Grid>
+          </Grid>
         </Grid>
       </Border>
     </Grid>
+
   </Grid>
 </UserControl>

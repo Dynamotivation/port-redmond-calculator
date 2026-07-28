@@ -61,6 +61,22 @@
       <!-- Hamburger/category/history row from MainPage + Calculator. -->
       <Grid Grid.Row="0" ColumnDefinitions="68,Auto,62,*,56">
         <TextBlock Grid.Column="1" Classes="pageHeading" VerticalAlignment="Center" Text="{Binding ModeDisplayName}" />
+        <Border x:Name="GraphingModeSwitch" Grid.Column="3" Grid.ColumnSpan="2"
+                Margin="0,7,8,7" HorizontalAlignment="Right"
+                IsVisible="False" CornerRadius="4" Background="#EA242424">
+          <StackPanel Orientation="Horizontal">
+            <ToggleButton x:Name="GraphingHeaderGraphButton" Classes="graphModeButton"
+                          IsChecked="True" Click="GraphingHeaderGraphButton_OnClick"
+                          AutomationProperties.Name="Switch to equation mode">
+              <TextBlock FontFamily="{StaticResource CalculatorIconFont}" Text="&#xF770;" />
+            </ToggleButton>
+            <ToggleButton x:Name="GraphingHeaderEquationButton" Classes="graphModeButton"
+                          Click="GraphingHeaderEquationButton_OnClick"
+                          AutomationProperties.Name="Switch to graph mode">
+              <TextBlock FontStyle="Italic" Text="ƒ" />
+            </ToggleButton>
+          </StackPanel>
+        </Border>
         <Button Grid.Column="2" Classes="chromeButton" Margin="10,3,0,3"
                 AutomationProperties.Name="{Binding AlwaysOnTopAutomationName}"
                 IsVisible="{Binding CanEnterAlwaysOnTop}"
