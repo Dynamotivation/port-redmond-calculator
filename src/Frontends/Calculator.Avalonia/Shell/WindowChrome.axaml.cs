@@ -12,8 +12,8 @@ namespace Calculator.Avalonia.Shell;
 /// <remarks>
 /// Window operations are surfaced as events instead of being performed here.
 /// Minimising, maximising, closing and moving belong to whoever owns the
-/// window, and keeping them out of this control is what lets the chrome be
-/// hosted (and snapshotted) without a real window behind it.
+/// window, and keeping them out of this control lets the chrome be hosted and
+/// tested without a real window behind it.
 /// </remarks>
 public partial class WindowChrome : UserControl
 {

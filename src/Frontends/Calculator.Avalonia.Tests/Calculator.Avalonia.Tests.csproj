@@ -6,7 +6,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Calculator.Avalonia.Tests</RootNamespace>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- The referenced frontend is a WinExe; suppress its entry point. -->
     <GenerateProgramFile>false</GenerateProgramFile>
     <NativeCalculatorLibrary Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(MSBuildProjectDirectory)/../../../build/portable/src/CalculatorNative/libcalculator_engine.dylib</NativeCalculatorLibrary>

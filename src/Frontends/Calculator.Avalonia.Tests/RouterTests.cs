@@ -4,9 +4,8 @@ using Calculator.Shortcuts;
 namespace Calculator.Avalonia.Tests;
 
 /// <summary>
-/// Non-visual guards for keyboard routing. Snapshots cannot see any of this,
-/// and the shortcut path is the part of the decomposition most likely to break
-/// silently, so it gets its own assertions.
+/// Guards for keyboard routing. The shortcut path is the part of the
+/// decomposition most likely to break silently, so it gets its own assertions.
 /// </summary>
 internal static class RouterTests
 {
