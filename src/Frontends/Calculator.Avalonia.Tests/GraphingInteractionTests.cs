@@ -7,7 +7,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Calculator.Managed;
-using CSharpMath.Avalonia;
+using Calculator.Avalonia.Views.Graphing;
 
 namespace Calculator.Avalonia.Tests;
 
@@ -112,7 +112,7 @@ internal static class GraphingInteractionTests
                     textBox.Name == "EquationExpressionTextBox"
                     && ReferenceEquals(textBox.DataContext, equation));
             var typeset = window.GetVisualDescendants()
-                .OfType<MathView>()
+                .OfType<EditableMathView>()
                 .First(mathView => ReferenceEquals(mathView.DataContext, equation));
             Assert(
                 typeset.IsEffectivelyVisible && !editor.IsEffectivelyVisible,
@@ -127,9 +127,28 @@ internal static class GraphingInteractionTests
             Pump();
 
             Assert(
+                !equation.IsEditing && typeset.IsEffectivelyVisible && typeset.IsFocused
+                && !editor.IsEffectivelyVisible,
+                "Clicking a committed equation should keep its focused structured presentation.");
+
+            var insertionBeforeNavigation = typeset.StructuredInsertionIndex;
+            window.KeyPress(
+                Key.Left,
+                RawInputModifiers.None,
+                PhysicalKey.ArrowLeft,
+                null);
+            Pump();
+            Assert(
+                typeset.StructuredInsertionIndex != insertionBeforeNavigation
+                && typeset.IsEffectivelyVisible,
+                "Arrow keys should move the caret through the structured equation.");
+
+            window.KeyTextInput("z");
+            Pump();
+            Assert(
                 equation.IsEditing && editor.IsEffectivelyVisible && editor.IsFocused
-                && !typeset.IsEffectivelyVisible,
-                "Clicking a typeset equation should restore its focused linear editor.");
+                && !typeset.IsEffectivelyVisible && equation.DraftExpression.Contains('z'),
+                "The first modifying input should return to the focused linear editor.");
         }
         finally
         {
@@ -178,7 +197,7 @@ internal static class GraphingInteractionTests
             Pump();
 
             var typeset = window.GetVisualDescendants()
-                .OfType<MathView>()
+                .OfType<EditableMathView>()
                 .First(mathView => ReferenceEquals(mathView.DataContext, equation));
             var typesetCenter = typeset.TranslatePoint(
                     new Point(typeset.Bounds.Width / 2, typeset.Bounds.Height / 2),
@@ -186,6 +205,8 @@ internal static class GraphingInteractionTests
                 ?? throw new InvalidOperationException("Could not locate the typeset equation.");
             window.MouseDown(typesetCenter, MouseButton.Left, RawInputModifiers.None);
             window.MouseUp(typesetCenter, MouseButton.Left, RawInputModifiers.None);
+            Pump();
+            window.KeyTextInput("z");
             Pump();
 
             var clear = window.GetVisualDescendants()

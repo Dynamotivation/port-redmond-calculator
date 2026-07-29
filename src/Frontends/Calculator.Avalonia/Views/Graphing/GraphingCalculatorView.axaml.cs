@@ -289,12 +289,69 @@ public partial class GraphingCalculatorView : UserControl
             return;
         }
         var properties = e.GetCurrentPoint(formattedEquation).Properties;
-        var openContextMenu = properties.IsRightButtonPressed;
-        if (!properties.IsLeftButtonPressed && !openContextMenu)
+        if (!properties.IsRightButtonPressed)
         {
             return;
         }
 
+        ActivateLinearEditor(
+            equation,
+            equation.DraftExpression.Length,
+            editor => editor.ContextMenu?.Open(editor));
+        e.Handled = true;
+    }
+
+    private void FormattedEquation_OnGotFocus(object? sender, FocusChangedEventArgs e)
+    {
+        if (sender is not EditableMathView { DataContext: GraphEquationViewModel equation })
+        {
+            return;
+        }
+
+        if (Graphing is not null)
+        {
+            Graphing.SelectedEquation = equation;
+        }
+        _activeTextBox = this.GetVisualDescendants()
+            .OfType<TextBox>()
+            .FirstOrDefault(textBox =>
+                textBox.Name == "EquationExpressionTextBox"
+                && ReferenceEquals(textBox.DataContext, equation));
+    }
+
+    private void FormattedEquation_OnLinearEditRequested(
+        object? sender,
+        LinearMathEditRequestedEventArgs e)
+    {
+        if (sender is not EditableMathView { DataContext: GraphEquationViewModel equation })
+        {
+            return;
+        }
+
+        ActivateLinearEditor(equation, e.SuggestedCaretIndex, editor =>
+        {
+            switch (e.Action)
+            {
+                case LinearMathEditAction.InsertText:
+                    InsertText(editor, e.Text);
+                    break;
+                case LinearMathEditAction.Backspace:
+                    Backspace(editor);
+                    break;
+                case LinearMathEditAction.Delete when editor.CaretIndex < (editor.Text?.Length ?? 0):
+                    editor.SelectionStart = editor.CaretIndex;
+                    editor.SelectionEnd = editor.CaretIndex + 1;
+                    DeleteSelection(editor);
+                    break;
+            }
+        });
+    }
+
+    private void ActivateLinearEditor(
+        GraphEquationViewModel equation,
+        int caretIndex,
+        Action<TextBox>? activated = null)
+    {
         equation.IsEditing = true;
         Dispatcher.UIThread.Post(() =>
         {
@@ -307,16 +364,11 @@ public partial class GraphingCalculatorView : UserControl
             {
                 return;
             }
-
             _activeTextBox = editor;
             editor.Focus();
-            editor.CaretIndex = editor.Text?.Length ?? 0;
-            if (openContextMenu)
-            {
-                editor.ContextMenu?.Open(editor);
-            }
+            editor.CaretIndex = Math.Clamp(caretIndex, 0, editor.Text?.Length ?? 0);
+            activated?.Invoke(editor);
         }, DispatcherPriority.Input);
-        e.Handled = true;
     }
 
     private void SubmitEquation(TextBox? textBox = null)
@@ -384,6 +436,10 @@ public partial class GraphingCalculatorView : UserControl
         if (_activeTextBox is null)
         {
             return;
+        }
+        if (_activeTextBox.DataContext is GraphEquationViewModel { ShowFormattedExpression: true } equation)
+        {
+            equation.IsEditing = true;
         }
         if (token == "clear-input")
         {
@@ -618,7 +674,6 @@ public partial class GraphingCalculatorView : UserControl
         {
             Columns = 7,
             Rows = 2,
-            Margin = new Thickness(4, 0),
         };
         var colorNames = new[]
         {
@@ -650,9 +705,8 @@ public partial class GraphingCalculatorView : UserControl
 
         var styleBox = new ComboBox
         {
-            MinWidth = 200,
-            Margin = new Thickness(8, 0),
-            HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            IsEnabled = equation.CanCustomizeLineStyle,
         };
         for (var index = 0; index < 3; index++)
         {
@@ -672,7 +726,7 @@ public partial class GraphingCalculatorView : UserControl
                 });
             styleBox.Items.Add(styleChoice);
         }
-        styleBox.SelectedIndex = (int)equation.LineStyle;
+        styleBox.SelectedIndex = (int)equation.EffectiveLineStyle;
         styleBox.SelectionChanged += (_, _) =>
         {
             if (styleBox.SelectedItem is ComboBoxItem { Tag: GraphLineStyle lineStyle })
@@ -696,13 +750,13 @@ public partial class GraphingCalculatorView : UserControl
                 new TextBlock
                 {
                     Text = Graphing?.Strings.ColorHeading ?? "Color",
-                    Margin = new Thickness(8, 5, 0, 0),
+                    Margin = new Thickness(0, 5, 0, 0),
                 },
                 swatches,
                 new TextBlock
                 {
                     Text = Graphing?.Strings.StyleHeading ?? "Style",
-                    Margin = new Thickness(8, 5, 0, 0),
+                    Margin = new Thickness(0, 5, 0, 0),
                 },
                 styleBox,
             },

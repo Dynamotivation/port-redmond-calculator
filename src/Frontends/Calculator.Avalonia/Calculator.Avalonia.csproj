@@ -5,6 +5,7 @@
     <AssemblyName>Redmond Calculator</AssemblyName>
     <RootNamespace>Calculator.Avalonia</RootNamespace>
     <Product>Redmond Calculator</Product>
+    <ApplicationIcon>Assets/RedmondCalculatorIcon.ico</ApplicationIcon>
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
@@ -22,6 +23,11 @@
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.0" />
     <PackageReference Include="FluentAvaloniaUI" Version="3.0.2" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <!-- The Avalonia fork accidentally omits its editor assembly. Keep the
+         fork's current CSharpMath core while supplying only the compatible
+         WYSIWYG editor backend. -->
+    <PackageReference Include="CSharpMath" Version="0.5.1" ExcludeAssets="All" PrivateAssets="All" />
+    <PackageReference Include="CSharpMath.Editor" Version="0.5.1" />
     <PackageReference Include="Sylinko.CSharpMath.Avalonia" Version="12.0.0" />
   </ItemGroup>
 
@@ -32,6 +38,7 @@
     <ProjectReference Include="../../../redmond-commons/Redmond.Avalonia.Controls/Redmond.Avalonia.Controls.csproj" />
     <ProjectReference Include="../../../redmond-commons/Redmond.Avalonia.Windowing/Redmond.Avalonia.Windowing.csproj" />
     <ProjectReference Include="../../../redmond-commons/Redmond.Shortcuts/Redmond.Shortcuts.csproj" />
+    <AvaloniaResource Include="Assets/RedmondCalculatorIcon.png" />
     <AvaloniaResource Include="$(MicrosoftCalculatorRoot)/src/Calculator/Assets/CalculatorIcons.ttf" Link="Assets/CalculatorIcons.ttf" />
     <Content Include="$(MicrosoftCalculatorRoot)/src/Calculator/Resources/**/*.resw" Link="Resources/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(NativeCalculatorLibrary)" Condition="'$(NativeCalculatorLibrary)' != '' and Exists('$(NativeCalculatorLibrary)')" Link="libcalculator_engine.dylib" CopyToOutputDirectory="PreserveNewest" />

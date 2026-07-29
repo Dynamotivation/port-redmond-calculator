@@ -673,26 +673,33 @@ public sealed class GraphCanvas : Control
 
     private void DrawInequality(DrawingContext context, GraphEquationRenderModel equation)
     {
-        const double cellSize = 8;
+        const double dotSpacing = 6;
+        const double dotRadius = 0.9;
         var color = ParseColor(equation.Color);
-        var fill = new SolidColorBrush(Color.FromArgb(36, color.R, color.G, color.B));
-        var boundaryPen = new Pen(new SolidColorBrush(color), 1.5);
-        for (var top = 0d; top < Bounds.Height; top += cellSize)
+        var dotBrush = new SolidColorBrush(Color.FromArgb(112, color.R, color.G, color.B));
+        var boundaryPen = new Pen(
+            new SolidColorBrush(color),
+            equation.LineWidth,
+            new DashStyle([0.1d, 1.8d], 0))
         {
-            for (var left = 0d; left < Bounds.Width; left += cellSize)
+            LineCap = PenLineCap.Round,
+        };
+        for (var y = dotSpacing / 2; y < Bounds.Height; y += dotSpacing)
+        {
+            for (var x = dotSpacing / 2; x < Bounds.Width; x += dotSpacing)
             {
-                var centerX = left + cellSize / 2;
-                var centerY = top + cellSize / 2;
                 var isInside = SafeEvaluateBoolean(() =>
                     equation.Evaluator.EvaluateInequality(
-                        ScreenToGraphX(centerX),
-                        ScreenToGraphY(centerY)));
+                        ScreenToGraphX(x),
+                        ScreenToGraphY(y)));
                 if (isInside)
                 {
-                    context.DrawRectangle(
-                        fill,
+                    context.DrawEllipse(
+                        dotBrush,
                         null,
-                        new Rect(left, top, cellSize + 0.5, cellSize + 0.5));
+                        new Point(x, y),
+                        dotRadius,
+                        dotRadius);
                 }
             }
         }
