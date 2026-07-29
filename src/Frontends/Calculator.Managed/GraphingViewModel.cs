@@ -215,7 +215,7 @@ public partial class GraphEquationViewModel : ObservableObject
     public GraphLineStyle EffectiveLineStyle =>
         UsesAreaRendering ? GraphLineStyle.Dash : LineStyle;
     public string FormattedExpression => _parsedExpression?.Latex ?? string.Empty;
-    public bool ShowFormattedExpression => HasExpression && IsValid && !IsEditing;
+    public bool ShowFormattedExpression => HasExpression && IsValid;
     public bool ShowPlaceholder => string.IsNullOrEmpty(DraftExpression);
     public bool ShowEquationActions =>
         IsAllocated && (!IsEditing || string.IsNullOrWhiteSpace(DraftExpression));

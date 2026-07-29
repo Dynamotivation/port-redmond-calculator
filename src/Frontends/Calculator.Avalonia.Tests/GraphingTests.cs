@@ -246,8 +246,10 @@ internal static class GraphingTests
 
         equation.IsEditing = true;
         equation.DraftExpression = "x^3/2";
-        Assert(!equation.ShowFormattedExpression && equation.Expression == "x^2/2",
-            "fresh edits should remain linear and must not reformat before commit");
+        Assert(equation.ShowFormattedExpression
+            && equation.Expression == "x^2/2"
+            && !equation.FormattedExpression.Contains("3"),
+            "inline edits should remain typeset without reparsing the committed expression before commit");
 
         equation.CommitDraft();
         equation.IsEditing = false;

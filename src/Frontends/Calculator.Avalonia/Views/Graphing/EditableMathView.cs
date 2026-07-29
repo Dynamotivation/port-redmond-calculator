@@ -18,6 +18,7 @@ public enum LinearMathEditAction
     InsertText,
     Backspace,
     Delete,
+    Clear,
 }
 
 public sealed class LinearMathEditRequestedEventArgs(
@@ -31,9 +32,8 @@ public sealed class LinearMathEditRequestedEventArgs(
 }
 
 /// <summary>
-/// A committed equation remains professionally typeset while its caret moves
-/// through the math tree. The first modifying input asks the host to return to
-/// the linear editor, matching Windows Calculator's MathRichEditBox workflow.
+/// A committed equation remains professionally typeset while the caret and
+/// modifying input move through its math tree.
 /// </summary>
 public sealed class EditableMathView : MathView
 {
@@ -49,6 +49,7 @@ public sealed class EditableMathView : MathView
     }
 
     public event EventHandler<LinearMathEditRequestedEventArgs>? LinearEditRequested;
+    public event EventHandler? CommitRequested;
 
     public static readonly StyledProperty<string> LinearTextProperty =
         AvaloniaProperty.Register<EditableMathView, string>(nameof(LinearText), string.Empty);
@@ -168,9 +169,20 @@ public sealed class EditableMathView : MathView
         }
         if (e.Key is Key.Back or Key.Delete)
         {
-            RequestLinearEdit(
-                e.Key == Key.Back ? LinearMathEditAction.Backspace : LinearMathEditAction.Delete,
-                string.Empty);
+            if (e.Key == Key.Back)
+            {
+                Backspace();
+            }
+            else
+            {
+                Delete();
+            }
+            e.Handled = true;
+            return;
+        }
+        if (e.Key == Key.Enter)
+        {
+            CommitRequested?.Invoke(this, EventArgs.Empty);
             e.Handled = true;
             return;
         }
@@ -182,21 +194,119 @@ public sealed class EditableMathView : MathView
     {
         if (!string.IsNullOrEmpty(e.Text))
         {
-            RequestLinearEdit(LinearMathEditAction.InsertText, e.Text);
+            InsertLinearText(e.Text);
             e.Handled = true;
             return;
         }
         base.OnTextInput(e);
     }
 
-    private void RequestLinearEdit(LinearMathEditAction action, string text)
+    public void InsertLinearText(string text)
     {
+        EnsureKeyboard();
+        if (_keyboard is null)
+        {
+            return;
+        }
+
+        foreach (var character in text)
+        {
+            var input = character switch
+            {
+                '×' => MathKeyboardInput.Multiply,
+                '÷' => MathKeyboardInput.Slash,
+                '−' => MathKeyboardInput.Minus,
+                _ => (MathKeyboardInput)character,
+            };
+            if (!Enum.IsDefined(typeof(MathKeyboardInput), input))
+            {
+                continue;
+            }
+
+            var caretIndex = GetSuggestedLinearCaretIndex();
+            _keyboard.KeyPress(input);
+            SynchronizeTypesetValue();
+            LinearEditRequested?.Invoke(
+                this,
+                new LinearMathEditRequestedEventArgs(
+                    LinearMathEditAction.InsertText,
+                    character.ToString(),
+                    caretIndex));
+        }
+    }
+
+    public void Backspace()
+    {
+        EnsureKeyboard();
+        if (_keyboard is null)
+        {
+            return;
+        }
+
+        var caretIndex = GetSuggestedLinearCaretIndex();
+        _keyboard.KeyPress(MathKeyboardInput.Backspace);
+        SynchronizeTypesetValue();
         LinearEditRequested?.Invoke(
             this,
             new LinearMathEditRequestedEventArgs(
-                action,
-                text,
-                GetSuggestedLinearCaretIndex()));
+                LinearMathEditAction.Backspace,
+                string.Empty,
+                caretIndex));
+    }
+
+    public void Delete()
+    {
+        EnsureKeyboard();
+        if (_keyboard is null)
+        {
+            return;
+        }
+
+        var caretIndex = GetSuggestedLinearCaretIndex();
+        if (caretIndex >= LinearText.Length)
+        {
+            return;
+        }
+        _keyboard.KeyPress(MathKeyboardInput.Right, MathKeyboardInput.Backspace);
+        SynchronizeTypesetValue();
+        LinearEditRequested?.Invoke(
+            this,
+            new LinearMathEditRequestedEventArgs(
+                LinearMathEditAction.Delete,
+                string.Empty,
+                caretIndex));
+    }
+
+    public void Clear()
+    {
+        EnsureKeyboard();
+        if (_keyboard is null)
+        {
+            return;
+        }
+
+        _keyboard.Clear();
+        SynchronizeTypesetValue();
+        LinearEditRequested?.Invoke(
+            this,
+            new LinearMathEditRequestedEventArgs(
+                LinearMathEditAction.Clear,
+                string.Empty,
+                0));
+    }
+
+    private void SynchronizeTypesetValue()
+    {
+        if (_keyboard is null)
+        {
+            return;
+        }
+
+        var latex = _keyboard.LaTeX;
+        _loadedLatex = latex;
+        SetCurrentValue(LaTeXProperty, latex);
+        InvalidateMeasure();
+        InvalidateVisual();
     }
 
     private void DrawReadableCaret(AvaloniaCanvas canvas, System.Drawing.Color color)

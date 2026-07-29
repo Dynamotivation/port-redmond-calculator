@@ -264,7 +264,9 @@
                                                    TextColor="{DynamicResource ChromeForegroundColor}"
                                                    DisplayErrorInline="False"
                                                    GotFocus="FormattedEquation_OnGotFocus"
+                                                   LostFocus="FormattedEquation_OnLostFocus"
                                                    LinearEditRequested="FormattedEquation_OnLinearEditRequested"
+                                                   CommitRequested="FormattedEquation_OnCommitRequested"
                                                    PointerPressed="FormattedEquation_OnPointerPressed" />
                         <StackPanel Grid.Column="2" Orientation="Horizontal"
                                     IsVisible="{Binding ShowStandardEquationActions}">

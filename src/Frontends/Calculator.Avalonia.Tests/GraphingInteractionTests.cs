@@ -20,7 +20,7 @@ internal static class GraphingInteractionTests
     public static IReadOnlyList<(string Name, Action Run)> All =>
     [
         ("equation context menu is attached before right click", EquationContextMenuIsAttached),
-        ("committed equation switches between typeset and linear editing", CommittedEquationSwitchesPresentation),
+        ("committed equation supports inline typeset editing", CommittedEquationSupportsInlineTypesetEditing),
         ("editing clear button clears the committed equation", EditingClearButtonClearsEquation),
         ("invalid equation uses the native error presentation", InvalidEquationUsesNativeErrorPresentation),
         ("graphing selector flyouts insert tokens with square keys", SelectorFlyoutsInsertTokens),
@@ -87,7 +87,7 @@ internal static class GraphingInteractionTests
         }
     }
 
-    private static void CommittedEquationSwitchesPresentation()
+    private static void CommittedEquationSupportsInlineTypesetEditing()
     {
         Application.Current!.RequestedThemeVariant = ThemeVariant.Dark;
         var window = new MainWindow(new AppSettings(
@@ -161,9 +161,40 @@ internal static class GraphingInteractionTests
             window.KeyTextInput("z");
             Pump();
             Assert(
-                equation.IsEditing && editor.IsEffectivelyVisible && editor.IsFocused
-                && !typeset.IsEffectivelyVisible && equation.DraftExpression.Contains('z'),
-                "The first modifying input should return to the focused linear editor.");
+                equation.IsEditing && typeset.IsEffectivelyVisible && typeset.IsFocused
+                && !editor.IsEffectivelyVisible
+                && equation.DraftExpression.Contains('z')
+                && typeset.LaTeX?.Contains('z') == true,
+                "Modifying input should remain inline in the focused typeset equation.");
+
+            window.KeyPress(
+                Key.Enter,
+                RawInputModifiers.None,
+                PhysicalKey.Enter,
+                null);
+            Pump();
+            Assert(
+                !equation.IsEditing
+                && equation.Expression == equation.DraftExpression
+                && typeset.IsEffectivelyVisible
+                && !editor.IsEffectivelyVisible,
+                "Enter should commit inline typeset edits without switching to the linear editor.");
+
+            window.KeyTextInput("y");
+            Pump();
+            var draftBeforeFocusLoss = equation.DraftExpression;
+            var placeholderEditor = window.GetVisualDescendants()
+                .OfType<TextBox>()
+                .First(textBox =>
+                    textBox.Name == "EquationExpressionTextBox"
+                    && !ReferenceEquals(textBox.DataContext, equation));
+            placeholderEditor.Focus();
+            Pump();
+            Assert(
+                !equation.IsEditing
+                && equation.Expression == draftBeforeFocusLoss
+                && typeset.IsEffectivelyVisible,
+                "Leaving the inline math editor should commit its draft without showing linear text.");
         }
         finally
         {
@@ -238,8 +269,8 @@ internal static class GraphingInteractionTests
             window.MouseDown(clearCenter, MouseButton.Left, RawInputModifiers.None);
             Pump();
             Assert(
-                clear.IsVisible && editor.IsFocused,
-                "Mouse-down on clear must keep the editor active until the click completes.");
+                clear.IsVisible && typeset.IsFocused && typeset.IsEffectivelyVisible,
+                "Mouse-down on clear must keep the inline math editor active until the click completes.");
             window.MouseUp(clearCenter, MouseButton.Left, RawInputModifiers.None);
             Pump();
 
