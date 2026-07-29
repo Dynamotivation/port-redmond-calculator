@@ -47,6 +47,7 @@ public partial class GraphingCalculatorView : UserControl
                 Plot.ManualAdjustmentChanged += Plot_OnManualAdjustmentChanged;
                 _plotEventsAttached = true;
             }
+            TraceOverlay.UpdateFrom(Plot);
             UpdateResponsiveLayout(Bounds.Width);
             UpdateBoundsEditors();
             UpdateGraphViewButton();
@@ -207,6 +208,7 @@ public partial class GraphingCalculatorView : UserControl
 
     private void Plot_OnTraceChanged(object? sender, EventArgs e)
     {
+        TraceOverlay.UpdateFrom(Plot);
         UpdateTraceButton();
         TraceLiveRegion.IsVisible = Plot.IsTracing && !string.IsNullOrEmpty(Plot.TraceText);
         AutomationProperties.SetName(TraceLiveRegion, Plot.TraceText);

@@ -591,6 +591,15 @@ internal static class GraphingInteractionTests
                 && Math.Abs(continuedCursor.Y - fineCursor.Y) < 0.01,
                 "Mouse movement should continue at double speed from the keyboard-moved virtual cursor.");
 
+            window.MouseDown(movedPhysicalPointerInWindow, MouseButton.Left, RawInputModifiers.None);
+            window.MouseUp(movedPhysicalPointerInWindow, MouseButton.Left, RawInputModifiers.None);
+            Pump();
+            Assert(
+                !plot.IsTracing && traceButton.IsChecked != true,
+                "Clicking the graph should stop tracing and restore the normal pointer.");
+
+            ClickTraceButton();
+            Pump();
             window.KeyPress(
                 Key.Escape,
                 RawInputModifiers.None,
