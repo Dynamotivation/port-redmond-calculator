@@ -133,6 +133,11 @@ internal static class Scenarios
         {
             ArrangeView = (window, _) => Click(window, "GraphingHeaderEquationButton"),
         },
+        Graphing("graphing-light-compact-graph", 701, 588, ThemeVariant.Light),
+        Graphing("graphing-light-compact-equation", 322, 588, ThemeVariant.Light) with
+        {
+            ArrangeView = (window, _) => Click(window, "GraphingHeaderEquationButton"),
+        },
         Graphing("graphing-dark-compact-options", 322, 588, ThemeVariant.Dark) with
         {
             ArrangeView = (window, _) => Click(window, "GraphOptionsButton"),

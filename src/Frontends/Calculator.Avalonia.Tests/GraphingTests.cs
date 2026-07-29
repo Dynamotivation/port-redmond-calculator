@@ -13,7 +13,9 @@ internal static class GraphingTests
         ("graphing evaluates inequalities", EvaluatesInequalities),
         ("graphing view model tracks parameters", ViewModelTracksParameters),
         ("graphing equation presentation state is preserved", EquationPresentationStateIsPreserved),
+        ("graphing formats committed equations as latex", FormatsCommittedEquationsAsLatex),
         ("graphing commits drafts and maintains a placeholder", DraftsCommitAtTheFourteenFunctionLimit),
+        ("graphing cleared equations remain allocated placeholders", ClearedEquationsRemainAllocated),
         ("graphing invalid rows consume slots and colors", InvalidRowsConsumeSlotsAndColors),
         ("graphing renumbers equations and reuses released colors", DeletionRenumbersAndReusesColors),
         ("graphing analyzes documented elementary functions", AnalyzesDocumentedElementaryFunctions),
@@ -113,6 +115,30 @@ internal static class GraphingTests
         Assert(GraphingViewModel.EquationColors.Length == 14, "line options should expose fourteen colors");
     }
 
+    private static void FormatsCommittedEquationsAsLatex()
+    {
+        var viewModel = new GraphingViewModel(CreateStrings());
+        var equation = viewModel.Equations.Single();
+        equation.DraftExpression = "x^2/2";
+        viewModel.CommitEquation(equation);
+
+        Assert(equation.IsValid && equation.FormattedExpression.Contains(@"\frac"),
+            "a committed fraction should expose structured LaTeX");
+        Assert(equation.ShowFormattedExpression,
+            "a valid committed equation should show its formatted presentation");
+
+        equation.IsEditing = true;
+        equation.DraftExpression = "x^3/2";
+        Assert(!equation.ShowFormattedExpression && equation.Expression == "x^2/2",
+            "fresh edits should remain linear and must not reformat before commit");
+
+        equation.CommitDraft();
+        equation.IsEditing = false;
+        Assert(equation.ShowFormattedExpression
+            && equation.FormattedExpression.Contains("3"),
+            "leaving the editor should parse and retypeset the new expression");
+    }
+
     private static void DraftsCommitAtTheFourteenFunctionLimit()
     {
         var viewModel = new GraphingViewModel(CreateStrings());
@@ -188,6 +214,30 @@ internal static class GraphingTests
             "the next committed equation should use the released color");
         Assert(viewModel.Equations[^1].Color == GraphingViewModel.EquationColors[3],
             "the following placeholder should advance to the next unused palette color");
+    }
+
+    private static void ClearedEquationsRemainAllocated()
+    {
+        var viewModel = new GraphingViewModel(CreateStrings());
+        var equation = viewModel.Equations.Single();
+        var assignedColor = equation.Color;
+        equation.DraftExpression = "x";
+        Assert(viewModel.CommitEquation(equation), "the first equation should commit");
+        Assert(viewModel.Equations.Count == 2, "a fresh placeholder should be appended");
+
+        equation.DraftExpression = string.Empty;
+        viewModel.CommitEquation(equation);
+
+        Assert(equation.IsAllocated && !equation.HasExpression,
+            "a manually cleared equation should remain an allocated empty row");
+        Assert(equation.FunctionLabel == "f₁" && equation.FunctionIndexLabel == "1",
+            "a cleared equation should retain its function number");
+        Assert(equation.Color == assignedColor && equation.TileColor == assignedColor,
+            "a cleared equation should retain its assigned tile color");
+        Assert(!viewModel.Equations[^1].IsAllocated,
+            "the separate new-expression placeholder should remain unallocated");
+        Assert(viewModel.GetRenderableEquations().Count == 0,
+            "a cleared allocated row should no longer render a graph");
     }
 
     private static void InvalidRowsConsumeSlotsAndColors()

@@ -248,14 +248,18 @@ public partial class GraphingCalculatorView : UserControl
     {
         if (sender is Button { DataContext: GraphEquationViewModel equation })
         {
-            equation.DraftExpression = string.Empty;
-            equation.Expression = string.Empty;
-
             var editor = this.GetVisualDescendants()
                 .OfType<TextBox>()
                 .FirstOrDefault(textBox =>
                     textBox.Name == "EquationExpressionTextBox"
                     && ReferenceEquals(textBox.DataContext, equation));
+            if (editor is not null)
+            {
+                editor.Text = string.Empty;
+                editor.CaretIndex = 0;
+            }
+            equation.DraftExpression = string.Empty;
+            equation.Expression = string.Empty;
             editor?.Focus();
         }
     }
@@ -278,6 +282,43 @@ public partial class GraphingCalculatorView : UserControl
         e.Handled = true;
     }
 
+    private void FormattedEquation_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is not Control { DataContext: GraphEquationViewModel equation } formattedEquation)
+        {
+            return;
+        }
+        var properties = e.GetCurrentPoint(formattedEquation).Properties;
+        var openContextMenu = properties.IsRightButtonPressed;
+        if (!properties.IsLeftButtonPressed && !openContextMenu)
+        {
+            return;
+        }
+
+        equation.IsEditing = true;
+        Dispatcher.UIThread.Post(() =>
+        {
+            var editor = this.GetVisualDescendants()
+                .OfType<TextBox>()
+                .FirstOrDefault(textBox =>
+                    textBox.Name == "EquationExpressionTextBox"
+                    && ReferenceEquals(textBox.DataContext, equation));
+            if (editor is null)
+            {
+                return;
+            }
+
+            _activeTextBox = editor;
+            editor.Focus();
+            editor.CaretIndex = editor.Text?.Length ?? 0;
+            if (openContextMenu)
+            {
+                editor.ContextMenu?.Open(editor);
+            }
+        }, DispatcherPriority.Input);
+        e.Handled = true;
+    }
+
     private void SubmitEquation(TextBox? textBox = null)
     {
         textBox ??= _activeTextBox;
@@ -287,6 +328,11 @@ public partial class GraphingCalculatorView : UserControl
         }
 
         var placeholderAdded = CommitEquation(textBox);
+        if (textBox.DataContext is GraphEquationViewModel equation)
+        {
+            equation.IsEditing = false;
+            SetEquationCardFocused(textBox, false);
+        }
         if (placeholderAdded)
         {
             Dispatcher.UIThread.Post(FocusLastEquation, DispatcherPriority.Input);
@@ -355,6 +401,23 @@ public partial class GraphingCalculatorView : UserControl
         token = ApplyTrigModifiers(token);
         InsertText(_activeTextBox, token);
         _activeTextBox.Focus();
+    }
+
+    private void SelectorButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button)
+        {
+            return;
+        }
+
+        if (_activeTextBox is null)
+        {
+            FocusEquationInput();
+        }
+        if (button.Flyout is { IsOpen: false } flyout)
+        {
+            flyout.ShowAt(button);
+        }
     }
 
     private string ApplyTrigModifiers(string token)

@@ -36,7 +36,8 @@ public sealed class AngouriMathSolver : IMathSolver
                     input,
                     GraphEquationKind.Explicit,
                     GraphComparison.Equal,
-                    explicitEntity);
+                    explicitEntity,
+                    explicitEntity.Latexise());
             }
 
             var (index, token, comparisonKind) = comparison.Value;
@@ -57,7 +58,8 @@ public sealed class AngouriMathSolver : IMathSolver
                         input,
                         GraphEquationKind.Explicit,
                         comparisonKind,
-                        right);
+                        right,
+                        FormatComparisonLatex(left, right, comparisonKind));
                 }
 
                 if (IsVariable(leftText, "r"))
@@ -66,21 +68,24 @@ public sealed class AngouriMathSolver : IMathSolver
                         input,
                         GraphEquationKind.Polar,
                         comparisonKind,
-                        right);
+                        right,
+                        FormatComparisonLatex(left, right, comparisonKind));
                 }
 
                 return Create(
                     input,
                     GraphEquationKind.Implicit,
                     comparisonKind,
-                    left - right);
+                    left - right,
+                    FormatComparisonLatex(left, right, comparisonKind));
             }
 
             return Create(
                 input,
                 GraphEquationKind.Inequality,
                 comparisonKind,
-                left - right);
+                left - right,
+                FormatComparisonLatex(left, right, comparisonKind));
         }
         catch (GraphingParseException)
         {
@@ -145,11 +150,25 @@ public sealed class AngouriMathSolver : IMathSolver
         string source,
         GraphEquationKind kind,
         GraphComparison comparison,
-        Entity entity)
+        Entity entity,
+        string latex)
     {
         var id = checked((uint)Interlocked.Increment(ref s_nextExpressionId));
-        return new AngouriExpression(id, source, kind, comparison, entity);
+        return new AngouriExpression(id, source, latex, kind, comparison, entity);
     }
+
+    private static string FormatComparisonLatex(
+        Entity left,
+        Entity right,
+        GraphComparison comparison) =>
+        $"{left.Latexise()} {comparison switch
+        {
+            GraphComparison.Less => "<",
+            GraphComparison.LessOrEqual => @"\leq",
+            GraphComparison.Greater => ">",
+            GraphComparison.GreaterOrEqual => @"\geq",
+            _ => "=",
+        }} {right.Latexise()}";
 
     private static string NormalizeInput(string input) =>
         input.Trim()
@@ -263,6 +282,7 @@ public sealed class AngouriMathSolver : IMathSolver
     private sealed class AngouriExpression(
         uint expressionId,
         string source,
+        string latex,
         GraphEquationKind kind,
         GraphComparison comparison,
         Entity entity) : IExpression
@@ -271,6 +291,7 @@ public sealed class AngouriMathSolver : IMathSolver
 
         public uint ExpressionId { get; } = expressionId;
         public string Source { get; } = source;
+        public string Latex { get; } = latex;
         public GraphEquationKind Kind { get; } = kind;
         public GraphComparison Comparison { get; } = comparison;
         public bool IsEmptySet => false;

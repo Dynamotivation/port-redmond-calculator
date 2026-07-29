@@ -116,6 +116,24 @@
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}" />
   </Style>
+  <Style Selector="Button.graphFlyoutKey">
+    <Setter Property="Width" Value="48" />
+    <Setter Property="Height" Value="48" />
+    <Setter Property="MinWidth" Value="48" />
+    <Setter Property="MinHeight" Value="48" />
+    <Setter Property="Margin" Value="1" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="CornerRadius" Value="4" />
+  </Style>
+  <Style Selector="ToggleButton.graphFlyoutKey">
+    <Setter Property="Width" Value="48" />
+    <Setter Property="Height" Value="48" />
+    <Setter Property="MinWidth" Value="48" />
+    <Setter Property="MinHeight" Value="48" />
+    <Setter Property="Margin" Value="1" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="CornerRadius" Value="4" />
+  </Style>
   <Style Selector="ToggleButton.graphModeButton">
     <Setter Property="Width" Value="32" />
     <Setter Property="Height" Value="30" />
@@ -123,9 +141,36 @@
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{TemplateBinding Background}"
+                CornerRadius="{TemplateBinding CornerRadius}">
+          <ContentPresenter Content="{TemplateBinding Content}"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center" />
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="ToggleButton.graphModeButton:pointerover">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="ToggleButton.graphModeButton:pressed">
+    <Setter Property="Background" Value="Transparent" />
   </Style>
   <Style Selector="ToggleButton.graphModeButton:checked">
     <Setter Property="Background" Value="{DynamicResource AccentButtonBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource GraphModeSwitchSelectedForegroundBrush}" />
+  </Style>
+  <Style Selector="ToggleButton.graphModeButton:checked:pointerover">
+    <Setter Property="Background" Value="{DynamicResource AccentButtonHoverBrush}" />
+  </Style>
+  <Style Selector="ToggleButton.graphModeButton:checked:pressed">
+    <Setter Property="Background" Value="{DynamicResource AccentButtonPressedBrush}" />
+  </Style>
+  <Style Selector="Border.graphModeSwitch:pointerover Border.graphModeSwitchOutline">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonHoverBrush}" />
   </Style>
   <Style Selector="Button.graphLinkButton">
     <Setter Property="Padding" Value="6,2" />

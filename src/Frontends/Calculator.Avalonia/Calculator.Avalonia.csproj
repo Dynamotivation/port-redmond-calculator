@@ -22,6 +22,7 @@
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.0" />
     <PackageReference Include="FluentAvaloniaUI" Version="3.0.2" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Sylinko.CSharpMath.Avalonia" Version="12.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,20 +32,12 @@
     <ProjectReference Include="../../../redmond-commons/Redmond.Avalonia.Controls/Redmond.Avalonia.Controls.csproj" />
     <ProjectReference Include="../../../redmond-commons/Redmond.Avalonia.Windowing/Redmond.Avalonia.Windowing.csproj" />
     <ProjectReference Include="../../../redmond-commons/Redmond.Shortcuts/Redmond.Shortcuts.csproj" />
-    <AvaloniaResource Include="$(MicrosoftCalculatorRoot)/src/Calculator/Assets/CalculatorIcons.ttf"
-                      Link="Assets/CalculatorIcons.ttf" />
-    <Content Include="$(MicrosoftCalculatorRoot)/src/Calculator/Resources/**/*.resw"
-             Link="Resources/%(RecursiveDir)%(Filename)%(Extension)"
-             CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(NativeCalculatorLibrary)"
-             Condition="'$(NativeCalculatorLibrary)' != '' and Exists('$(NativeCalculatorLibrary)')"
-             Link="libcalculator_engine.dylib"
-             CopyToOutputDirectory="PreserveNewest" />
+    <AvaloniaResource Include="$(MicrosoftCalculatorRoot)/src/Calculator/Assets/CalculatorIcons.ttf" Link="Assets/CalculatorIcons.ttf" />
+    <Content Include="$(MicrosoftCalculatorRoot)/src/Calculator/Resources/**/*.resw" Link="Resources/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(NativeCalculatorLibrary)" Condition="'$(NativeCalculatorLibrary)' != '' and Exists('$(NativeCalculatorLibrary)')" Link="libcalculator_engine.dylib" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <Target Name="RequireNativeCalculatorLibrary"
-          BeforeTargets="Build"
-          Condition="'$(NativeCalculatorLibrary)' != '' and !Exists('$(NativeCalculatorLibrary)')">
+  <Target Name="RequireNativeCalculatorLibrary" BeforeTargets="Build" Condition="'$(NativeCalculatorLibrary)' != '' and !Exists('$(NativeCalculatorLibrary)')">
     <Error Text="Native calculator library not found. Configure and build the repository CMake project first." />
   </Target>
 </Project>

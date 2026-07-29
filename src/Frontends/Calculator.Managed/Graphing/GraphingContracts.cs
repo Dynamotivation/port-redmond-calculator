@@ -68,6 +68,7 @@ public interface IExpression
 {
     uint ExpressionId { get; }
     string Source { get; }
+    string Latex { get; }
     GraphEquationKind Kind { get; }
     GraphComparison Comparison { get; }
     IReadOnlyList<string> Variables { get; }
