@@ -41,6 +41,12 @@ public sealed class GraphCanvas : Control
     private Vector _panVelocity;
     private DateTime _lastPointerMoveTime;
     private readonly DispatcherTimer _inertiaTimer;
+    private readonly DispatcherTimer _traceMovementTimer;
+    private bool _traceLeftPressed;
+    private bool _traceRightPressed;
+    private bool _traceUpPressed;
+    private bool _traceDownPressed;
+    private bool _fineTraceMovement;
     private bool _isTracing;
     private bool _isManualAdjustment;
     private Point? _traceScreenPoint;
@@ -54,6 +60,10 @@ public sealed class GraphCanvas : Control
     public GraphCanvas()
     {
         _inertiaTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(16), DispatcherPriority.Render, OnInertiaTick);
+        _traceMovementTimer = new DispatcherTimer(
+            TimeSpan.FromMilliseconds(16),
+            DispatcherPriority.Render,
+            OnTraceMovementTick);
         LostFocus += OnGraphLostFocus;
     }
 
@@ -70,6 +80,8 @@ public sealed class GraphCanvas : Control
     public Point? TraceScreenPoint => _traceScreenPoint;
     public Color TraceColor => _traceColor;
     public Point? ActiveTraceCursorPosition => _activeTraceCursorPosition;
+    internal bool IsTraceMovementActive => _traceMovementTimer.IsEnabled;
+    internal void AdvanceTraceMovementFrame() => OnTraceMovementTick(this, EventArgs.Empty);
 
     public GraphingViewModel? ViewModel
     {
@@ -123,6 +135,7 @@ public sealed class GraphCanvas : Control
         _isTracing = enabled;
         if (!enabled)
         {
+            StopTraceMovement();
             _activeTraceCursorPosition = null;
             _traceScreenPoint = null;
             _traceText = string.Empty;
@@ -412,23 +425,107 @@ public sealed class GraphCanvas : Control
             return;
         }
 
-        var delta = e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? 1d : 5d;
-        var movement = e.Key switch
+        _fineTraceMovement = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        var wasAlreadyPressed = e.Key switch
         {
-            Key.Left => new Vector(-delta, 0),
-            Key.Right => new Vector(delta, 0),
-            Key.Up => new Vector(0, -delta),
-            Key.Down => new Vector(0, delta),
-            _ => default,
+            Key.Left => SetPressed(ref _traceLeftPressed),
+            Key.Right => SetPressed(ref _traceRightPressed),
+            Key.Up => SetPressed(ref _traceUpPressed),
+            Key.Down => SetPressed(ref _traceDownPressed),
+            _ => true,
         };
-        if (movement == default || _activeTraceCursorPosition is not { } cursorPosition)
+        if (e.Key is not (Key.Left or Key.Right or Key.Up or Key.Down))
         {
             return;
         }
 
+        if (!wasAlreadyPressed)
+        {
+            MoveActiveTraceCursor();
+        }
+        _traceMovementTimer.Start();
+        e.Handled = true;
+    }
+
+    protected override void OnKeyUp(KeyEventArgs e)
+    {
+        base.OnKeyUp(e);
+        if (!_isTracing)
+        {
+            return;
+        }
+
+        _fineTraceMovement = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        switch (e.Key)
+        {
+            case Key.Left:
+                _traceLeftPressed = false;
+                break;
+            case Key.Right:
+                _traceRightPressed = false;
+                break;
+            case Key.Up:
+                _traceUpPressed = false;
+                break;
+            case Key.Down:
+                _traceDownPressed = false;
+                break;
+            default:
+                return;
+        }
+        if (!HasActiveTraceMovement)
+        {
+            _traceMovementTimer.Stop();
+        }
+        e.Handled = true;
+    }
+
+    private static bool SetPressed(ref bool pressed)
+    {
+        var wasAlreadyPressed = pressed;
+        pressed = true;
+        return wasAlreadyPressed;
+    }
+
+    private bool HasActiveTraceMovement =>
+        _traceLeftPressed || _traceRightPressed || _traceUpPressed || _traceDownPressed;
+
+    private void OnTraceMovementTick(object? sender, EventArgs e)
+    {
+        if (!_isTracing || !HasActiveTraceMovement)
+        {
+            _traceMovementTimer.Stop();
+            return;
+        }
+        MoveActiveTraceCursor();
+    }
+
+    private void MoveActiveTraceCursor()
+    {
+        if (_activeTraceCursorPosition is not { } cursorPosition)
+        {
+            return;
+        }
+        var delta = _fineTraceMovement ? 1d : 5d;
+        var movement = new Vector(
+            (_traceRightPressed ? delta : 0) - (_traceLeftPressed ? delta : 0),
+            (_traceDownPressed ? delta : 0) - (_traceUpPressed ? delta : 0));
+        if (movement == default)
+        {
+            return;
+        }
         _activeTraceCursorPosition = ClampToBounds(cursorPosition + movement);
         UpdateTrace(_activeTraceCursorPosition.Value);
-        e.Handled = true;
+    }
+
+    private void StopTraceMovement()
+    {
+        _traceMovementTimer.Stop();
+        _traceLeftPressed = false;
+        _traceRightPressed = false;
+        _traceUpPressed = false;
+        _traceDownPressed = false;
+        _fineTraceMovement = false;
     }
 
     private void OnGraphLostFocus(object? sender, RoutedEventArgs e)

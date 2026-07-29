@@ -563,6 +563,11 @@ internal static class GraphingInteractionTests
                 RawInputModifiers.None,
                 PhysicalKey.ArrowRight,
                 null);
+            window.KeyRelease(
+                Key.Right,
+                RawInputModifiers.None,
+                PhysicalKey.ArrowRight,
+                null);
             Pump();
             var normalCursor = plot.ActiveTraceCursorPosition!.Value;
             Assert(
@@ -574,11 +579,47 @@ internal static class GraphingInteractionTests
                 RawInputModifiers.Shift,
                 PhysicalKey.ArrowRight,
                 null);
+            window.KeyRelease(
+                Key.Right,
+                RawInputModifiers.None,
+                PhysicalKey.ArrowRight,
+                null);
             Pump();
             var fineCursor = plot.ActiveTraceCursorPosition!.Value;
             Assert(
                 Math.Abs(fineCursor.X - normalCursor.X - 1) < 0.01,
                 "Shift plus an arrow key should move the active cursor by one pixel.");
+
+            var holdStart = plot.ActiveTraceCursorPosition!.Value;
+            window.KeyPress(
+                Key.Down,
+                RawInputModifiers.None,
+                PhysicalKey.ArrowDown,
+                null);
+            Pump();
+            var afterInitialKeyDown = plot.ActiveTraceCursorPosition!.Value;
+            for (var frame = 0; frame < 3; frame++)
+            {
+                plot.AdvanceTraceMovementFrame();
+            }
+            var afterHeldKey = plot.ActiveTraceCursorPosition!.Value;
+            Assert(
+                Math.Abs(afterInitialKeyDown.Y - holdStart.Y - 5) < 0.01
+                && plot.IsTraceMovementActive
+                && Math.Abs(afterHeldKey.Y - afterInitialKeyDown.Y - 15) < 0.01,
+                "Holding an arrow key should advance the cursor continuously on render ticks.");
+            window.KeyRelease(
+                Key.Down,
+                RawInputModifiers.None,
+                PhysicalKey.ArrowDown,
+                null);
+            Pump();
+            var releasedCursor = plot.ActiveTraceCursorPosition!.Value;
+            plot.AdvanceTraceMovementFrame();
+            Assert(
+                !plot.IsTraceMovementActive
+                && plot.ActiveTraceCursorPosition == releasedCursor,
+                "Releasing the arrow key should stop continuous cursor movement immediately.");
 
             var movedPhysicalPointer = physicalPointer + new Vector(10, 0);
             var movedPhysicalPointerInWindow = plot.TranslatePoint(movedPhysicalPointer, window)
@@ -587,8 +628,8 @@ internal static class GraphingInteractionTests
             Pump();
             var continuedCursor = plot.ActiveTraceCursorPosition!.Value;
             Assert(
-                Math.Abs(continuedCursor.X - fineCursor.X - 20) < 0.01
-                && Math.Abs(continuedCursor.Y - fineCursor.Y) < 0.01,
+                Math.Abs(continuedCursor.X - releasedCursor.X - 20) < 0.01
+                && Math.Abs(continuedCursor.Y - releasedCursor.Y) < 0.01,
                 "Mouse movement should continue at double speed from the keyboard-moved virtual cursor.");
 
             window.MouseDown(movedPhysicalPointerInWindow, MouseButton.Left, RawInputModifiers.None);
