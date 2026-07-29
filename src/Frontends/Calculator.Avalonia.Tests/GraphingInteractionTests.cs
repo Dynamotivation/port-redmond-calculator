@@ -307,11 +307,12 @@ internal static class GraphingInteractionTests
             Pump();
 
             OpenAndPress("TrigButton", "TrigSinButton");
-            OpenAndPress("InequalitiesButton", "LessThanButton");
+            OpenAndPress("InequalitiesButton", "LessThanOrEqualButton");
+            OpenAndPress("InequalitiesButton", "GreaterThanOrEqualButton");
             OpenAndPress("FunctionsButton", "AbsoluteValueButton");
 
             Assert(
-                equation.DraftExpression == "sin(<abs(",
+                equation.DraftExpression == "sin(≤≥abs(",
                 $"Selector keys inserted '{equation.DraftExpression}' instead of the expected tokens.");
 
             void OpenAndPress(string selectorName, string keyName)
