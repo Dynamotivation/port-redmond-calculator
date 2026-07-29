@@ -33,6 +33,7 @@ public sealed class GraphCanvas : Control
     private const double MaximumRange = 1e8;
     private const double TraceSearchRadius = 24;
     private const double ActiveTraceOffset = 40;
+    private const double ActiveTracePointerSpeed = 2;
     private Point? _lastPointerPosition;
     private Point? _pointerPressedPosition;
     private Point? _pointerPosition;
@@ -304,7 +305,8 @@ public sealed class GraphCanvas : Control
         {
             _activeTraceCursorPosition = _pointerPosition is { } previousPointer
                 && _activeTraceCursorPosition is { } activeCursor
-                    ? ClampToBounds(activeCursor + (current - previousPointer))
+                    ? ClampToBounds(
+                        activeCursor + (current - previousPointer) * ActiveTracePointerSpeed)
                     : current;
             _pointerPosition = current;
             UpdateTrace(_activeTraceCursorPosition.Value);
