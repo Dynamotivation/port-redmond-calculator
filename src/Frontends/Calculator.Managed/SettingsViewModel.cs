@@ -159,4 +159,6 @@ public sealed record SettingsStrings(
     public string MicaEffectName { get; } = "Translucent background";
     public string MicaEffectDescription { get; } = "Blur the desktop behind the calculator window";
     public string AboutVersionText { get; } = "Redmond Calculator 0.1.0";
+    public string ProjectLicenseName { get; } = "MIT License";
+    public string ThirdPartyNoticesName { get; } = "Third-party notices";
 }

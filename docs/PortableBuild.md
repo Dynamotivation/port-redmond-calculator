@@ -68,6 +68,43 @@ The frontend packages all original Calculator `.resw` files and selects the
 current UI culture at runtime. It is not restricted to the former copied
 `en-US/CEngineStrings.resw` file.
 
+## Release licensing
+
+Build and publish output includes a `Licenses` directory containing the
+Redmond Calculator, Redmond Commons, and Microsoft Calculator license and
+notice files; bundled-font licenses; .NET runtime notices; and the exact
+resolved NuGet dependency inventory in Markdown and SPDX 2.3 formats.
+
+After changing dependencies or the .NET SDK/runtime, regenerate all derived
+compliance material:
+
+```sh
+scripts/update-licensing.sh
+```
+
+This reads the exact NuGet graph, copies native-package notices from the
+resolved package versions, and refreshes the .NET license and third-party
+notice snapshot from the active official installation. No package version or
+SDK installation path is hard-coded in the application project.
+
+The repository's `global.json` pins the SDK used by CI so the .NET snapshot is
+reproducible. When upgrading the SDK, update `global.json`, restore, and run
+`scripts/update-licensing.sh` in the same change.
+
+Before releasing, verify source materials and the reviewed Latin Modern Math
+font, then check the actual publish directory:
+
+```sh
+scripts/verify-licensing.sh
+scripts/verify-published-licenses.sh path/to/publish
+```
+
+The macOS bundler copies this material to
+`Redmond Calculator.app/Contents/Resources/Licenses` and refuses to construct a
+bundle if the core application and .NET runtime notices are absent. The About
+section opens the packaged project license and third-party notices, with the
+repository copies as development fallbacks.
+
 The hamburger button opens an Avalonia replacement for the original
 `NavigationView` in `LeftMinimal` mode. Its manifest preserves the source order,
 serialization IDs, localized labels, category groups, and glyphs from

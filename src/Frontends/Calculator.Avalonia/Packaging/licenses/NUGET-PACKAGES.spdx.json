@@ -1,0 +1,663 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "Redmond Calculator resolved NuGet packages",
+  "documentNamespace": "https://github.com/Dynamotivation/port-redmond-calculator/sbom/nuget-9a02facec3c0032a0b6b6a34ee650dc28fc0348d4a8135ecc8c7daebe40dc0c3",
+  "creationInfo": {
+    "created": "2026-07-29T21:39:49Z",
+    "creators": [
+      "Tool: Redmond LicenseAudit"
+    ]
+  },
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-AngouriMath-1.4.0",
+      "name": "AngouriMath",
+      "versionInfo": "1.4.0",
+      "downloadLocation": "https://github.com/asc-community/AngouriMath",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "\u00A9 Angouri 2019-2026",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Antlr4.Runtime.Standard-4.13.1",
+      "name": "Antlr4.Runtime.Standard",
+      "versionInfo": "4.13.1",
+      "downloadLocation": "https://github.com/antlr/antlr4",
+      "filesAnalyzed": false,
+      "licenseConcluded": "BSD-3-Clause",
+      "licenseDeclared": "BSD-3-Clause",
+      "copyrightText": "Copyright (c) 2012-2020 The ANTLR Project. All rights reserved.",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia-12.1.0",
+      "name": "Avalonia",
+      "versionInfo": "12.1.0",
+      "downloadLocation": "https://github.com/AvaloniaUI/Avalonia/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2013-2026 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia.Angle.Windows.Natives-2.1.27548.20260419",
+      "name": "Avalonia.Angle.Windows.Natives",
+      "versionInfo": "2.1.27548.20260419",
+      "downloadLocation": "https://github.com/AvaloniaUI/angle/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "BSD-3-Clause",
+      "licenseDeclared": "BSD-3-Clause",
+      "copyrightText": "Copyright 2013-2026 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia.BuildServices-11.3.2",
+      "name": "Avalonia.BuildServices",
+      "versionInfo": "11.3.2",
+      "downloadLocation": "https://github.com/AvaloniaUI/Avalonia.BuildServices",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2023-2025 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia.Controls.ColorPicker-12.0.0",
+      "name": "Avalonia.Controls.ColorPicker",
+      "versionInfo": "12.0.0",
+      "downloadLocation": "https://github.com/AvaloniaUI/Avalonia/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2013-2026 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia.Controls.DataGrid-12.0.0",
+      "name": "Avalonia.Controls.DataGrid",
+      "versionInfo": "12.0.0",
+      "downloadLocation": "https://github.com/AvaloniaUI/Avalonia.Controls.DataGrid",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2013-2026 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia.Desktop-12.1.0",
+      "name": "Avalonia.Desktop",
+      "versionInfo": "12.1.0",
+      "downloadLocation": "https://github.com/AvaloniaUI/Avalonia/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2013-2026 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia.Fonts.Inter-12.1.0",
+      "name": "Avalonia.Fonts.Inter",
+      "versionInfo": "12.1.0",
+      "downloadLocation": "https://github.com/AvaloniaUI/Avalonia/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2013-2026 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia.FreeDesktop-12.1.0",
+      "name": "Avalonia.FreeDesktop",
+      "versionInfo": "12.1.0",
+      "downloadLocation": "https://github.com/AvaloniaUI/Avalonia/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2013-2026 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia.FreeDesktop.AtSpi-12.1.0",
+      "name": "Avalonia.FreeDesktop.AtSpi",
+      "versionInfo": "12.1.0",
+      "downloadLocation": "https://github.com/AvaloniaUI/Avalonia/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2013-2026 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia.HarfBuzz-12.1.0",
+      "name": "Avalonia.HarfBuzz",
+      "versionInfo": "12.1.0",
+      "downloadLocation": "https://github.com/AvaloniaUI/Avalonia/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2013-2026 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia.Native-12.1.0",
+      "name": "Avalonia.Native",
+      "versionInfo": "12.1.0",
+      "downloadLocation": "https://github.com/AvaloniaUI/Avalonia/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2013-2026 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia.Remote.Protocol-12.1.0",
+      "name": "Avalonia.Remote.Protocol",
+      "versionInfo": "12.1.0",
+      "downloadLocation": "https://github.com/AvaloniaUI/Avalonia/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2013-2026 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia.Skia-12.1.0",
+      "name": "Avalonia.Skia",
+      "versionInfo": "12.1.0",
+      "downloadLocation": "https://github.com/AvaloniaUI/Avalonia/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2013-2026 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia.Themes.Fluent-12.1.0",
+      "name": "Avalonia.Themes.Fluent",
+      "versionInfo": "12.1.0",
+      "downloadLocation": "https://github.com/AvaloniaUI/Avalonia/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2013-2026 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia.Win32-12.1.0",
+      "name": "Avalonia.Win32",
+      "versionInfo": "12.1.0",
+      "downloadLocation": "https://github.com/AvaloniaUI/Avalonia/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2013-2026 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Avalonia.X11-12.1.0",
+      "name": "Avalonia.X11",
+      "versionInfo": "12.1.0",
+      "downloadLocation": "https://github.com/AvaloniaUI/Avalonia/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2013-2026 \u00A9 The AvaloniaUI Project",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-CommunityToolkit.Mvvm-8.4.2",
+      "name": "CommunityToolkit.Mvvm",
+      "versionInfo": "8.4.2",
+      "downloadLocation": "https://github.com/CommunityToolkit/dotnet",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "(c) .NET Foundation and Contributors. All rights reserved.",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-CSharpMath-0.5.1",
+      "name": "CSharpMath",
+      "versionInfo": "0.5.1",
+      "downloadLocation": "https://github.com/verybadcat/CSharpMath.git",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "\u00A9 CSharpMath Contributors 2020",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-CSharpMath.Editor-0.5.1",
+      "name": "CSharpMath.Editor",
+      "versionInfo": "0.5.1",
+      "downloadLocation": "https://github.com/verybadcat/CSharpMath.git",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "\u00A9 CSharpMath Contributors 2020",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-FluentAvaloniaUI-3.0.2",
+      "name": "FluentAvaloniaUI",
+      "versionInfo": "3.0.2",
+      "downloadLocation": "https://github.com/amwx/FluentAvalonia",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright holders: FluentAvalonia",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-GenericTensor-1.0.4",
+      "name": "GenericTensor",
+      "versionInfo": "1.0.4",
+      "downloadLocation": "https://github.com/asc-community/GenericTensor",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "WhiteBlackGoose",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-HarfBuzzSharp-8.3.1.3",
+      "name": "HarfBuzzSharp",
+      "versionInfo": "8.3.1.3",
+      "downloadLocation": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-HarfBuzzSharp.NativeAssets.Linux-8.3.1.3",
+      "name": "HarfBuzzSharp.NativeAssets.Linux",
+      "versionInfo": "8.3.1.3",
+      "downloadLocation": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-HarfBuzzSharp.NativeAssets.macOS-8.3.1.3",
+      "name": "HarfBuzzSharp.NativeAssets.macOS",
+      "versionInfo": "8.3.1.3",
+      "downloadLocation": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-HarfBuzzSharp.NativeAssets.WebAssembly-8.3.1.3",
+      "name": "HarfBuzzSharp.NativeAssets.WebAssembly",
+      "versionInfo": "8.3.1.3",
+      "downloadLocation": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-HarfBuzzSharp.NativeAssets.Win32-8.3.1.3",
+      "name": "HarfBuzzSharp.NativeAssets.Win32",
+      "versionInfo": "8.3.1.3",
+      "downloadLocation": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-HonkSharp-1.0.3",
+      "name": "HonkSharp",
+      "versionInfo": "1.0.3",
+      "downloadLocation": "https://github.com/WhiteBlackGoose/HonkSharp",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "WhiteBlackGoose 2021",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-MicroCom.Runtime-0.11.6",
+      "name": "MicroCom.Runtime",
+      "versionInfo": "0.11.6",
+      "downloadLocation": "https://github.com/kekekeks/MicroCom",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2021 \u00A9 Nikita Tsukanov",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-PeterO.Numbers-1.8.0",
+      "name": "PeterO.Numbers",
+      "versionInfo": "1.8.0",
+      "downloadLocation": "https://github.com/peteroupc/Numbers",
+      "filesAnalyzed": false,
+      "licenseConcluded": "CC0-1.0",
+      "licenseDeclared": "CC0-1.0",
+      "copyrightText": "Copyright holders: Peter Occil",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-SkiaSharp-3.119.4",
+      "name": "SkiaSharp",
+      "versionInfo": "3.119.4",
+      "downloadLocation": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-SkiaSharp.NativeAssets.Linux-3.119.4",
+      "name": "SkiaSharp.NativeAssets.Linux",
+      "versionInfo": "3.119.4",
+      "downloadLocation": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-SkiaSharp.NativeAssets.macOS-3.119.4",
+      "name": "SkiaSharp.NativeAssets.macOS",
+      "versionInfo": "3.119.4",
+      "downloadLocation": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-SkiaSharp.NativeAssets.WebAssembly-3.119.4",
+      "name": "SkiaSharp.NativeAssets.WebAssembly",
+      "versionInfo": "3.119.4",
+      "downloadLocation": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-SkiaSharp.NativeAssets.Win32-3.119.4",
+      "name": "SkiaSharp.NativeAssets.Win32",
+      "versionInfo": "3.119.4",
+      "downloadLocation": "https://go.microsoft.com/fwlink/?linkid=868515",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "\u00A9 Microsoft Corporation. All rights reserved.",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Sylinko.CSharpMath.Avalonia-12.0.0",
+      "name": "Sylinko.CSharpMath.Avalonia",
+      "versionInfo": "12.0.0",
+      "downloadLocation": "https://github.com/Sylinko/CSharpMath.Avalonia",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "\u00A9 CSharpMath Contributors 2020; \u00A9 Sylinko 2025",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Tmds.DBus.Protocol-0.94.1",
+      "name": "Tmds.DBus.Protocol",
+      "versionInfo": "0.94.1",
+      "downloadLocation": "https://github.com/tmds/Tmds.DBus.git",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Tom Deseyn",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "LIBRARY"
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-AngouriMath-1.4.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Antlr4.Runtime.Standard-4.13.1"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia-12.1.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia.Angle.Windows.Natives-2.1.27548.20260419"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia.BuildServices-11.3.2"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia.Controls.ColorPicker-12.0.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia.Controls.DataGrid-12.0.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia.Desktop-12.1.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia.Fonts.Inter-12.1.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia.FreeDesktop-12.1.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia.FreeDesktop.AtSpi-12.1.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia.HarfBuzz-12.1.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia.Native-12.1.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia.Remote.Protocol-12.1.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia.Skia-12.1.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia.Themes.Fluent-12.1.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia.Win32-12.1.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Avalonia.X11-12.1.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-CommunityToolkit.Mvvm-8.4.2"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-CSharpMath-0.5.1"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-CSharpMath.Editor-0.5.1"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-FluentAvaloniaUI-3.0.2"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-GenericTensor-1.0.4"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-HarfBuzzSharp-8.3.1.3"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-HarfBuzzSharp.NativeAssets.Linux-8.3.1.3"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-HarfBuzzSharp.NativeAssets.macOS-8.3.1.3"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-HarfBuzzSharp.NativeAssets.WebAssembly-8.3.1.3"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-HarfBuzzSharp.NativeAssets.Win32-8.3.1.3"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-HonkSharp-1.0.3"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-MicroCom.Runtime-0.11.6"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-PeterO.Numbers-1.8.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-SkiaSharp-3.119.4"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-SkiaSharp.NativeAssets.Linux-3.119.4"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-SkiaSharp.NativeAssets.macOS-3.119.4"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-SkiaSharp.NativeAssets.WebAssembly-3.119.4"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-SkiaSharp.NativeAssets.Win32-3.119.4"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Sylinko.CSharpMath.Avalonia-12.0.0"
+    },
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-Tmds.DBus.Protocol-0.94.1"
+    }
+  ]
+}

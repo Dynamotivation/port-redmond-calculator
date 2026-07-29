@@ -1,0 +1,5 @@
+Dotnet-Runtime/LICENSE.txt
+Dotnet-Runtime/ThirdPartyNotices.txt
+Native-Dependencies/ANGLE-LICENSE.txt
+Native-Dependencies/HarfBuzzSharp-THIRD-PARTY-NOTICES.txt
+Native-Dependencies/SkiaSharp-THIRD-PARTY-NOTICES.txt

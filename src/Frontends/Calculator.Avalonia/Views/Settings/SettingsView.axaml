@@ -275,9 +275,8 @@
               </Grid>
             </Expander.Header>
             <StackPanel Margin="68,0,16,14" Spacing="12">
-              <Button Classes="settingsLink" Content="{Binding Settings.Strings.AboutLicenseName}" Click="License_OnClick" />
-              <Button Classes="settingsLink" Content="{Binding Settings.Strings.AboutServicesName}" Click="ServicesAgreement_OnClick" />
-              <Button Classes="settingsLink" Content="{Binding Settings.Strings.AboutPrivacyName}" Click="PrivacyStatement_OnClick" />
+              <Button Classes="settingsLink" Content="{Binding Settings.Strings.ProjectLicenseName}" Click="License_OnClick" />
+              <Button Classes="settingsLink" Content="{Binding Settings.Strings.ThirdPartyNoticesName}" Click="ThirdPartyNotices_OnClick" />
             </StackPanel>
           </shared:AnimatedSettingsExpander>
         </Border>

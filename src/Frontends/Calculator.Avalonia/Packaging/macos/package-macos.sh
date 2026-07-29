@@ -14,6 +14,14 @@ if [ ! -f "$publish_dir/libhostfxr.dylib" ] ||
     exit 1
 fi
 
+if [ ! -f "$publish_dir/Licenses/Redmond-Calculator-MIT.txt" ] ||
+   [ ! -f "$publish_dir/Licenses/THIRD_PARTY_NOTICES.md" ] ||
+   [ ! -f "$publish_dir/Licenses/Dotnet-Runtime/ThirdPartyNotices.txt" ]; then
+    echo "Refusing to package a build without its license bundle." >&2
+    echo "Publish Calculator.Avalonia again so Licenses is populated." >&2
+    exit 1
+fi
+
 if [ -e "$bundle" ]; then
     echo "Bundle already exists: $bundle" >&2
     exit 1
@@ -26,5 +34,6 @@ find "$publish_dir" -maxdepth 1 -type f -exec cp {} "$contents/MacOS/" \;
 if [ -d "$publish_dir/Resources" ]; then
     cp -R "$publish_dir/Resources" "$contents/MacOS/Resources"
 fi
+cp -R "$publish_dir/Licenses" "$contents/Resources/Licenses"
 
 echo "$bundle"

@@ -1,0 +1,31 @@
+name: Licensing
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Restore dependency inventories
+        run: |
+          dotnet restore src/Frontends/Calculator.Avalonia/Calculator.Avalonia.csproj -p:NuGetAudit=false
+          dotnet restore tools/LicenseAudit/LicenseAudit.csproj -p:NuGetAudit=false
+      - name: Verify notices, licenses, font provenance, and SPDX inventory
+        run: scripts/verify-licensing.sh
+      - name: Verify the built redistribution bundle
+        run: |
+          dotnet build src/Frontends/Calculator.Avalonia/Calculator.Avalonia.csproj --no-restore -p:NuGetAudit=false
+          scripts/verify-published-licenses.sh src/Frontends/Calculator.Avalonia/bin/Debug/net10.0

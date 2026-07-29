@@ -1,0 +1,20 @@
+CSharpMath embedded font notice
+
+The CSharpMath rendering assemblies used by Redmond Calculator include font
+software in addition to their MIT-licensed program code:
+
+- Latin Modern Math — GUST Font License. The complete license and upstream
+  manifest are in Latin-Modern-Math/.
+- Cyrillic Modern — SIL Open Font License, Version 1.1.
+- AMS Capital Blackboard Bold — SIL Open Font License, Version 1.1.
+
+The complete SIL Open Font License is in Inter/OFL-1.1.txt. That license text
+applies independently to the OFL-covered fonts listed above; Inter is a
+separate font project.
+
+Sources and attribution:
+
+- https://github.com/verybadcat/CSharpMath
+- https://www.gust.org.pl/projects/e-foundry/lm-math
+- https://sourceforge.net/projects/cyrillic-modern/
+- https://github.com/Happypig375/AMSFonts-Ttf-Otf

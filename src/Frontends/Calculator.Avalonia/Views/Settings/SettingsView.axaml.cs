@@ -1,9 +1,10 @@
 using System;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 
 namespace Calculator.Avalonia.Views;
@@ -31,18 +32,39 @@ public partial class SettingsView : UserControl
             ?.Focus();
 
     private async void License_OnClick(object? sender, RoutedEventArgs e) =>
-        await LaunchAsync("https://github.com/microsoft/calculator/blob/main/LICENSE");
+        await LaunchPackagedDocumentAsync(
+            "Redmond-Calculator-MIT.txt",
+            "https://github.com/Dynamotivation/port-redmond-calculator/blob/main/LICENSE");
 
-    private async void ServicesAgreement_OnClick(object? sender, RoutedEventArgs e) =>
-        await LaunchAsync("https://go.microsoft.com/fwlink/?LinkID=822631");
-
-    private async void PrivacyStatement_OnClick(object? sender, RoutedEventArgs e) =>
-        await LaunchAsync("https://go.microsoft.com/fwlink/?LinkID=521839");
+    private async void ThirdPartyNotices_OnClick(object? sender, RoutedEventArgs e) =>
+        await LaunchPackagedDocumentAsync(
+            "THIRD_PARTY_NOTICES.md",
+            "https://github.com/Dynamotivation/port-redmond-calculator/blob/main/THIRD_PARTY_NOTICES.md");
 
     private async void Feedback_OnClick(object? sender, RoutedEventArgs e) =>
-        await LaunchAsync("https://github.com/Dynamotivation/RedmondCalculator/issues");
+        await LaunchAsync("https://github.com/Dynamotivation/port-redmond-calculator/issues");
 
-    private async System.Threading.Tasks.Task LaunchAsync(string url)
+    private async Task LaunchPackagedDocumentAsync(string fileName, string fallbackUrl)
+    {
+        var licenseDirectories = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "Licenses"),
+            Path.GetFullPath(Path.Combine(
+                AppContext.BaseDirectory,
+                "..",
+                "Resources",
+                "Licenses")),
+        };
+        var documentPath = licenseDirectories
+            .Select(directory => Path.Combine(directory, fileName))
+            .FirstOrDefault(File.Exists);
+
+        await LaunchAsync(documentPath is null
+            ? fallbackUrl
+            : new Uri(documentPath).AbsoluteUri);
+    }
+
+    private async Task LaunchAsync(string url)
     {
         if (TopLevel.GetTopLevel(this)?.Launcher is { } launcher)
         {
