@@ -628,9 +628,9 @@ internal static class GraphingInteractionTests
             Pump();
             var continuedCursor = plot.ActiveTraceCursorPosition!.Value;
             Assert(
-                Math.Abs(continuedCursor.X - releasedCursor.X - 20) < 0.01
+                Math.Abs(continuedCursor.X - releasedCursor.X - 10) < 0.01
                 && Math.Abs(continuedCursor.Y - releasedCursor.Y) < 0.01,
-                "Mouse movement should continue at double speed from the keyboard-moved virtual cursor.");
+                "Mouse movement should track one-to-one from the keyboard-moved virtual cursor.");
 
             window.MouseDown(movedPhysicalPointerInWindow, MouseButton.Left, RawInputModifiers.None);
             window.MouseUp(movedPhysicalPointerInWindow, MouseButton.Left, RawInputModifiers.None);
