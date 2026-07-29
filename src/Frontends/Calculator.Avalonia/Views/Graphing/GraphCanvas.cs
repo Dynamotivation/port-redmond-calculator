@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Calculator.Managed;
@@ -30,15 +31,19 @@ public sealed class GraphCanvas : Control
     private const double DefaultMaximum = 10;
     private const double MinimumRange = 1e-5;
     private const double MaximumRange = 1e8;
+    private const double TraceSearchRadius = 24;
+    private const double ActiveTraceOffset = 40;
     private Point? _lastPointerPosition;
     private Point? _pointerPressedPosition;
+    private Point? _pointerPosition;
+    private Point? _activeTraceCursorPosition;
     private Vector _panVelocity;
     private DateTime _lastPointerMoveTime;
     private readonly DispatcherTimer _inertiaTimer;
     private bool _isTracing;
     private bool _isManualAdjustment;
-    private int _traceEquationIndex;
     private Point? _traceScreenPoint;
+    private Color _traceColor = Colors.Black;
     private string _traceText = string.Empty;
     private double _xMinimum = DefaultMinimum;
     private double _xMaximum = DefaultMaximum;
@@ -48,6 +53,7 @@ public sealed class GraphCanvas : Control
     public GraphCanvas()
     {
         _inertiaTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(16), DispatcherPriority.Render, OnInertiaTick);
+        LostFocus += OnGraphLostFocus;
     }
 
     public event EventHandler? ViewportChanged;
@@ -60,6 +66,7 @@ public sealed class GraphCanvas : Control
     public bool IsTracing => _isTracing;
     public bool IsManualAdjustment => _isManualAdjustment;
     public string TraceText => _traceText;
+    public Point? ActiveTraceCursorPosition => _activeTraceCursorPosition;
 
     public GraphingViewModel? ViewModel
     {
@@ -105,16 +112,28 @@ public sealed class GraphCanvas : Control
 
     public void SetTracing(bool enabled)
     {
+        if (_isTracing == enabled)
+        {
+            return;
+        }
+
         _isTracing = enabled;
         if (!enabled)
         {
+            _activeTraceCursorPosition = null;
             _traceScreenPoint = null;
             _traceText = string.Empty;
+            Cursor = null;
         }
         else
         {
-            _traceEquationIndex = 0;
-            UpdateTrace(new Point(GraphToScreenX(0), GraphToScreenY(0)));
+            StopInertia();
+            _activeTraceCursorPosition = ClampToBounds(new Point(
+                Bounds.Width / 2 + ActiveTraceOffset,
+                Bounds.Height / 2 - ActiveTraceOffset));
+            Cursor = new Cursor(StandardCursorType.None);
+            UpdateTrace(_activeTraceCursorPosition.Value);
+            Focus();
         }
         TraceChanged?.Invoke(this, EventArgs.Empty);
         InvalidateVisual();
@@ -127,35 +146,27 @@ public sealed class GraphCanvas : Control
             return false;
         }
 
-        var equations = ViewModel?.GetRenderableEquations()
-            .Where(model => model.Evaluator.Kind == GraphEquationKind.Explicit)
-            .ToArray() ?? [];
-        if (equations.Length == 0)
+        if (_activeTraceCursorPosition is not { } cursorPosition)
         {
             return false;
         }
 
-        var x = _traceScreenPoint?.X ?? GraphToScreenX(0);
-        switch (direction)
+        var delta = fine ? 1d : 5d;
+        var movement = direction switch
         {
-            case "LEFT":
-                x -= Math.Max(1, Bounds.Width * (fine ? 0.0025 : 0.01));
-                break;
-            case "RIGHT":
-                x += Math.Max(1, Bounds.Width * (fine ? 0.0025 : 0.01));
-                break;
-            case "UP":
-                _traceEquationIndex =
-                    (_traceEquationIndex - 1 + equations.Length) % equations.Length;
-                break;
-            case "DOWN":
-                _traceEquationIndex = (_traceEquationIndex + 1) % equations.Length;
-                break;
-            default:
-                return false;
+            "LEFT" => new Vector(-delta, 0),
+            "RIGHT" => new Vector(delta, 0),
+            "UP" => new Vector(0, -delta),
+            "DOWN" => new Vector(0, delta),
+            _ => default,
+        };
+        if (movement == default)
+        {
+            return false;
         }
 
-        UpdateTrace(new Point(Math.Clamp(x, 0, Math.Max(0, Bounds.Width)), 0));
+        _activeTraceCursorPosition = ClampToBounds(cursorPosition + movement);
+        UpdateTrace(_activeTraceCursorPosition.Value);
         return true;
     }
 
@@ -231,9 +242,13 @@ public sealed class GraphCanvas : Control
             }
         }
 
-        if (_traceScreenPoint is { } tracePoint && _isTracing)
+        if (_traceScreenPoint is { } tracePoint)
         {
             DrawTrace(context, tracePoint);
+        }
+        if (_isTracing && _activeTraceCursorPosition is { } cursorPoint)
+        {
+            DrawActiveTraceCursor(context, cursorPoint);
         }
 
         UpdateAutomationDescription();
@@ -284,13 +299,24 @@ public sealed class GraphCanvas : Control
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
+        var current = ClampToBounds(e.GetPosition(this));
+        _pointerPosition = current;
+        if (_isTracing)
+        {
+            _activeTraceCursorPosition = current;
+            UpdateTrace(current);
+        }
+        else if (e.Pointer.Captured != this)
+        {
+            UpdateTrace(current);
+        }
+
         if (_lastPointerPosition is not { } previous
             || e.Pointer.Captured != this)
         {
             return;
         }
 
-        var current = e.GetPosition(this);
         var delta = current - previous;
         var now = DateTime.UtcNow;
         var elapsed = Math.Max(0.001, (now - _lastPointerMoveTime).TotalSeconds);
@@ -332,6 +358,13 @@ public sealed class GraphCanvas : Control
         _pointerPressedPosition = null;
     }
 
+    protected override void OnPointerExited(PointerEventArgs e)
+    {
+        base.OnPointerExited(e);
+        _pointerPosition = null;
+        ClearTrace();
+    }
+
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
     {
         base.OnPointerCaptureLost(e);
@@ -356,6 +389,57 @@ public sealed class GraphCanvas : Control
         {
             InvalidateVisual();
         }
+        RefreshTrace();
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (!_isTracing)
+        {
+            return;
+        }
+
+        if (e.Key == Key.Escape)
+        {
+            SetTracing(false);
+            e.Handled = true;
+            return;
+        }
+
+        var delta = e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? 1d : 5d;
+        var movement = e.Key switch
+        {
+            Key.Left => new Vector(-delta, 0),
+            Key.Right => new Vector(delta, 0),
+            Key.Up => new Vector(0, -delta),
+            Key.Down => new Vector(0, delta),
+            _ => default,
+        };
+        if (movement == default || _activeTraceCursorPosition is not { } cursorPosition)
+        {
+            return;
+        }
+
+        _activeTraceCursorPosition = ClampToBounds(cursorPosition + movement);
+        UpdateTrace(_activeTraceCursorPosition.Value);
+        e.Handled = true;
+    }
+
+    private void OnGraphLostFocus(object? sender, RoutedEventArgs e)
+    {
+        // Defer until a click on the tracing toggle has completed. Stopping
+        // synchronously here would reset the toggle before its Click handler
+        // can observe that the user intended to turn tracing off.
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                if (_isTracing && !IsFocused)
+                {
+                    SetTracing(false);
+                }
+            },
+            DispatcherPriority.Background);
     }
 
     private void ZoomAt(Point center, double factor)
@@ -374,6 +458,7 @@ public sealed class GraphCanvas : Control
         _xMaximum = _xMinimum + newXRange;
         _yMaximum = graphCenterY + newYRange * yRatio;
         _yMinimum = _yMaximum - newYRange;
+        RefreshTrace();
         InvalidateVisual();
         ViewportChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -501,16 +586,7 @@ public sealed class GraphCanvas : Control
 
     private void DrawTrace(DrawingContext context, Point point)
     {
-        var accent = new SolidColorBrush(Color.Parse("#0078D4"));
-        var marker = new StreamGeometry();
-        using (var geometry = marker.Open())
-        {
-            geometry.BeginFigure(new Point(point.X, point.Y - 7), true);
-            geometry.LineTo(new Point(point.X - 6, point.Y + 5));
-            geometry.LineTo(new Point(point.X + 6, point.Y + 5));
-            geometry.EndFigure(true);
-        }
-        context.DrawGeometry(Brushes.White, new Pen(accent, 2), marker);
+        context.DrawEllipse(new SolidColorBrush(_traceColor), null, point, 3, 3);
 
         var tooltipOrigin = new Point(
             Math.Clamp(point.X + 10, 4, Math.Max(4, Bounds.Width - 180)),
@@ -522,33 +598,254 @@ public sealed class GraphCanvas : Control
         DrawLabel(context, _traceText, tooltipOrigin + new Vector(8, 6), Brushes.White, 11);
     }
 
+    private static void DrawActiveTraceCursor(DrawingContext context, Point point)
+    {
+        var shadow = CreateTraceCursorGeometry(point + new Vector(2, 2));
+        context.DrawGeometry(new SolidColorBrush(Color.FromArgb(84, 0, 0, 0)), null, shadow);
+
+        var cursor = CreateTraceCursorGeometry(point);
+        context.DrawGeometry(Brushes.White, new Pen(Brushes.Black, 1), cursor);
+    }
+
+    private static StreamGeometry CreateTraceCursorGeometry(Point point)
+    {
+        // This is the Windows Calculator TracePointer vector, normalized from
+        // "M0 0 l1371 1371 H538 l-538 538 Z" into its 18px display box.
+        var geometry = new StreamGeometry();
+        using var context = geometry.Open();
+        context.BeginFigure(point, true);
+        context.LineTo(point + new Vector(12.93, 12.93));
+        context.LineTo(point + new Vector(5.08, 12.93));
+        context.LineTo(point + new Vector(0, 18));
+        context.EndFigure(true);
+        return geometry;
+    }
+
     private void UpdateTrace(Point pointerPosition)
     {
-        var equations = ViewModel?.GetRenderableEquations()
-            .Where(model => model.Evaluator.Kind == GraphEquationKind.Explicit)
-            .ToArray() ?? [];
-        if (equations.Length == 0)
+        var candidate = FindNearestTracePoint(pointerPosition);
+        if (candidate is null)
         {
-            _traceScreenPoint = null;
-            _traceText = string.Empty;
-            TraceChanged?.Invoke(this, EventArgs.Empty);
-            InvalidateVisual();
+            ClearTrace();
             return;
         }
 
-        _traceEquationIndex = Math.Clamp(_traceEquationIndex, 0, equations.Length - 1);
-        var equation = equations[_traceEquationIndex];
-        var x = ScreenToGraphX(pointerPosition.X);
-        var y = SafeEvaluate(() => equation.Evaluator.EvaluateExplicit(x));
-        if (!double.IsFinite(y))
-        {
-            return;
-        }
-        _traceScreenPoint = new Point(GraphToScreenX(x), GraphToScreenY(y));
-        _traceText = $"({x:0.###############}, {y:0.000000000000000})";
+        _traceScreenPoint = candidate.Value.ScreenPoint;
+        _traceColor = candidate.Value.Color;
+        _traceText = $"({candidate.Value.X.ToString("R", CultureInfo.CurrentCulture)}, " +
+            $"{candidate.Value.Y.ToString("N15", CultureInfo.CurrentCulture)})";
         TraceChanged?.Invoke(this, EventArgs.Empty);
         InvalidateVisual();
     }
+
+    private TraceCandidate? FindNearestTracePoint(Point pointerPosition)
+    {
+        TraceCandidate? nearest = null;
+        foreach (var equation in ViewModel?.GetRenderableEquations() ?? [])
+        {
+            switch (equation.Evaluator.Kind)
+            {
+                case GraphEquationKind.Explicit:
+                    FindNearestExplicitPoint(equation, pointerPosition, ref nearest);
+                    break;
+                case GraphEquationKind.Polar:
+                    FindNearestPolarPoint(equation, pointerPosition, ref nearest);
+                    break;
+                case GraphEquationKind.Implicit:
+                case GraphEquationKind.Inequality:
+                    FindNearestImplicitPoint(equation, pointerPosition, ref nearest);
+                    break;
+            }
+        }
+
+        return nearest is { DistanceSquared: <= TraceSearchRadius * TraceSearchRadius }
+            ? nearest
+            : null;
+    }
+
+    private void FindNearestExplicitPoint(
+        GraphEquationRenderModel equation,
+        Point pointerPosition,
+        ref TraceCandidate? nearest)
+    {
+        var left = Math.Max(0, pointerPosition.X - TraceSearchRadius);
+        var right = Math.Min(Bounds.Width, pointerPosition.X + TraceSearchRadius);
+        for (var screenX = left; screenX <= right; screenX++)
+        {
+            var x = ScreenToGraphX(screenX);
+            var y = SafeEvaluate(() => equation.Evaluator.EvaluateExplicit(x));
+            if (!double.IsFinite(y))
+            {
+                continue;
+            }
+            ConsiderTraceCandidate(
+                equation,
+                new Point(screenX, GraphToScreenY(y)),
+                x,
+                y,
+                pointerPosition,
+                ref nearest);
+        }
+    }
+
+    private void FindNearestPolarPoint(
+        GraphEquationRenderModel equation,
+        Point pointerPosition,
+        ref TraceCandidate? nearest)
+    {
+        var sampleCount = Math.Max(720, (int)Math.Ceiling(Bounds.Width * 1.5));
+        for (var sample = 0; sample <= sampleCount; sample++)
+        {
+            var theta = sample / (double)sampleCount * Math.Tau;
+            var radius = SafeEvaluate(() => equation.Evaluator.EvaluatePolar(theta));
+            if (!double.IsFinite(radius))
+            {
+                continue;
+            }
+            var x = radius * Math.Cos(theta);
+            var y = radius * Math.Sin(theta);
+            ConsiderTraceCandidate(
+                equation,
+                new Point(GraphToScreenX(x), GraphToScreenY(y)),
+                x,
+                y,
+                pointerPosition,
+                ref nearest);
+        }
+    }
+
+    private void FindNearestImplicitPoint(
+        GraphEquationRenderModel equation,
+        Point pointerPosition,
+        ref TraceCandidate? nearest)
+    {
+        const double cellSize = 4;
+        var left = Math.Max(0, pointerPosition.X - TraceSearchRadius);
+        var right = Math.Min(Bounds.Width, pointerPosition.X + TraceSearchRadius);
+        var top = Math.Max(0, pointerPosition.Y - TraceSearchRadius);
+        var bottom = Math.Min(Bounds.Height, pointerPosition.Y + TraceSearchRadius);
+        for (var y = top; y < bottom; y += cellSize)
+        {
+            for (var x = left; x < right; x += cellSize)
+            {
+                FindImplicitCellCandidates(
+                    equation,
+                    pointerPosition,
+                    x,
+                    y,
+                    Math.Min(right, x + cellSize),
+                    Math.Min(bottom, y + cellSize),
+                    ref nearest);
+            }
+        }
+    }
+
+    private void FindImplicitCellCandidates(
+        GraphEquationRenderModel equation,
+        Point pointerPosition,
+        double left,
+        double top,
+        double right,
+        double bottom,
+        ref TraceCandidate? nearest)
+    {
+        var corners = new[]
+        {
+            new Point(left, top),
+            new Point(right, top),
+            new Point(right, bottom),
+            new Point(left, bottom),
+        };
+        var values = corners.Select(point => SafeEvaluate(() =>
+            equation.Evaluator.EvaluateImplicit(
+                ScreenToGraphX(point.X),
+                ScreenToGraphY(point.Y)))).ToArray();
+        if (values.Any(value => !double.IsFinite(value)))
+        {
+            return;
+        }
+
+        for (var edge = 0; edge < corners.Length; edge++)
+        {
+            var next = (edge + 1) % corners.Length;
+            var a = values[edge];
+            var b = values[next];
+            if ((a < 0) == (b < 0) && Math.Abs(a) > 1e-12 && Math.Abs(b) > 1e-12)
+            {
+                continue;
+            }
+            var denominator = Math.Abs(a) + Math.Abs(b);
+            var ratio = denominator <= 1e-15 ? 0.5 : Math.Abs(a) / denominator;
+            var screenPoint = new Point(
+                corners[edge].X + (corners[next].X - corners[edge].X) * ratio,
+                corners[edge].Y + (corners[next].Y - corners[edge].Y) * ratio);
+            ConsiderTraceCandidate(
+                equation,
+                screenPoint,
+                ScreenToGraphX(screenPoint.X),
+                ScreenToGraphY(screenPoint.Y),
+                pointerPosition,
+                ref nearest);
+        }
+    }
+
+    private static void ConsiderTraceCandidate(
+        GraphEquationRenderModel equation,
+        Point screenPoint,
+        double x,
+        double y,
+        Point pointerPosition,
+        ref TraceCandidate? nearest)
+    {
+        var difference = screenPoint - pointerPosition;
+        var distanceSquared = difference.X * difference.X + difference.Y * difference.Y;
+        if (nearest is not null && distanceSquared >= nearest.Value.DistanceSquared)
+        {
+            return;
+        }
+        nearest = new TraceCandidate(
+            screenPoint,
+            x,
+            y,
+            Color.Parse(equation.Color),
+            distanceSquared);
+    }
+
+    private void ClearTrace()
+    {
+        if (_traceScreenPoint is null && string.IsNullOrEmpty(_traceText))
+        {
+            return;
+        }
+        _traceScreenPoint = null;
+        _traceText = string.Empty;
+        TraceChanged?.Invoke(this, EventArgs.Empty);
+        InvalidateVisual();
+    }
+
+    private void RefreshTrace()
+    {
+        var trackingPosition = _isTracing ? _activeTraceCursorPosition : _pointerPosition;
+        if (trackingPosition is { } position)
+        {
+            UpdateTrace(position);
+        }
+        else
+        {
+            ClearTrace();
+        }
+    }
+
+    private Point ClampToBounds(Point point) => new(
+        Math.Clamp(point.X, 0, Math.Max(0, Bounds.Width - 5)),
+        Math.Clamp(point.Y, 0, Math.Max(0, Bounds.Height - 5)));
+
+    private readonly record struct TraceCandidate(
+        Point ScreenPoint,
+        double X,
+        double Y,
+        Color Color,
+        double DistanceSquared);
 
     private void OnInertiaTick(object? sender, EventArgs e)
     {
@@ -576,6 +873,7 @@ public sealed class GraphCanvas : Control
 
     private void NotifyViewportChanged()
     {
+        RefreshTrace();
         InvalidateVisual();
         ViewportChanged?.Invoke(this, EventArgs.Empty);
     }

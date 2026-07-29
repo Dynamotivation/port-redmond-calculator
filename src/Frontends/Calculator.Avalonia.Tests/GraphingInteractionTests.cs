@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -21,6 +22,7 @@ internal static class GraphingInteractionTests
         ("invalid equation uses the native error presentation", InvalidEquationUsesNativeErrorPresentation),
         ("graphing selector flyouts insert tokens with square keys", SelectorFlyoutsInsertTokens),
         ("graph shortcuts use shared contextual scopes", GraphShortcutsUseSharedContextualScopes),
+        ("graph tracing matches Windows active cursor behavior", GraphTracingMatchesWindowsBehavior),
     ];
 
     private static void EquationContextMenuIsAttached()
@@ -482,6 +484,120 @@ internal static class GraphingInteractionTests
             Assert(
                 Math.Abs(plot.XMinimum - (-4)) < 0.001,
                 "Enter in a graph setting did not use the graph-settings shortcut scope");
+        }
+        finally
+        {
+            window.Close();
+            Dispatcher.UIThread.RunJobs();
+        }
+    }
+
+    private static void GraphTracingMatchesWindowsBehavior()
+    {
+        Application.Current!.RequestedThemeVariant = ThemeVariant.Light;
+        var window = new MainWindow(new AppSettings(
+            AppThemePreference.Light,
+            "Inter",
+            UseMicaEffect: false,
+            WindowCornerStyle.Windows11,
+            WindowControlStyle.Windows11))
+        {
+            Width = 1204,
+            Height = 720,
+        };
+
+        try
+        {
+            window.Show();
+            Pump();
+            window.KeyPressQwerty(PhysicalKey.Digit3, RawInputModifiers.Alt);
+            Pump();
+
+            var viewModel = (CalculatorViewModel)window.DataContext!;
+            var equation = viewModel.Graphing.Equations[0];
+            equation.DraftExpression = "x";
+            viewModel.Graphing.CommitEquation(equation);
+            Pump();
+
+            var plot = window.GetVisualDescendants()
+                .OfType<GraphCanvas>()
+                .Single();
+            var traceButton = window.GetVisualDescendants()
+                .OfType<ToggleButton>()
+                .Single(button => button.Name == "TraceButton");
+            var hoverPosition = new Point(
+                plot.Bounds.Width / 2 + 40,
+                plot.Bounds.Height / 2 - 40);
+            var hoverInWindow = plot.TranslatePoint(hoverPosition, window)
+                ?? throw new InvalidOperationException("Could not locate the graph canvas.");
+
+            window.MouseMove(hoverInWindow, RawInputModifiers.None);
+            Pump();
+            Assert(
+                !plot.IsTracing && !string.IsNullOrEmpty(plot.TraceText),
+                "Ordinary hover should expose the nearest graph coordinates without active tracing.");
+
+            ClickTraceButton();
+            Pump();
+            Assert(
+                plot.IsTracing && plot.IsFocused && plot.ActiveTraceCursorPosition is not null,
+                "Starting tracing should focus the graph and show the Windows active trace cursor.");
+
+            var initialCursor = plot.ActiveTraceCursorPosition!.Value;
+            window.KeyPress(
+                Key.Right,
+                RawInputModifiers.None,
+                PhysicalKey.ArrowRight,
+                null);
+            Pump();
+            var normalCursor = plot.ActiveTraceCursorPosition!.Value;
+            Assert(
+                Math.Abs(normalCursor.X - initialCursor.X - 5) < 0.01,
+                "An arrow key should move the active cursor by five pixels.");
+
+            window.KeyPress(
+                Key.Right,
+                RawInputModifiers.Shift,
+                PhysicalKey.ArrowRight,
+                null);
+            Pump();
+            var fineCursor = plot.ActiveTraceCursorPosition!.Value;
+            Assert(
+                Math.Abs(fineCursor.X - normalCursor.X - 1) < 0.01,
+                "Shift plus an arrow key should move the active cursor by one pixel.");
+
+            window.KeyPress(
+                Key.Escape,
+                RawInputModifiers.None,
+                PhysicalKey.Escape,
+                null);
+            Pump();
+            Assert(
+                !plot.IsTracing && traceButton.IsChecked != true,
+                "Escape should stop tracing and release the toggle button.");
+
+            ClickTraceButton();
+            Pump();
+            var graphOptionsButton = window.GetVisualDescendants()
+                .OfType<Button>()
+                .Single(button => button.Name == "GraphOptionsButton");
+            graphOptionsButton.Focus();
+            Pump();
+            Assert(
+                graphOptionsButton.IsFocused
+                && !plot.IsTracing
+                && traceButton.IsChecked != true,
+                "Moving focus away from the graph should stop tracing and release the toggle.");
+
+            void ClickTraceButton()
+            {
+                var center = traceButton.TranslatePoint(
+                        new Point(traceButton.Bounds.Width / 2, traceButton.Bounds.Height / 2),
+                        window)
+                    ?? throw new InvalidOperationException("Could not locate the tracing button.");
+                window.MouseDown(center, MouseButton.Left, RawInputModifiers.None);
+                window.MouseUp(center, MouseButton.Left, RawInputModifiers.None);
+            }
         }
         finally
         {

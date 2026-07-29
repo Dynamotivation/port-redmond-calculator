@@ -24,12 +24,20 @@ public partial class GraphingCalculatorView : UserControl
     private bool _showsEquationPanelOnNarrow;
     private bool _showsInverseKeypad;
     private bool _plotEventsAttached;
+    private bool _graphOptionsDismissedDuringPointerClick;
     private TextBox? _activeTextBox;
 
     public GraphingCalculatorView()
     {
         InitializeComponent();
         SizeChanged += (_, _) => UpdateResponsiveLayout(Bounds.Width);
+        GraphOptionsPopup.Closed += (_, _) =>
+            _graphOptionsDismissedDuringPointerClick = true;
+        AddHandler(
+            PointerReleasedEvent,
+            (_, _) => _graphOptionsDismissedDuringPointerClick = false,
+            RoutingStrategies.Tunnel,
+            handledEventsToo: true);
         AttachedToVisualTree += (_, _) =>
         {
             if (!_plotEventsAttached)
@@ -88,7 +96,7 @@ public partial class GraphingCalculatorView : UserControl
 
         TraceButton.IsChecked = false;
         Plot.SetTracing(false);
-        UpdateTraceButtonLabel();
+        UpdateTraceButton();
         return true;
     }
 
@@ -138,8 +146,8 @@ public partial class GraphingCalculatorView : UserControl
         GraphPanel.IsVisible = !_showsEquationPanelOnNarrow;
         EquationPanel.IsVisible = _showsEquationPanelOnNarrow;
 
-        GraphOptionsPanel.Width = Math.Max(0, width - 16);
-        GraphOptionsPanel.MaxHeight = Math.Max(100, Bounds.Height - 16);
+        GraphOptionsPanel.Width = Math.Min(318, Math.Max(0, width - 16));
+        GraphOptionsPanel.MaxHeight = Math.Min(468, Math.Max(100, Bounds.Height - 64));
     }
 
     public bool ShowsEquationPanelOnNarrow => _showsEquationPanelOnNarrow;
@@ -194,11 +202,19 @@ public partial class GraphingCalculatorView : UserControl
     private void TraceButton_OnClick(object? sender, RoutedEventArgs e)
     {
         Plot.SetTracing(TraceButton.IsChecked == true);
-        UpdateTraceButtonLabel();
+        UpdateTraceButton();
     }
 
-    private void UpdateTraceButtonLabel()
+    private void Plot_OnTraceChanged(object? sender, EventArgs e)
     {
+        UpdateTraceButton();
+        TraceLiveRegion.IsVisible = Plot.IsTracing && !string.IsNullOrEmpty(Plot.TraceText);
+        AutomationProperties.SetName(TraceLiveRegion, Plot.TraceText);
+    }
+
+    private void UpdateTraceButton()
+    {
+        TraceButton.IsChecked = Plot.IsTracing;
         var label = Plot.IsTracing
             ? Graphing?.Strings.StopTracingTooltip ?? "Stop tracing"
             : Graphing?.Strings.StartTracingTooltip ?? "Start tracing";
@@ -206,16 +222,16 @@ public partial class GraphingCalculatorView : UserControl
         ToolTip.SetTip(TraceButton, label);
     }
 
-    private void Plot_OnTraceChanged(object? sender, EventArgs e)
-    {
-        TraceLiveRegion.IsVisible = Plot.IsTracing && !string.IsNullOrEmpty(Plot.TraceText);
-        AutomationProperties.SetName(TraceLiveRegion, Plot.TraceText);
-    }
-
     private void GraphOptionsButton_OnClick(object? sender, RoutedEventArgs e)
     {
-        GraphOptionsPanel.IsVisible = !GraphOptionsPanel.IsVisible;
-        if (GraphOptionsPanel.IsVisible)
+        if (_graphOptionsDismissedDuringPointerClick)
+        {
+            _graphOptionsDismissedDuringPointerClick = false;
+            return;
+        }
+
+        GraphOptionsPopup.IsOpen = !GraphOptionsPopup.IsOpen;
+        if (GraphOptionsPopup.IsOpen)
         {
             UpdateBoundsEditors();
         }

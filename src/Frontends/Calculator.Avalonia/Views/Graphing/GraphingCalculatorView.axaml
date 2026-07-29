@@ -81,10 +81,14 @@
             </StackPanel>
           </Border>
 
-          <Border x:Name="GraphOptionsPanel" Width="318" MaxHeight="468" ZIndex="20"
-                  Margin="0,8,8,0" Padding="18,14"
-                  HorizontalAlignment="Right" VerticalAlignment="Top"
-                  IsVisible="False" CornerRadius="8"
+          <Popup x:Name="GraphOptionsPopup"
+                 PlacementTarget="{Binding #GraphOptionsButton}"
+                 Placement="BottomEdgeAlignedRight"
+                 VerticalOffset="4"
+                 IsLightDismissEnabled="True"
+                 OverlayDismissEventPassThrough="True">
+          <Border x:Name="GraphOptionsPanel" Width="318" MaxHeight="468"
+                  Padding="18,14" CornerRadius="8"
                   Background="{DynamicResource CardBrush}" BoxShadow="0 6 18 0 #70000000">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
               <StackPanel Spacing="9">
@@ -151,6 +155,7 @@
               </StackPanel>
             </ScrollViewer>
           </Border>
+          </Popup>
 
           <Border x:Name="TraceLiveRegion" Margin="10" HorizontalAlignment="Left" VerticalAlignment="Bottom"
                   IsVisible="False" Opacity="0"
