@@ -193,8 +193,14 @@ public partial class GraphEquationViewModel : ObservableObject
 
     public bool HasExpression => !string.IsNullOrWhiteSpace(Expression);
     public bool CanAnalyze => HasExpression && IsValid;
+    public bool UsesAreaRendering =>
+        _parsedExpression?.Kind == GraphEquationKind.Inequality;
+    public bool CanCustomizeLineStyle => !UsesAreaRendering;
+    public GraphLineStyle EffectiveLineStyle =>
+        UsesAreaRendering ? GraphLineStyle.Dot : LineStyle;
     public string FormattedExpression => _parsedExpression?.Latex ?? string.Empty;
     public bool ShowFormattedExpression => HasExpression && IsValid && !IsEditing;
+    public bool ShowPlaceholder => string.IsNullOrEmpty(DraftExpression);
     public bool ShowEquationActions =>
         IsAllocated && (!IsEditing || string.IsNullOrWhiteSpace(DraftExpression));
     public bool ShowEditingClear =>
@@ -246,6 +252,13 @@ public partial class GraphEquationViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowEquationActions));
         OnPropertyChanged(nameof(TileColor));
         Parse();
+        if (UsesAreaRendering && LineStyle != GraphLineStyle.Dot)
+        {
+            LineStyle = GraphLineStyle.Dot;
+        }
+        OnPropertyChanged(nameof(UsesAreaRendering));
+        OnPropertyChanged(nameof(CanCustomizeLineStyle));
+        OnPropertyChanged(nameof(EffectiveLineStyle));
         OnPropertyChanged(nameof(FormattedExpression));
         OnPropertyChanged(nameof(ShowFormattedExpression));
         EquationChanged?.Invoke(this, EventArgs.Empty);
@@ -278,6 +291,7 @@ public partial class GraphEquationViewModel : ObservableObject
     }
     partial void OnDraftExpressionChanged(string value)
     {
+        OnPropertyChanged(nameof(ShowPlaceholder));
         OnPropertyChanged(nameof(ShowEditingClear));
         OnPropertyChanged(nameof(ShowEquationActions));
     }
@@ -287,7 +301,11 @@ public partial class GraphEquationViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowEditingClear));
         OnPropertyChanged(nameof(ShowFormattedExpression));
     }
-    partial void OnLineStyleChanged(GraphLineStyle value) => EquationChanged?.Invoke(this, EventArgs.Empty);
+    partial void OnLineStyleChanged(GraphLineStyle value)
+    {
+        OnPropertyChanged(nameof(EffectiveLineStyle));
+        EquationChanged?.Invoke(this, EventArgs.Empty);
+    }
     partial void OnLineWidthChanged(double value) => EquationChanged?.Invoke(this, EventArgs.Empty);
 
     internal IEnumerable<string> GetVariables() => _parsedExpression?.Variables ?? [];
@@ -323,7 +341,7 @@ public partial class GraphEquationViewModel : ObservableObject
         return new GraphEquationRenderModel(
             _parsedExpression.ExpressionId,
             Color,
-            LineStyle,
+            EffectiveLineStyle,
             LineWidth,
             _evaluator);
     }

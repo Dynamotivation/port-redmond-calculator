@@ -106,6 +106,16 @@ internal static class Scenarios
                 Click(window, "EquationStyleButton");
             },
         },
+        new("graphing-dark-inequality-line-options", 1204, 720, ThemeVariant.Dark, Opaque,
+            vm =>
+            {
+                SwitchTo(vm, CalculatorViewMode.Graphing);
+                vm.Graphing.Equations[0].Expression = "x < 1";
+                vm.Graphing.AddEquationCommand.Execute(null);
+            })
+        {
+            ArrangeView = (window, _) => Click(window, "EquationStyleButton"),
+        },
         GraphingAnalysis(
             "graphing-dark-analysis-wide",
             "(x+1)(x-1)",

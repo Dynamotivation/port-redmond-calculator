@@ -8,6 +8,8 @@
   <string>Redmond Calculator</string>
   <key>CFBundleExecutable</key>
   <string>Redmond Calculator</string>
+  <key>CFBundleIconFile</key>
+  <string>RedmondCalculatorIcon.icns</string>
   <key>CFBundleIdentifier</key>
   <string>com.dynamotivation.redmondcalculator</string>
   <key>CFBundleInfoDictionaryVersion</key>

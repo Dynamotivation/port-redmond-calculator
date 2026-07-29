@@ -15,6 +15,7 @@
         CanResize="True"
         WindowStartupLocation="CenterScreen"
         WindowDecorations="None"
+        Icon="avares://Redmond%20Calculator/Assets/RedmondCalculatorIcon.png"
         Background="Transparent"
         TransparencyLevelHint="Transparent"
         TransparencyBackgroundFallback="#202027"

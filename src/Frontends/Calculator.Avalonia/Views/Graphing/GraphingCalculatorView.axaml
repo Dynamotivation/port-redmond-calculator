@@ -2,7 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:managed="using:Calculator.Managed"
              xmlns:graphing="using:Calculator.Avalonia.Views.Graphing"
-             xmlns:math="clr-namespace:CSharpMath.Avalonia;assembly=CSharpMath.Avalonia"
              x:Class="Calculator.Avalonia.Views.Graphing.GraphingCalculatorView"
              x:DataType="managed:CalculatorViewModel"
              IsVisible="{Binding IsGraphingMode}">
@@ -216,7 +215,6 @@
                                  FontFamily="STIX Two Math, Cambria Math, Times New Roman"
                                  FontSize="14" FontWeight="Normal"
                                  Text="{Binding DraftExpression, Mode=TwoWay}"
-                                 PlaceholderText="{Binding Placeholder}"
                                  AutomationProperties.Name="Open the context menu for available actions"
                                  KeyDown="EquationTextBox_OnKeyDown"
                                  GotFocus="EquationTextBox_OnGotFocus"
@@ -229,16 +227,26 @@
                             <SolidColorBrush x:Key="TextControlBorderBrushDisabled" Color="Transparent" />
                           </TextBox.Resources>
                         </TextBox>
-                        <math:MathView Grid.Column="1"
-                                       Height="44" Margin="10,0"
-                                       HorizontalAlignment="Left"
-                                       VerticalAlignment="Center"
-                                       IsVisible="{Binding ShowFormattedExpression}"
-                                       LaTeX="{Binding FormattedExpression}"
-                                       FontSize="16"
-                                       TextColor="{DynamicResource ChromeForegroundColor}"
-                                       DisplayErrorInline="False"
-                                       PointerPressed="FormattedEquation_OnPointerPressed" />
+                        <TextBlock Grid.Column="1" Margin="10,0"
+                                   VerticalAlignment="Center"
+                                   IsHitTestVisible="False"
+                                   IsVisible="{Binding ShowPlaceholder}"
+                                   FontSize="14" FontWeight="Normal"
+                                   Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
+                                   Text="{Binding Placeholder}" />
+                        <graphing:EditableMathView Grid.Column="1"
+                                                   Height="44" Margin="10,0"
+                                                   HorizontalAlignment="Left"
+                                                   VerticalAlignment="Center"
+                                                   IsVisible="{Binding ShowFormattedExpression}"
+                                                   LaTeX="{Binding FormattedExpression}"
+                                                   LinearText="{Binding DraftExpression}"
+                                                   FontSize="12"
+                                                   TextColor="{DynamicResource ChromeForegroundColor}"
+                                                   DisplayErrorInline="False"
+                                                   GotFocus="FormattedEquation_OnGotFocus"
+                                                   LinearEditRequested="FormattedEquation_OnLinearEditRequested"
+                                                   PointerPressed="FormattedEquation_OnPointerPressed" />
                         <StackPanel Grid.Column="2" Orientation="Horizontal"
                                     IsVisible="{Binding ShowEquationActions}">
                           <Button x:Name="AnalyzeEquationButton" Classes="graphEquationAction"

@@ -256,14 +256,11 @@
             <Expander.Header>
               <Grid Height="72">
                 <Grid Classes="settingsExpanderHeader" VerticalAlignment="Center" ColumnDefinitions="36,*,32">
-                  <Grid Width="24" Height="24">
-                    <Border CornerRadius="3" Background="#6EC7E8" />
-                    <Grid Margin="5" RowDefinitions="5,*" ColumnDefinitions="*,*" ColumnSpacing="2" RowSpacing="2">
-                      <Border Grid.ColumnSpan="2" Background="#E9F7FC" />
-                      <Border Grid.Row="1" Background="#315368" />
-                      <Border Grid.Row="1" Grid.Column="1" Background="#315368" />
-                    </Grid>
-                  </Grid>
+                  <Image Width="24"
+                         Height="24"
+                         Stretch="Uniform"
+                         IsHitTestVisible="False"
+                         Source="avares://Redmond%20Calculator/Assets/RedmondCalculatorIcon.png" />
                   <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0"
                              FontSize="14" Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
                              Text="{Binding Settings.Strings.AboutVersionText}" />

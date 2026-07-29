@@ -18,8 +18,9 @@ if [ -e "$bundle" ]; then
     echo "Bundle already exists: $bundle" >&2
     exit 1
 fi
-mkdir -p "$contents/MacOS"
+mkdir -p "$contents/MacOS" "$contents/Resources"
 cp "$project_dir/Packaging/macos/Info.plist" "$contents/Info.plist"
+cp "$project_dir/Assets/RedmondCalculatorIcon.icns" "$contents/Resources/RedmondCalculatorIcon.icns"
 
 find "$publish_dir" -maxdepth 1 -type f -exec cp {} "$contents/MacOS/" \;
 if [ -d "$publish_dir/Resources" ]; then

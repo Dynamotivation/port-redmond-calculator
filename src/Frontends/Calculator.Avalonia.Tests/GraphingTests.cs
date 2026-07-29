@@ -11,6 +11,7 @@ internal static class GraphingTests
         ("graphing evaluates implicit equations", EvaluatesImplicitEquations),
         ("graphing evaluates polar expressions", EvaluatesPolarExpressions),
         ("graphing evaluates inequalities", EvaluatesInequalities),
+        ("graphing forces dotted area rendering", ForcesDottedAreaRendering),
         ("graphing view model tracks parameters", ViewModelTracksParameters),
         ("graphing equation presentation state is preserved", EquationPresentationStateIsPreserved),
         ("graphing formats committed equations as latex", FormatsCommittedEquationsAsLatex),
@@ -66,6 +67,24 @@ internal static class GraphingTests
         var evaluator = CreateEvaluator(expression);
         Assert(evaluator.EvaluateInequality(0, 0), "origin should satisfy y <= x + 1");
         Assert(!evaluator.EvaluateInequality(0, 2), "(0,2) should not satisfy y <= x + 1");
+    }
+
+    private static void ForcesDottedAreaRendering()
+    {
+        var viewModel = new GraphingViewModel(CreateStrings());
+        var equation = viewModel.Equations.Single();
+        equation.Expression = "x < 1";
+
+        Assert(equation.UsesAreaRendering, "an inequality should use area rendering");
+        Assert(!equation.CanCustomizeLineStyle,
+            "area-rendering equations should disable line-style customization");
+        Assert(equation.EffectiveLineStyle == GraphLineStyle.Dot,
+            "area-rendering equations should force the dotted style");
+
+        equation.LineStyle = GraphLineStyle.Solid;
+        var rendered = viewModel.GetRenderableEquations().Single();
+        Assert(rendered.LineStyle == GraphLineStyle.Dot,
+            "programmatic style changes must not override dotted area rendering");
     }
 
     private static void ViewModelTracksParameters()
