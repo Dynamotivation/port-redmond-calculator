@@ -45,3 +45,17 @@ strict submodule compatibility contract.
 
 Microsoft Calculator retains its own MIT license and third-party notices inside
 the submodule. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## License
+
+Redmond Calculator's original code is available under the
+[MIT License](LICENSE). The Microsoft Calculator and Redmond Commons
+submodules, bundled fonts, native runtime components, and package dependencies
+retain their respective licenses. See
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the ownership boundaries
+and redistribution notices. See [TRADEMARKS.md](TRADEMARKS.md) for the
+independent-project and trademark disclaimer.
+
+Packaged builds contain a complete `Licenses` directory, including a generated
+NuGet inventory and SPDX 2.3 document. Run `scripts/verify-licensing.sh` before
+releasing.
