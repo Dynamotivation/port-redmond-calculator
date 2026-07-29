@@ -36,6 +36,7 @@ public sealed class GraphCanvas : Control
     private DateTime _lastPointerMoveTime;
     private readonly DispatcherTimer _inertiaTimer;
     private bool _isTracing;
+    private bool _isManualAdjustment;
     private Point? _traceScreenPoint;
     private string _traceText = string.Empty;
     private double _xMinimum = DefaultMinimum;
@@ -50,11 +51,13 @@ public sealed class GraphCanvas : Control
 
     public event EventHandler? ViewportChanged;
     public event EventHandler? TraceChanged;
+    public event EventHandler? ManualAdjustmentChanged;
     public double XMinimum => _xMinimum;
     public double XMaximum => _xMaximum;
     public double YMinimum => _yMinimum;
     public double YMaximum => _yMaximum;
     public bool IsTracing => _isTracing;
+    public bool IsManualAdjustment => _isManualAdjustment;
     public string TraceText => _traceText;
 
     public GraphingViewModel? ViewModel
@@ -95,11 +98,8 @@ public sealed class GraphCanvas : Control
         }
 
         StopInertia();
-        _xMinimum = xMinimum;
-        _xMaximum = xMaximum;
-        _yMinimum = yMinimum;
-        _yMaximum = yMaximum;
-        NotifyViewportChanged();
+        SetManualAdjustment(true);
+        ApplyViewport(xMinimum, xMaximum, yMinimum, yMaximum);
     }
 
     public void SetTracing(bool enabled)
@@ -118,15 +118,25 @@ public sealed class GraphCanvas : Control
         InvalidateVisual();
     }
 
-    public void ResetView()
+    public void SetManualAdjustment(bool enabled)
+    {
+        if (!enabled)
+        {
+            RefreshViewAutomatically();
+            return;
+        }
+
+        SetManualAdjustmentState(true);
+    }
+
+    public void RefreshViewAutomatically()
     {
         StopInertia();
-        _xMinimum = DefaultMinimum;
-        _xMaximum = DefaultMaximum;
-        _yMinimum = DefaultMinimum;
-        _yMaximum = DefaultMaximum;
-        NotifyViewportChanged();
+        SetManualAdjustmentState(false);
+        FitViewToGraph();
     }
+
+    public void ResetView() => RefreshViewAutomatically();
 
     public override void Render(DrawingContext context)
     {
@@ -160,7 +170,12 @@ public sealed class GraphCanvas : Control
                 GraphLineStyle.Dot => new DashStyle([1d], 0),
                 _ => null,
             };
-            var pen = new Pen(new SolidColorBrush(color), equation.LineWidth, dashStyle);
+            var pen = new Pen(new SolidColorBrush(color), equation.LineWidth, dashStyle)
+            {
+                LineCap = equation.LineStyle == GraphLineStyle.Dot
+                    ? PenLineCap.Round
+                    : PenLineCap.Flat,
+            };
             switch (equation.Evaluator.Kind)
             {
                 case GraphEquationKind.Explicit:
@@ -196,7 +211,14 @@ public sealed class GraphCanvas : Control
             {
                 newViewModel.GraphInvalidated += OnGraphInvalidated;
             }
-            InvalidateVisual();
+            if (_isManualAdjustment)
+            {
+                InvalidateVisual();
+            }
+            else
+            {
+                FitViewToGraph();
+            }
         }
     }
 
@@ -234,6 +256,7 @@ public sealed class GraphCanvas : Control
         _lastPointerMoveTime = now;
         _panVelocity = new Vector(delta.X / elapsed, delta.Y / elapsed);
         _lastPointerPosition = current;
+        SetManualAdjustmentState(true);
         var xDelta = -delta.X / Bounds.Width * (_xMaximum - _xMinimum);
         var yDelta = delta.Y / Bounds.Height * (_yMaximum - _yMinimum);
         _xMinimum += xDelta;
@@ -282,10 +305,21 @@ public sealed class GraphCanvas : Control
         e.Handled = true;
     }
 
-    private void OnGraphInvalidated(object? sender, EventArgs e) => InvalidateVisual();
+    private void OnGraphInvalidated(object? sender, GraphInvalidatedEventArgs e)
+    {
+        if (!_isManualAdjustment && e.Reason == GraphInvalidationReason.Geometry)
+        {
+            FitViewToGraph();
+        }
+        else
+        {
+            InvalidateVisual();
+        }
+    }
 
     private void ZoomAt(Point center, double factor)
     {
+        SetManualAdjustmentState(true);
         var currentXRange = _xMaximum - _xMinimum;
         var currentYRange = _yMaximum - _yMinimum;
         var newXRange = Math.Clamp(currentXRange * factor, MinimumRange, MaximumRange);
@@ -502,6 +536,41 @@ public sealed class GraphCanvas : Control
         ViewportChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    private void FitViewToGraph()
+    {
+        var viewport = GraphViewportFitter.Calculate(
+            ViewModel?.GetRenderableEquations() ?? []);
+        ApplyViewport(
+            viewport.XMinimum,
+            viewport.XMaximum,
+            viewport.YMinimum,
+            viewport.YMaximum);
+    }
+
+    private void ApplyViewport(
+        double xMinimum,
+        double xMaximum,
+        double yMinimum,
+        double yMaximum)
+    {
+        _xMinimum = xMinimum;
+        _xMaximum = xMaximum;
+        _yMinimum = yMinimum;
+        _yMaximum = yMaximum;
+        NotifyViewportChanged();
+    }
+
+    private void SetManualAdjustmentState(bool value)
+    {
+        if (_isManualAdjustment == value)
+        {
+            return;
+        }
+
+        _isManualAdjustment = value;
+        ManualAdjustmentChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     private void UpdateAutomationDescription()
     {
         var count = ViewModel?.Equations.Count(equation => equation.HasExpression) ?? 0;
@@ -673,17 +742,18 @@ public sealed class GraphCanvas : Control
 
     private void DrawInequality(DrawingContext context, GraphEquationRenderModel equation)
     {
-        const double dotSpacing = 6;
-        const double dotRadius = 0.9;
+        const double dotSpacing = 12;
         var color = ParseColor(equation.Color);
+        var dotRadius = equation.LineWidth / 2;
         var dotBrush = new SolidColorBrush(Color.FromArgb(112, color.R, color.G, color.B));
         var boundaryPen = new Pen(
             new SolidColorBrush(color),
             equation.LineWidth,
-            new DashStyle([0.1d, 1.8d], 0))
+            new DashStyle([2d, 1d], 0))
         {
-            LineCap = PenLineCap.Round,
+            LineCap = PenLineCap.Flat,
         };
+
         for (var y = dotSpacing / 2; y < Bounds.Height; y += dotSpacing)
         {
             for (var x = dotSpacing / 2; x < Bounds.Width; x += dotSpacing)

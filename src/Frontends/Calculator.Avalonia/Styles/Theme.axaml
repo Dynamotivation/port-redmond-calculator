@@ -57,6 +57,8 @@
         <SolidColorBrush x:Key="GraphPlotBackgroundBrush" Color="#FF202020" />
         <SolidColorBrush x:Key="GraphEquationPanelBrush" Color="#DD202020" />
         <SolidColorBrush x:Key="GraphEquationCardBrush" Color="#E62B2B2B" />
+        <SolidColorBrush x:Key="GraphEquationErrorBackgroundBrush" Color="#33EB5757" />
+        <SolidColorBrush x:Key="GraphEquationErrorBorderBrush" Color="#FFEB5757" />
         <SolidColorBrush x:Key="GraphCommandPanelBrush" Color="#E62B2B2B" />
         <SolidColorBrush x:Key="GraphCommandPanelBorderBrush" Color="#24FFFFFF" />
         <SolidColorBrush x:Key="GraphGridBrush" Color="#28FFFFFF" />
@@ -122,6 +124,8 @@
         <SolidColorBrush x:Key="GraphPlotBackgroundBrush" Color="#FFF9F9F9" />
         <SolidColorBrush x:Key="GraphEquationPanelBrush" Color="#DDF9F9F9" />
         <SolidColorBrush x:Key="GraphEquationCardBrush" Color="#E6FBFBFB" />
+        <SolidColorBrush x:Key="GraphEquationErrorBackgroundBrush" Color="#33EB5757" />
+        <SolidColorBrush x:Key="GraphEquationErrorBorderBrush" Color="#FFEB5757" />
         <SolidColorBrush x:Key="GraphCommandPanelBrush" Color="#E6FBFBFB" />
         <SolidColorBrush x:Key="GraphCommandPanelBorderBrush" Color="#24000000" />
         <SolidColorBrush x:Key="GraphGridBrush" Color="#22000000" />

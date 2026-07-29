@@ -64,17 +64,20 @@
                 <TextBlock FontFamily="{StaticResource CalculatorIconFont}"
                            FontSize="14" Text="&#xE949;" />
               </Button>
-              <Button Classes="graphCommandButton" Click="ResetView_OnClick"
-                      Margin="4"
-                      AutomationProperties.Name="Graph view"
-                      ToolTip.Tip="{Binding Graphing.Strings.ResetViewTooltip}">
+              <ToggleButton x:Name="GraphViewButton"
+                            Classes="graphCommandButton"
+                            Click="GraphViewButton_OnClick"
+                            Margin="4"
+                            AutomationProperties.Name="Graph view"
+                            ToolTip.Tip="{Binding Graphing.Strings.ResetViewTooltip}">
                 <Grid Width="18" Height="18">
                   <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
                              FontFamily="{StaticResource CalculatorIconFont}" FontSize="15" Text="&#xE45E;" />
-                  <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                  <TextBlock x:Name="AutomaticViewGlyph"
+                             HorizontalAlignment="Center" VerticalAlignment="Center"
                              FontFamily="{StaticResource CalculatorIconFont}" FontSize="15" Text="&#xE45D;" />
                 </Grid>
-              </Button>
+              </ToggleButton>
             </StackPanel>
           </Border>
 
@@ -168,8 +171,9 @@
                             ItemsSource="{Binding Graphing.Equations}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="managed:GraphEquationViewModel">
-                  <Grid Margin="1.75,1.75,1.75,0" RowDefinitions="44,Auto" VerticalAlignment="Top">
-                    <Border Classes="graphEquationCard" Height="44"
+                  <Grid Margin="1.75,1.75,1.75,0" Height="44" VerticalAlignment="Top">
+                    <Border Classes="graphEquationCard"
+                            Classes.error="{Binding HasError}" Height="44"
                             VerticalAlignment="Top" CornerRadius="5" ClipToBounds="True"
                             Background="{DynamicResource GraphEquationCardBrush}">
                       <Grid ColumnDefinitions="44,*,Auto">
@@ -216,6 +220,7 @@
                                  FontSize="14" FontWeight="Normal"
                                  Text="{Binding DraftExpression, Mode=TwoWay}"
                                  AutomationProperties.Name="Open the context menu for available actions"
+                                 AutomationProperties.HelpText="{Binding ErrorMessage}"
                                  KeyDown="EquationTextBox_OnKeyDown"
                                  GotFocus="EquationTextBox_OnGotFocus"
                                  LostFocus="EquationTextBox_OnLostFocus"
@@ -248,7 +253,7 @@
                                                    LinearEditRequested="FormattedEquation_OnLinearEditRequested"
                                                    PointerPressed="FormattedEquation_OnPointerPressed" />
                         <StackPanel Grid.Column="2" Orientation="Horizontal"
-                                    IsVisible="{Binding ShowEquationActions}">
+                                    IsVisible="{Binding ShowStandardEquationActions}">
                           <Button x:Name="AnalyzeEquationButton" Classes="graphEquationAction"
                                   IsEnabled="{Binding CanAnalyze}"
                                   Click="AnalyzeEquation_OnClick"
@@ -279,15 +284,28 @@
                                 AutomationProperties.Name="Clear">
                           <TextBlock FontSize="20" FontWeight="Light" Text="×" />
                         </Button>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal"
+                                    IsVisible="{Binding ShowErrorIcon}">
+                          <TextBlock x:Name="EquationErrorIcon"
+                                     Width="32" VerticalAlignment="Center"
+                                     TextAlignment="Center"
+                                     Foreground="{DynamicResource GraphEquationErrorBorderBrush}"
+                                     FontFamily="{StaticResource CalculatorIconFont}"
+                                     FontSize="16" Text="&#xF736;"
+                                     ToolTip.Tip="{Binding ErrorMessage}" />
+                          <Button Classes="graphEquationErrorAction"
+                                  Click="RemoveEquation_OnClick"
+                                  AutomationProperties.Name="{Binding $parent[UserControl].DataContext.Graphing.Strings.RemoveEquationTooltip}"
+                                  ToolTip.Tip="{Binding $parent[UserControl].DataContext.Graphing.Strings.RemoveEquationTooltip}">
+                            <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="13"
+                                       Text="&#xE74D;" />
+                          </Button>
+                        </StackPanel>
                         <Border Grid.ColumnSpan="3" Classes="graphEquationOutline"
                                 IsHitTestVisible="False" CornerRadius="5"
                                 BorderBrush="{Binding TileColor}" BorderThickness="1" />
                       </Grid>
                     </Border>
-                    <TextBlock Grid.Row="1" Margin="54,2,4,5"
-                               Foreground="#FFFF6B6B" FontSize="11"
-                               Text="{Binding ErrorMessage}" TextWrapping="Wrap"
-                               IsVisible="{Binding HasError}" />
                   </Grid>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>

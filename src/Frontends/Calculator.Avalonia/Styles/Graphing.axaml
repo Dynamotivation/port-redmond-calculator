@@ -39,6 +39,14 @@
     <Setter Property="CornerRadius" Value="4" />
     <Setter Property="Opacity" Value="0" />
   </Style>
+  <Style Selector="Border.graphEquationCard.error">
+    <Setter Property="Background" Value="{DynamicResource GraphEquationErrorBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource GraphEquationErrorBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="Border.graphEquationCard.error.focused">
+    <Setter Property="Background" Value="{DynamicResource GraphEquationCardBrush}" />
+  </Style>
   <Style Selector="Border.graphEquationCard:pointerover Button.graphEquationAction:pointerover">
     <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaqueHoverBrush}" />
   </Style>
@@ -47,6 +55,25 @@
   </Style>
   <Style Selector="Border.graphEquationCard:pointerover Button.graphEquationAction">
     <Setter Property="Opacity" Value="1" />
+  </Style>
+  <Style Selector="Border.graphEquationCard Button.graphEquationErrorAction">
+    <Setter Property="Width" Value="32" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="MinWidth" Value="32" />
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Margin" Value="2" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="4" />
+  </Style>
+  <Style Selector="Border.graphEquationCard Button.graphEquationErrorAction:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaqueHoverBrush}" />
+  </Style>
+  <Style Selector="Border.graphEquationCard Button.graphEquationErrorAction:pressed">
+    <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaquePressedBrush}" />
   </Style>
   <Style Selector="Border.graphEquationCard Button.graphEquationClear">
     <Setter Property="Width" Value="32" />
@@ -71,6 +98,10 @@
     <Setter Property="Opacity" Value="1" />
   </Style>
   <Style Selector="Border.graphEquationCard.focused Border.graphEquationOutline">
+    <Setter Property="Opacity" Value="1" />
+  </Style>
+  <Style Selector="Border.graphEquationCard.error Border.graphEquationOutline">
+    <Setter Property="BorderBrush" Value="{DynamicResource GraphEquationErrorBorderBrush}" />
     <Setter Property="Opacity" Value="1" />
   </Style>
   <Style Selector="ToggleButton.graphEquationToggle Border.graphEquationTileShade">

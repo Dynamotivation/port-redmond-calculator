@@ -329,7 +329,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
                 appResources.GetString("copyEquationMenuItem.Text"),
                 appResources.GetString("pasteEquationMenuItem.Text"),
                 appResources.GetString("undoEquationMenuItem.Text"),
-                appResources.GetString("selectAllEquationMenuItem.Text")));
+                appResources.GetString("selectAllEquationMenuItem.Text"),
+                appResources.GetString("UnexpectedEndOfExpression")));
         DateCalculator = new DateCalculatorViewModel(
             new DateCalculatorStrings(
                 appResources.GetString("Date_DifferenceOption.Content"),

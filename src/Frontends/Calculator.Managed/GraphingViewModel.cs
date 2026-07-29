@@ -80,7 +80,8 @@ public sealed record GraphingStrings(
     string CopyEquationText = "Copy",
     string PasteEquationText = "Paste",
     string UndoEquationText = "Undo",
-    string SelectAllEquationText = "Select all");
+    string SelectAllEquationText = "Select all",
+    string UnexpectedEndOfExpression = "Unexpected end of expression");
 
 public sealed record GraphEquationRenderModel(
     uint ExpressionId,
@@ -94,6 +95,17 @@ public enum GraphLineStyle
     Solid,
     Dash,
     Dot,
+}
+
+public enum GraphInvalidationReason
+{
+    Geometry,
+    Appearance,
+}
+
+public sealed class GraphInvalidatedEventArgs(GraphInvalidationReason reason) : EventArgs
+{
+    public GraphInvalidationReason Reason { get; } = reason;
 }
 
 public sealed record GraphAnalysisDisplayValue(
@@ -138,6 +150,7 @@ public partial class GraphVariableViewModel(
 public partial class GraphEquationViewModel : ObservableObject
 {
     private readonly IMathSolver _solver;
+    private readonly GraphingStrings _strings;
     private IExpression? _parsedExpression;
     private IGraphExpressionEvaluator? _evaluator;
 
@@ -145,12 +158,13 @@ public partial class GraphEquationViewModel : ObservableObject
         IMathSolver solver,
         int functionIndex,
         string color,
-        string placeholder)
+        GraphingStrings strings)
     {
         _solver = solver;
+        _strings = strings;
         FunctionIndex = functionIndex;
         Color = color;
-        Placeholder = placeholder;
+        Placeholder = strings.EnterExpressionPlaceholder;
     }
 
     public int FunctionIndex { get; private set; }
@@ -184,6 +198,7 @@ public partial class GraphEquationViewModel : ObservableObject
     public partial string ErrorMessage { get; private set; } = string.Empty;
 
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+    public bool ShowErrorIcon => HasError && !IsEditing;
 
     [ObservableProperty]
     public partial bool IsValid { get; private set; }
@@ -197,19 +212,20 @@ public partial class GraphEquationViewModel : ObservableObject
         _parsedExpression?.Kind == GraphEquationKind.Inequality;
     public bool CanCustomizeLineStyle => !UsesAreaRendering;
     public GraphLineStyle EffectiveLineStyle =>
-        UsesAreaRendering ? GraphLineStyle.Dot : LineStyle;
+        UsesAreaRendering ? GraphLineStyle.Dash : LineStyle;
     public string FormattedExpression => _parsedExpression?.Latex ?? string.Empty;
     public bool ShowFormattedExpression => HasExpression && IsValid && !IsEditing;
     public bool ShowPlaceholder => string.IsNullOrEmpty(DraftExpression);
     public bool ShowEquationActions =>
         IsAllocated && (!IsEditing || string.IsNullOrWhiteSpace(DraftExpression));
+    public bool ShowStandardEquationActions => ShowEquationActions && !HasError;
     public bool ShowEditingClear =>
         IsEditing && !string.IsNullOrWhiteSpace(DraftExpression);
 
     [ObservableProperty]
     public partial bool IsEditing { get; set; }
 
-    public event EventHandler? EquationChanged;
+    public event EventHandler<GraphInvalidatedEventArgs>? EquationChanged;
 
     internal void SetFunctionIndex(int functionIndex)
     {
@@ -252,31 +268,42 @@ public partial class GraphEquationViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowEquationActions));
         OnPropertyChanged(nameof(TileColor));
         Parse();
-        if (UsesAreaRendering && LineStyle != GraphLineStyle.Dot)
+        if (UsesAreaRendering && LineStyle != GraphLineStyle.Dash)
         {
-            LineStyle = GraphLineStyle.Dot;
+            LineStyle = GraphLineStyle.Dash;
         }
         OnPropertyChanged(nameof(UsesAreaRendering));
         OnPropertyChanged(nameof(CanCustomizeLineStyle));
         OnPropertyChanged(nameof(EffectiveLineStyle));
         OnPropertyChanged(nameof(FormattedExpression));
         OnPropertyChanged(nameof(ShowFormattedExpression));
-        EquationChanged?.Invoke(this, EventArgs.Empty);
+        EquationChanged?.Invoke(
+            this,
+            new GraphInvalidatedEventArgs(GraphInvalidationReason.Geometry));
     }
 
     partial void OnIsEnabledChanged(bool value)
     {
         OnPropertyChanged(nameof(VisibilityAutomationName));
         OnPropertyChanged(nameof(TileColor));
-        EquationChanged?.Invoke(this, EventArgs.Empty);
+        EquationChanged?.Invoke(
+            this,
+            new GraphInvalidatedEventArgs(GraphInvalidationReason.Geometry));
     }
 
     partial void OnColorChanged(string value)
     {
         OnPropertyChanged(nameof(TileColor));
-        EquationChanged?.Invoke(this, EventArgs.Empty);
+        EquationChanged?.Invoke(
+            this,
+            new GraphInvalidatedEventArgs(GraphInvalidationReason.Appearance));
     }
-    partial void OnErrorMessageChanged(string value) => OnPropertyChanged(nameof(HasError));
+    partial void OnErrorMessageChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasError));
+        OnPropertyChanged(nameof(ShowErrorIcon));
+        OnPropertyChanged(nameof(ShowStandardEquationActions));
+    }
     partial void OnIsValidChanged(bool value)
     {
         OnPropertyChanged(nameof(CanAnalyze));
@@ -288,25 +315,34 @@ public partial class GraphEquationViewModel : ObservableObject
         OnPropertyChanged(nameof(FunctionIndexLabel));
         OnPropertyChanged(nameof(TileColor));
         OnPropertyChanged(nameof(ShowEquationActions));
+        OnPropertyChanged(nameof(ShowStandardEquationActions));
     }
     partial void OnDraftExpressionChanged(string value)
     {
         OnPropertyChanged(nameof(ShowPlaceholder));
         OnPropertyChanged(nameof(ShowEditingClear));
         OnPropertyChanged(nameof(ShowEquationActions));
+        OnPropertyChanged(nameof(ShowStandardEquationActions));
     }
     partial void OnIsEditingChanged(bool value)
     {
         OnPropertyChanged(nameof(ShowEquationActions));
+        OnPropertyChanged(nameof(ShowStandardEquationActions));
         OnPropertyChanged(nameof(ShowEditingClear));
         OnPropertyChanged(nameof(ShowFormattedExpression));
+        OnPropertyChanged(nameof(ShowErrorIcon));
     }
     partial void OnLineStyleChanged(GraphLineStyle value)
     {
         OnPropertyChanged(nameof(EffectiveLineStyle));
-        EquationChanged?.Invoke(this, EventArgs.Empty);
+        EquationChanged?.Invoke(
+            this,
+            new GraphInvalidatedEventArgs(GraphInvalidationReason.Appearance));
     }
-    partial void OnLineWidthChanged(double value) => EquationChanged?.Invoke(this, EventArgs.Empty);
+    partial void OnLineWidthChanged(double value) =>
+        EquationChanged?.Invoke(
+            this,
+            new GraphInvalidatedEventArgs(GraphInvalidationReason.Appearance));
 
     internal IEnumerable<string> GetVariables() => _parsedExpression?.Variables ?? [];
 
@@ -391,7 +427,12 @@ public partial class GraphEquationViewModel : ObservableObject
         }
         catch (GraphingParseException exception)
         {
-            ErrorMessage = exception.Message;
+            ErrorMessage = exception.ErrorCode switch
+            {
+                GraphingParseErrorCode.UnexpectedEndOfExpression =>
+                    _strings.UnexpectedEndOfExpression,
+                _ => exception.Message,
+            };
             IsValid = false;
         }
     }
@@ -450,7 +491,7 @@ public partial class GraphingViewModel : ObservableObject
         OnPropertyChanged(nameof(HasAnalysisError));
 
     public bool CanAddEquation => Equations.Count < EquationColors.Length;
-    public event EventHandler? GraphInvalidated;
+    public event EventHandler<GraphInvalidatedEventArgs>? GraphInvalidated;
 
     [RelayCommand(CanExecute = nameof(CanAddEquation))]
     private void AddEquation()
@@ -460,7 +501,7 @@ public partial class GraphingViewModel : ObservableObject
             _solver,
             functionIndex,
             GetNextUnusedColor(),
-            Strings.EnterExpressionPlaceholder);
+            Strings);
         equation.EquationChanged += OnEquationChanged;
         Equations.Add(equation);
         SelectedEquation = equation;
@@ -627,13 +668,20 @@ public partial class GraphingViewModel : ObservableObject
         AnalysisItems.Clear();
     }
 
-    private void OnEquationChanged(object? sender, EventArgs e)
+    private void OnEquationChanged(object? sender, GraphInvalidatedEventArgs e)
     {
         if (IsAnalysisVisible && ReferenceEquals(sender, SelectedEquation))
         {
             CloseAnalysis();
         }
-        RefreshGraph();
+        if (e.Reason == GraphInvalidationReason.Geometry)
+        {
+            RefreshGraph();
+        }
+        else
+        {
+            GraphInvalidated?.Invoke(this, e);
+        }
     }
 
     private void OnVariableValueChanged(object? sender, EventArgs e) => RefreshEvaluators();
@@ -682,7 +730,9 @@ public partial class GraphingViewModel : ObservableObject
         {
             equation.RebuildEvaluator(arguments);
         }
-        GraphInvalidated?.Invoke(this, EventArgs.Empty);
+        GraphInvalidated?.Invoke(
+            this,
+            new GraphInvalidatedEventArgs(GraphInvalidationReason.Geometry));
     }
 
     private GraphAnalysisDisplayItem ToDisplayItem(GraphAnalysisFeature feature)

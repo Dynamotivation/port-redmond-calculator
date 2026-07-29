@@ -45,7 +45,10 @@ public sealed class AngouriMathSolver : IMathSolver
             var rightText = normalized[(index + token.Length)..].Trim();
             if (leftText.Length == 0 || rightText.Length == 0)
             {
-                throw new GraphingParseException("Both sides of the equation are required.", index);
+                throw new GraphingParseException(
+                    string.Empty,
+                    index,
+                    GraphingParseErrorCode.UnexpectedEndOfExpression);
             }
 
             var left = MathS.FromString(leftText);
