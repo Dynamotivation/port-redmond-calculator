@@ -5,6 +5,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -22,8 +23,9 @@ internal static class GraphingInteractionTests
         ("editing clear button clears the committed equation", EditingClearButtonClearsEquation),
         ("invalid equation uses the native error presentation", InvalidEquationUsesNativeErrorPresentation),
         ("graphing selector flyouts insert tokens with square keys", SelectorFlyoutsInsertTokens),
-        ("graph options flyout is anchored and light dismissible", GraphOptionsFlyoutIsAnchoredAndLightDismissible),
+        ("graph options popup is anchored and dismissible", GraphOptionsPopupIsAnchoredAndDismissible),
         ("graph shortcuts use shared contextual scopes", GraphShortcutsUseSharedContextualScopes),
+        ("automatic graph view is a stable on off toggle", AutomaticGraphViewIsStableOnOffToggle),
         ("graph tracing matches Windows active cursor behavior", GraphTracingMatchesWindowsBehavior),
     ];
 
@@ -120,6 +122,12 @@ internal static class GraphingInteractionTests
             var typeset = window.GetVisualDescendants()
                 .OfType<EditableMathView>()
                 .First(mathView => ReferenceEquals(mathView.DataContext, equation));
+            Assert(
+                editor.TryFindResource("GraphEquationFont", out var fontResource)
+                && fontResource is FontFamily equationFont
+                && editor.FontFamily.Equals(equationFont)
+                && equationFont.Name.Contains("Latin Modern Math", StringComparison.Ordinal),
+                "The linear equation editor should use the same Latin Modern Math face as the typeset renderer.");
             Assert(
                 typeset.IsEffectivelyVisible && !editor.IsEffectivelyVisible,
                 "A committed equation should show its typeset presentation, not the linear editor.");
@@ -418,7 +426,7 @@ internal static class GraphingInteractionTests
         }
     }
 
-    private static void GraphOptionsFlyoutIsAnchoredAndLightDismissible()
+    private static void GraphOptionsPopupIsAnchoredAndDismissible()
     {
         Application.Current!.RequestedThemeVariant = ThemeVariant.Light;
         var window = new MainWindow(new AppSettings(
@@ -445,8 +453,8 @@ internal static class GraphingInteractionTests
             var graphView = window.GetVisualDescendants()
                 .OfType<GraphingCalculatorView>()
                 .Single();
-            var graphOptionsFlyout = graphOptionsButton.Flyout
-                ?? throw new InvalidOperationException("The graph options button has no flyout.");
+            var graphOptionsPopup = graphView.FindControl<Popup>("GraphOptionsPopup")
+                ?? throw new InvalidOperationException("The graph options popup is missing.");
             var graphOptionsPanel = graphView.FindControl<Border>("GraphOptionsPanel")
                 ?? throw new InvalidOperationException("The graph options panel is missing.");
             var plot = window.GetVisualDescendants().OfType<GraphCanvas>().Single();
@@ -457,35 +465,35 @@ internal static class GraphingInteractionTests
 
             Click(graphOptionsButton);
             Pump();
-            Assert(graphOptionsFlyout.IsOpen, "The graph options flyout did not open.");
+            Assert(graphOptionsPopup.IsOpen, "The graph options popup did not open.");
             var buttonBottom = graphOptionsButton.PointToScreen(
                 new Point(0, graphOptionsButton.Bounds.Height));
             var panelTop = graphOptionsPanel.PointToScreen(default);
             Assert(
                 panelTop.Y >= buttonBottom.Y,
-                "The graph options flyout should open below its invoking button.");
+                "The graph options popup should open below its invoking button.");
 
             var xMinimum = graphOptionsPanel.FindControl<TextBox>("XMinimumBox")
                 ?? throw new InvalidOperationException("The X minimum graph setting is missing.");
             xMinimum.Focus();
             window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, null);
             Pump();
-            Assert(!graphOptionsFlyout.IsOpen, "Escape did not dismiss the graph options flyout.");
+            Assert(!graphOptionsPopup.IsOpen, "Escape did not dismiss the graph options popup.");
 
             Click(graphOptionsButton);
             Pump();
             Click(graphOptionsButton);
             Pump();
             Assert(
-                !graphOptionsFlyout.IsOpen,
-                "Clicking the graph options button a second time did not dismiss its flyout.");
+                !graphOptionsPopup.IsOpen,
+                "Clicking the graph options button a second time did not dismiss its popup.");
 
             var widthBeforeZoom = plot.XMaximum - plot.XMinimum;
             Click(graphOptionsButton);
             Pump();
             Click(zoomInButton);
             Pump();
-            Assert(!graphOptionsFlyout.IsOpen, "Clicking outside did not dismiss the graph options flyout.");
+            Assert(!graphOptionsPopup.IsOpen, "Clicking outside did not dismiss the graph options popup.");
             Assert(
                 plot.XMaximum - plot.XMinimum < widthBeforeZoom,
                 "The click that dismissed graph options did not reach the underlying zoom button.");
@@ -567,7 +575,9 @@ internal static class GraphingInteractionTests
                 .Single();
             var graphOptionsButton = graphView.FindControl<Button>("GraphOptionsButton")
                 ?? throw new InvalidOperationException("The graph options button is missing.");
-            graphOptionsButton.Flyout?.ShowAt(graphOptionsButton);
+            var graphOptionsPopup = graphView.FindControl<Popup>("GraphOptionsPopup")
+                ?? throw new InvalidOperationException("The graph options popup is missing.");
+            graphOptionsPopup.IsOpen = true;
             Pump();
             var xMinimum = graphView.FindControl<TextBox>("XMinimumBox")
                 ?? throw new InvalidOperationException("The X minimum graph setting is missing.");
@@ -768,6 +778,71 @@ internal static class GraphingInteractionTests
                 window.MouseDown(center, MouseButton.Left, RawInputModifiers.None);
                 window.MouseUp(center, MouseButton.Left, RawInputModifiers.None);
             }
+        }
+        finally
+        {
+            window.Close();
+            Dispatcher.UIThread.RunJobs();
+        }
+    }
+
+    private static void AutomaticGraphViewIsStableOnOffToggle()
+    {
+        Application.Current!.RequestedThemeVariant = ThemeVariant.Light;
+        var window = new MainWindow(new AppSettings(
+            AppThemePreference.Light,
+            "Inter",
+            UseMicaEffect: false,
+            WindowCornerStyle.Windows11,
+            WindowControlStyle.Windows11))
+        {
+            Width = 1204,
+            Height = 720,
+        };
+
+        try
+        {
+            window.Show();
+            Pump();
+            window.KeyPressQwerty(PhysicalKey.Digit3, RawInputModifiers.Alt);
+            Pump();
+
+            var viewModel = (CalculatorViewModel)window.DataContext!;
+            var plot = window.GetVisualDescendants()
+                .OfType<GraphCanvas>()
+                .Single();
+            var button = window.GetVisualDescendants()
+                .OfType<ToggleButton>()
+                .Single(control => control.Name == "GraphViewButton");
+            var glyphs = button.GetVisualDescendants()
+                .OfType<TextBlock>()
+                .ToArray();
+
+            Assert(
+                glyphs.Length == 1
+                && glyphs[0].Text == "\uE45E"
+                && button.IsChecked == true,
+                "Automatic best fit should be the checked state with one stable toggle glyph.");
+            Assert(
+                Equals(ToolTip.GetTip(button), viewModel.Graphing.Strings.AutomaticViewTooltip),
+                "The toggle should be labelled as automatic best fit.");
+
+            plot.SetManualAdjustment(true);
+            Pump();
+            Assert(
+                glyphs[0].Text == "\uE45E"
+                && button.IsChecked != true,
+                "Manual view should be the unchecked state without replacing the toggle glyph.");
+            Assert(
+                Equals(ToolTip.GetTip(button), viewModel.Graphing.Strings.AutomaticViewTooltip),
+                "The toggle label should remain stable between states.");
+
+            plot.RefreshViewAutomatically();
+            Pump();
+            Assert(
+                glyphs[0].Text == "\uE45E"
+                && button.IsChecked == true,
+                "Returning to automatic best fit should restore the checked state.");
         }
         finally
         {

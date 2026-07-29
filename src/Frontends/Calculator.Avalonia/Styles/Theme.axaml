@@ -133,6 +133,7 @@
       </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
     <FontFamily x:Key="CalculatorIconFont">avares://Redmond%20Calculator/Assets/CalculatorIcons.ttf#Calculator Fluent Icons</FontFamily>
+    <FontFamily x:Key="GraphEquationFont">avares://Redmond%20Calculator/Assets/LatinModernMath-Regular.otf#Latin Modern Math</FontFamily>
     <DataTemplate x:Key="NavigationItemTemplate" x:DataType="managed:CalculatorNavigationItem" x:CompileBindings="False">
     <Button Classes="navigationItem"
             Classes.selected="{Binding IsSelected}"

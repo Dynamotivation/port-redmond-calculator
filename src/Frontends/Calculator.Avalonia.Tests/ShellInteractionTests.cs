@@ -22,6 +22,7 @@ internal static class ShellInteractionTests
         ("Alt+H toggles navigation pane", AltHTogglesNavigationPane),
         ("date navigation shortcuts select date calculation", DateNavigationShortcutsSelectDateCalculation),
         ("macOS graph shortcut uses unified binding and text", MacGraphShortcutUsesUnifiedBindingAndText),
+        ("about identifies this project's license and notices", AboutIdentifiesProjectLicenseAndNotices),
         ("opening shell surfaces transfers focus", OpeningShellSurfacesTransfersFocus),
     ];
 
@@ -173,6 +174,19 @@ internal static class ShellInteractionTests
             Dispatcher.UIThread.RunJobs();
         }
     }
+
+    private static void AboutIdentifiesProjectLicenseAndNotices() => Run((window, viewModel) =>
+    {
+        viewModel.OpenSettingsCommand.Execute(null);
+        Pump();
+
+        Assert(
+            viewModel.Settings.Strings.ProjectLicenseName == "MIT License",
+            "About should identify Redmond Calculator's MIT license");
+        Assert(
+            viewModel.Settings.Strings.ThirdPartyNoticesName == "Third-party notices",
+            "About should expose the packaged third-party notices");
+    });
 
     private static void Run(Action<MainWindow, CalculatorViewModel> body)
     {
