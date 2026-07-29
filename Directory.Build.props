@@ -3,6 +3,16 @@
     <MicrosoftCalculatorRoot Condition="'$(MicrosoftCalculatorRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)upstream/windows-calculator'))</MicrosoftCalculatorRoot>
   </PropertyGroup>
 
+  <!-- Avalonia brings this package in transitively only to run its build-time
+       statistics task. Make it a direct, asset-less dependency so NuGet's
+       nearest-wins resolution prevents that task from entering any project. -->
+  <ItemGroup>
+    <PackageReference Include="Avalonia.BuildServices"
+                      Version="11.3.2"
+                      ExcludeAssets="All"
+                      PrivateAssets="All" />
+  </ItemGroup>
+
   <Target Name="RequireMicrosoftCalculatorSubmodule"
           BeforeTargets="PrepareForBuild"
           Condition="!Exists('$(MicrosoftCalculatorRoot)/src/Calculator/Resources/en-US/Resources.resw')">

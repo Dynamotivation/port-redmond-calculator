@@ -155,9 +155,9 @@ public partial class GraphEquationViewModel : ObservableObject
 
     public int FunctionIndex { get; private set; }
     public string Placeholder { get; }
-    public string FunctionLabel => HasExpression ? $"f{ToSubscript(FunctionIndex + 1)}" : "f";
-    public string FunctionIndexLabel => HasExpression ? (FunctionIndex + 1).ToString() : string.Empty;
-    public string TileColor => !HasExpression || !IsEnabled ? "#A6A6A6" : Color;
+    public string FunctionLabel => IsAllocated ? $"f{ToSubscript(FunctionIndex + 1)}" : "f";
+    public string FunctionIndexLabel => IsAllocated ? (FunctionIndex + 1).ToString() : string.Empty;
+    public string TileColor => !IsAllocated || !IsEnabled ? "#A6A6A6" : Color;
     public string VisibilityAutomationName =>
         $"{(IsEnabled ? "Hide" : "Show")} equation {FunctionIndex + 1}";
     public bool CanToggleVisibility => HasExpression;
@@ -188,9 +188,15 @@ public partial class GraphEquationViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsValid { get; private set; }
 
+    [ObservableProperty]
+    public partial bool IsAllocated { get; private set; }
+
     public bool HasExpression => !string.IsNullOrWhiteSpace(Expression);
     public bool CanAnalyze => HasExpression && IsValid;
-    public bool ShowCommittedActions => HasExpression && !IsEditing;
+    public string FormattedExpression => _parsedExpression?.Latex ?? string.Empty;
+    public bool ShowFormattedExpression => HasExpression && IsValid && !IsEditing;
+    public bool ShowEquationActions =>
+        IsAllocated && (!IsEditing || string.IsNullOrWhiteSpace(DraftExpression));
     public bool ShowEditingClear =>
         IsEditing && !string.IsNullOrWhiteSpace(DraftExpression);
 
@@ -224,6 +230,10 @@ public partial class GraphEquationViewModel : ObservableObject
 
     partial void OnExpressionChanged(string value)
     {
+        if (!string.IsNullOrWhiteSpace(value) && !IsAllocated)
+        {
+            IsAllocated = true;
+        }
         if (!string.Equals(DraftExpression, value, StringComparison.Ordinal))
         {
             DraftExpression = value;
@@ -233,9 +243,11 @@ public partial class GraphEquationViewModel : ObservableObject
         OnPropertyChanged(nameof(FunctionIndexLabel));
         OnPropertyChanged(nameof(CanToggleVisibility));
         OnPropertyChanged(nameof(CanAnalyze));
-        OnPropertyChanged(nameof(ShowCommittedActions));
+        OnPropertyChanged(nameof(ShowEquationActions));
         OnPropertyChanged(nameof(TileColor));
         Parse();
+        OnPropertyChanged(nameof(FormattedExpression));
+        OnPropertyChanged(nameof(ShowFormattedExpression));
         EquationChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -252,13 +264,28 @@ public partial class GraphEquationViewModel : ObservableObject
         EquationChanged?.Invoke(this, EventArgs.Empty);
     }
     partial void OnErrorMessageChanged(string value) => OnPropertyChanged(nameof(HasError));
-    partial void OnIsValidChanged(bool value) => OnPropertyChanged(nameof(CanAnalyze));
-    partial void OnDraftExpressionChanged(string value) =>
+    partial void OnIsValidChanged(bool value)
+    {
+        OnPropertyChanged(nameof(CanAnalyze));
+        OnPropertyChanged(nameof(ShowFormattedExpression));
+    }
+    partial void OnIsAllocatedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(FunctionLabel));
+        OnPropertyChanged(nameof(FunctionIndexLabel));
+        OnPropertyChanged(nameof(TileColor));
+        OnPropertyChanged(nameof(ShowEquationActions));
+    }
+    partial void OnDraftExpressionChanged(string value)
+    {
         OnPropertyChanged(nameof(ShowEditingClear));
+        OnPropertyChanged(nameof(ShowEquationActions));
+    }
     partial void OnIsEditingChanged(bool value)
     {
-        OnPropertyChanged(nameof(ShowCommittedActions));
+        OnPropertyChanged(nameof(ShowEquationActions));
         OnPropertyChanged(nameof(ShowEditingClear));
+        OnPropertyChanged(nameof(ShowFormattedExpression));
     }
     partial void OnLineStyleChanged(GraphLineStyle value) => EquationChanged?.Invoke(this, EventArgs.Empty);
     partial void OnLineWidthChanged(double value) => EquationChanged?.Invoke(this, EventArgs.Empty);
@@ -441,7 +468,7 @@ public partial class GraphingViewModel : ObservableObject
             return;
         }
 
-        if (CanAddEquation && Equations.All(item => item.HasExpression))
+        if (CanAddEquation && Equations.All(item => item.IsAllocated))
         {
             AddEquation();
             return;
@@ -480,8 +507,8 @@ public partial class GraphingViewModel : ObservableObject
     private void AssignUnusedColorsToPlaceholders()
     {
         var assignedEquations = new List<GraphEquationViewModel>(
-            Equations.Where(item => item.HasExpression));
-        foreach (var placeholder in Equations.Where(item => !item.HasExpression))
+            Equations.Where(item => item.IsAllocated));
+        foreach (var placeholder in Equations.Where(item => !item.IsAllocated))
         {
             placeholder.Color = GetNextUnusedColor(assignedEquations);
             assignedEquations.Add(placeholder);
@@ -495,7 +522,7 @@ public partial class GraphingViewModel : ObservableObject
             return false;
         }
 
-        var convertedPlaceholder = !equation.HasExpression;
+        var convertedPlaceholder = !equation.IsAllocated;
         if (!equation.CommitDraft() || !convertedPlaceholder
             || !ReferenceEquals(Equations.LastOrDefault(), equation)
             || !AddEquationCommand.CanExecute(null))

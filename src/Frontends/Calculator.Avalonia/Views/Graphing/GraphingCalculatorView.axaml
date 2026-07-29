@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:managed="using:Calculator.Managed"
              xmlns:graphing="using:Calculator.Avalonia.Views.Graphing"
+             xmlns:math="clr-namespace:CSharpMath.Avalonia;assembly=CSharpMath.Avalonia"
              x:Class="Calculator.Avalonia.Views.Graphing.GraphingCalculatorView"
              x:DataType="managed:CalculatorViewModel"
              IsVisible="{Binding IsGraphingMode}">
@@ -209,8 +210,10 @@
                         <TextBox x:Name="EquationExpressionTextBox"
                                  Grid.Column="1" Height="44" Padding="10,0"
                                  Classes="graphEquationInput"
+                                 IsVisible="{Binding !ShowFormattedExpression}"
                                  VerticalContentAlignment="Center"
                                  Background="Transparent" BorderThickness="0"
+                                 FontFamily="STIX Two Math, Cambria Math, Times New Roman"
                                  FontSize="14" FontWeight="Normal"
                                  Text="{Binding DraftExpression, Mode=TwoWay}"
                                  PlaceholderText="{Binding Placeholder}"
@@ -226,8 +229,18 @@
                             <SolidColorBrush x:Key="TextControlBorderBrushDisabled" Color="Transparent" />
                           </TextBox.Resources>
                         </TextBox>
+                        <math:MathView Grid.Column="1"
+                                       Height="44" Margin="10,0"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Center"
+                                       IsVisible="{Binding ShowFormattedExpression}"
+                                       LaTeX="{Binding FormattedExpression}"
+                                       FontSize="16"
+                                       TextColor="{DynamicResource ChromeForegroundColor}"
+                                       DisplayErrorInline="False"
+                                       PointerPressed="FormattedEquation_OnPointerPressed" />
                         <StackPanel Grid.Column="2" Orientation="Horizontal"
-                                    IsVisible="{Binding ShowCommittedActions}">
+                                    IsVisible="{Binding ShowEquationActions}">
                           <Button x:Name="AnalyzeEquationButton" Classes="graphEquationAction"
                                   IsEnabled="{Binding CanAnalyze}"
                                   Click="AnalyzeEquation_OnClick"
@@ -253,6 +266,7 @@
                         </StackPanel>
                         <Button Grid.Column="2" Classes="graphEquationClear"
                                 IsVisible="{Binding ShowEditingClear}"
+                                Focusable="False"
                                 Click="ClearEditingEquation_OnClick"
                                 AutomationProperties.Name="Clear">
                           <TextBlock FontSize="20" FontWeight="Light" Text="×" />
@@ -339,7 +353,8 @@
           <Grid Grid.Row="1" Margin="2,0,2,2" RowDefinitions="50,*">
             <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
               <StackPanel Orientation="Horizontal">
-                <Button x:Name="TrigButton" Classes="graphSelectorButton">
+                <Button x:Name="TrigButton" Classes="graphSelectorButton"
+                        Click="SelectorButton_OnClick">
                   <Button.Content>
                     <StackPanel Orientation="Horizontal">
                       <TextBlock Margin="0,2,8,0" VerticalAlignment="Center"
@@ -353,22 +368,37 @@
                   </Button.Content>
                   <Button.Flyout>
                     <Flyout Placement="Top">
-                      <Grid Width="264" Height="96" RowDefinitions="*,*" ColumnDefinitions="64,*,*,*">
-                        <ToggleButton x:Name="TrigSecondButton" Content="2nd" Click="TrigModifier_OnClick"
+                      <UniformGrid Columns="4" Rows="2" Width="200" Height="100">
+                        <ToggleButton x:Name="TrigSecondButton" Classes="graphFlyoutKey"
+                                      Content="2nd" Click="TrigModifier_OnClick"
                                       AutomationProperties.Name="Inverse function" />
-                        <ToggleButton x:Name="TrigHypButton" Grid.Row="1" Content="hyp" Click="TrigModifier_OnClick"
+                        <Button x:Name="TrigSinButton" Classes="graphFlyoutKey"
+                                Content="sin" Tag="sin(" Click="InputButton_OnClick"
+                                AutomationProperties.Name="Sine" />
+                        <Button x:Name="TrigCosButton" Classes="graphFlyoutKey"
+                                Content="cos" Tag="cos(" Click="InputButton_OnClick"
+                                AutomationProperties.Name="Cosine" />
+                        <Button x:Name="TrigTanButton" Classes="graphFlyoutKey"
+                                Content="tan" Tag="tan(" Click="InputButton_OnClick"
+                                AutomationProperties.Name="Tangent" />
+                        <ToggleButton x:Name="TrigHypButton" Classes="graphFlyoutKey"
+                                      Content="hyp" Click="TrigModifier_OnClick"
                                       AutomationProperties.Name="Hyperbolic function" />
-                        <Button x:Name="TrigSinButton" Grid.Column="1" Content="sin" Tag="sin(" Click="InputButton_OnClick" AutomationProperties.Name="Sine" />
-                        <Button x:Name="TrigCosButton" Grid.Column="2" Content="cos" Tag="cos(" Click="InputButton_OnClick" AutomationProperties.Name="Cosine" />
-                        <Button x:Name="TrigTanButton" Grid.Column="3" Content="tan" Tag="tan(" Click="InputButton_OnClick" AutomationProperties.Name="Tangent" />
-                        <Button x:Name="TrigSecButton" Grid.Row="1" Grid.Column="1" Content="sec" Tag="sec(" Click="InputButton_OnClick" AutomationProperties.Name="Secant" />
-                        <Button x:Name="TrigCscButton" Grid.Row="1" Grid.Column="2" Content="csc" Tag="csc(" Click="InputButton_OnClick" AutomationProperties.Name="Cosecant" />
-                        <Button x:Name="TrigCotButton" Grid.Row="1" Grid.Column="3" Content="cot" Tag="cot(" Click="InputButton_OnClick" AutomationProperties.Name="Cotangent" />
-                      </Grid>
+                        <Button x:Name="TrigSecButton" Classes="graphFlyoutKey"
+                                Content="sec" Tag="sec(" Click="InputButton_OnClick"
+                                AutomationProperties.Name="Secant" />
+                        <Button x:Name="TrigCscButton" Classes="graphFlyoutKey"
+                                Content="csc" Tag="csc(" Click="InputButton_OnClick"
+                                AutomationProperties.Name="Cosecant" />
+                        <Button x:Name="TrigCotButton" Classes="graphFlyoutKey"
+                                Content="cot" Tag="cot(" Click="InputButton_OnClick"
+                                AutomationProperties.Name="Cotangent" />
+                      </UniformGrid>
                     </Flyout>
                   </Button.Flyout>
                 </Button>
-                <Button Classes="graphSelectorButton">
+                <Button x:Name="InequalitiesButton" Classes="graphSelectorButton"
+                        Click="SelectorButton_OnClick">
                   <Button.Content>
                     <StackPanel Orientation="Horizontal">
                       <TextBlock Margin="0,2,8,0" VerticalAlignment="Center"
@@ -382,17 +412,27 @@
                   </Button.Content>
                   <Button.Flyout>
                     <Flyout Placement="Top">
-                      <UniformGrid Columns="5" Width="290" Height="58">
-                        <Button Content="&lt;" Tag="&lt;" Click="InputButton_OnClick" AutomationProperties.Name="Less than" />
-                        <Button Content="≤" Tag="&lt;=" Click="InputButton_OnClick" AutomationProperties.Name="Less than or equal" />
-                        <Button Content="=" Tag="=" Click="InputButton_OnClick" AutomationProperties.Name="Equal" />
-                        <Button Content="≥" Tag=">=" Click="InputButton_OnClick" AutomationProperties.Name="Greater than or equal" />
-                        <Button Content=">" Tag=">" Click="InputButton_OnClick" AutomationProperties.Name="Greater than" />
+                      <UniformGrid Columns="5" Width="250" Height="50">
+                        <Button x:Name="LessThanButton" Classes="graphFlyoutKey"
+                                Content="&lt;" Tag="&lt;" Click="InputButton_OnClick"
+                                AutomationProperties.Name="Less than" />
+                        <Button Classes="graphFlyoutKey" Content="≤" Tag="&lt;="
+                                Click="InputButton_OnClick"
+                                AutomationProperties.Name="Less than or equal" />
+                        <Button Classes="graphFlyoutKey" Content="=" Tag="="
+                                Click="InputButton_OnClick" AutomationProperties.Name="Equal" />
+                        <Button Classes="graphFlyoutKey" Content="≥" Tag=">="
+                                Click="InputButton_OnClick"
+                                AutomationProperties.Name="Greater than or equal" />
+                        <Button Classes="graphFlyoutKey" Content=">" Tag=">"
+                                Click="InputButton_OnClick"
+                                AutomationProperties.Name="Greater than" />
                       </UniformGrid>
                     </Flyout>
                   </Button.Flyout>
                 </Button>
-                <Button Classes="graphSelectorButton">
+                <Button x:Name="FunctionsButton" Classes="graphSelectorButton"
+                        Click="SelectorButton_OnClick">
                   <Button.Content>
                     <StackPanel Orientation="Horizontal">
                       <TextBlock Margin="0,2,8,0" VerticalAlignment="Center"
@@ -406,10 +446,14 @@
                   </Button.Content>
                   <Button.Flyout>
                     <Flyout Placement="Top">
-                      <UniformGrid Columns="3" Width="194" Height="58">
-                        <Button Content="|x|" Tag="abs(" Click="InputButton_OnClick" AutomationProperties.Name="Absolute value" />
-                        <Button Content="⌊x⌋" Tag="floor(" Click="InputButton_OnClick" AutomationProperties.Name="Floor" />
-                        <Button Content="⌈x⌉" Tag="ceil(" Click="InputButton_OnClick" AutomationProperties.Name="Ceiling" />
+                      <UniformGrid Columns="3" Width="150" Height="50">
+                        <Button x:Name="AbsoluteValueButton" Classes="graphFlyoutKey"
+                                Content="|x|" Tag="abs(" Click="InputButton_OnClick"
+                                AutomationProperties.Name="Absolute value" />
+                        <Button Classes="graphFlyoutKey" Content="⌊x⌋" Tag="floor("
+                                Click="InputButton_OnClick" AutomationProperties.Name="Floor" />
+                        <Button Classes="graphFlyoutKey" Content="⌈x⌉" Tag="ceil("
+                                Click="InputButton_OnClick" AutomationProperties.Name="Ceiling" />
                       </UniformGrid>
                     </Flyout>
                   </Button.Flyout>

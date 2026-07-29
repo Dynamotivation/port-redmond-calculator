@@ -38,7 +38,8 @@
         <BoxShadows x:Key="OperatorButtonShadow">0 1 2 0 #28000000</BoxShadows>
         <BoxShadows x:Key="OperatorButtonPressedShadow">0 0 1 0 #18000000</BoxShadows>
         <SolidColorBrush x:Key="ChromeHoverBrush" Color="#34343B" />
-        <SolidColorBrush x:Key="ChromeForegroundBrush" Color="#F5F5F5" />
+        <Color x:Key="ChromeForegroundColor">#F5F5F5</Color>
+        <SolidColorBrush x:Key="ChromeForegroundBrush" Color="{StaticResource ChromeForegroundColor}" />
         <SolidColorBrush x:Key="SettingsSecondaryForegroundBrush" Color="#C7C7C7" />
         <SolidColorBrush x:Key="CalculatorBorderBrush" Color="#505158" />
         <SolidColorBrush x:Key="SettingsCardBorderBrush" Color="#80505158" />
@@ -51,6 +52,8 @@
         <SolidColorBrush x:Key="AccentButtonBrush" Color="#4CC2FF" />
         <SolidColorBrush x:Key="AccentButtonHoverBrush" Color="#65CAFA" />
         <SolidColorBrush x:Key="AccentButtonPressedBrush" Color="#36A9E2" />
+        <SolidColorBrush x:Key="GraphModeSwitchTrackBrush" Color="#40000000" />
+        <SolidColorBrush x:Key="GraphModeSwitchSelectedForegroundBrush" Color="#FF000000" />
         <SolidColorBrush x:Key="GraphPlotBackgroundBrush" Color="#FF202020" />
         <SolidColorBrush x:Key="GraphEquationPanelBrush" Color="#DD202020" />
         <SolidColorBrush x:Key="GraphEquationCardBrush" Color="#E62B2B2B" />
@@ -100,7 +103,8 @@
         <BoxShadows x:Key="OperatorButtonShadow">0 0 0 0 #00000000</BoxShadows>
         <BoxShadows x:Key="OperatorButtonPressedShadow">0 0 0 0 #00000000</BoxShadows>
         <SolidColorBrush x:Key="ChromeHoverBrush" Color="#0F000000" />
-        <SolidColorBrush x:Key="ChromeForegroundBrush" Color="#1A1A1A" />
+        <Color x:Key="ChromeForegroundColor">#1A1A1A</Color>
+        <SolidColorBrush x:Key="ChromeForegroundBrush" Color="{StaticResource ChromeForegroundColor}" />
         <SolidColorBrush x:Key="SettingsSecondaryForegroundBrush" Color="#5E5E5E" />
         <SolidColorBrush x:Key="CalculatorBorderBrush" Color="#D0D0D0" />
         <SolidColorBrush x:Key="SettingsCardBorderBrush" Color="#80CCCCCC" />
@@ -113,6 +117,8 @@
         <SolidColorBrush x:Key="AccentButtonBrush" Color="#0067C0" />
         <SolidColorBrush x:Key="AccentButtonHoverBrush" Color="#1975C5" />
         <SolidColorBrush x:Key="AccentButtonPressedBrush" Color="#005A9E" />
+        <SolidColorBrush x:Key="GraphModeSwitchTrackBrush" Color="#60FFFFFF" />
+        <SolidColorBrush x:Key="GraphModeSwitchSelectedForegroundBrush" Color="#FFFFFFFF" />
         <SolidColorBrush x:Key="GraphPlotBackgroundBrush" Color="#FFF9F9F9" />
         <SolidColorBrush x:Key="GraphEquationPanelBrush" Color="#DDF9F9F9" />
         <SolidColorBrush x:Key="GraphEquationCardBrush" Color="#E6FBFBFB" />

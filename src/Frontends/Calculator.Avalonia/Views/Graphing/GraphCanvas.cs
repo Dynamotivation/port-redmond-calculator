@@ -306,17 +306,23 @@ public sealed class GraphCanvas : Control
     private void DrawGrid(DrawingContext context)
     {
         var gridPen = new Pen(GridBrush ?? Brushes.Gray, 1);
+        var numberedGridPen = new Pen(GridBrush ?? Brushes.Gray, 1.5);
         var axisPen = new Pen(AxisBrush ?? Brushes.Black, 1.25);
         var xDivisions = Math.Clamp(Bounds.Width / 40, 4, 20);
         var yDivisions = Math.Clamp(Bounds.Height / 40, 4, 20);
         var xStep = NiceStep((_xMaximum - _xMinimum) / xDivisions);
         var yStep = NiceStep((_yMaximum - _yMinimum) / yDivisions);
+        var numberedXStep = NiceStep((_xMaximum - _xMinimum) / 4);
+        var numberedYStep = NiceStep((_yMaximum - _yMinimum) / 4);
 
         var firstX = Math.Ceiling(_xMinimum / xStep) * xStep;
         for (var x = firstX; x <= _xMaximum; x += xStep)
         {
             var screenX = GraphToScreenX(x);
-            context.DrawLine(Math.Abs(x) < xStep * 1e-6 ? axisPen : gridPen,
+            var pen = Math.Abs(x) < xStep * 1e-6
+                ? axisPen
+                : IsStepMultiple(x, numberedXStep) ? numberedGridPen : gridPen;
+            context.DrawLine(pen,
                 new Point(screenX, 0),
                 new Point(screenX, Bounds.Height));
         }
@@ -325,15 +331,24 @@ public sealed class GraphCanvas : Control
         for (var y = firstY; y <= _yMaximum; y += yStep)
         {
             var screenY = GraphToScreenY(y);
-            context.DrawLine(Math.Abs(y) < yStep * 1e-6 ? axisPen : gridPen,
+            var pen = Math.Abs(y) < yStep * 1e-6
+                ? axisPen
+                : IsStepMultiple(y, numberedYStep) ? numberedGridPen : gridPen;
+            context.DrawLine(pen,
                 new Point(0, screenY),
                 new Point(Bounds.Width, screenY));
         }
 
-        DrawAxisDecorations(context, xStep, yStep);
+        DrawAxisDecorations(context);
     }
 
-    private void DrawAxisDecorations(DrawingContext context, double xStep, double yStep)
+    private static bool IsStepMultiple(double value, double step)
+    {
+        var multiple = value / step;
+        return Math.Abs(multiple - Math.Round(multiple)) < 1e-6;
+    }
+
+    private void DrawAxisDecorations(DrawingContext context)
     {
         var axisBrush = AxisBrush ?? Brushes.Black;
         var axisPen = new Pen(axisBrush, 1.25);
