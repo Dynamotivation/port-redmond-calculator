@@ -221,7 +221,6 @@
                                  Text="{Binding DraftExpression, Mode=TwoWay}"
                                  AutomationProperties.Name="Open the context menu for available actions"
                                  AutomationProperties.HelpText="{Binding ErrorMessage}"
-                                 KeyDown="EquationTextBox_OnKeyDown"
                                  GotFocus="EquationTextBox_OnGotFocus"
                                  LostFocus="EquationTextBox_OnLostFocus"
                                  Loaded="EquationTextBox_OnLoaded">

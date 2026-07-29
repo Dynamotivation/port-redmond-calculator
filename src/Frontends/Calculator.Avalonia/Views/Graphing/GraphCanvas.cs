@@ -37,6 +37,7 @@ public sealed class GraphCanvas : Control
     private readonly DispatcherTimer _inertiaTimer;
     private bool _isTracing;
     private bool _isManualAdjustment;
+    private int _traceEquationIndex;
     private Point? _traceScreenPoint;
     private string _traceText = string.Empty;
     private double _xMinimum = DefaultMinimum;
@@ -112,10 +113,50 @@ public sealed class GraphCanvas : Control
         }
         else
         {
+            _traceEquationIndex = 0;
             UpdateTrace(new Point(GraphToScreenX(0), GraphToScreenY(0)));
         }
         TraceChanged?.Invoke(this, EventArgs.Empty);
         InvalidateVisual();
+    }
+
+    public bool MoveTrace(string direction, bool fine)
+    {
+        if (!_isTracing)
+        {
+            return false;
+        }
+
+        var equations = ViewModel?.GetRenderableEquations()
+            .Where(model => model.Evaluator.Kind == GraphEquationKind.Explicit)
+            .ToArray() ?? [];
+        if (equations.Length == 0)
+        {
+            return false;
+        }
+
+        var x = _traceScreenPoint?.X ?? GraphToScreenX(0);
+        switch (direction)
+        {
+            case "LEFT":
+                x -= Math.Max(1, Bounds.Width * (fine ? 0.0025 : 0.01));
+                break;
+            case "RIGHT":
+                x += Math.Max(1, Bounds.Width * (fine ? 0.0025 : 0.01));
+                break;
+            case "UP":
+                _traceEquationIndex =
+                    (_traceEquationIndex - 1 + equations.Length) % equations.Length;
+                break;
+            case "DOWN":
+                _traceEquationIndex = (_traceEquationIndex + 1) % equations.Length;
+                break;
+            default:
+                return false;
+        }
+
+        UpdateTrace(new Point(Math.Clamp(x, 0, Math.Max(0, Bounds.Width)), 0));
+        return true;
     }
 
     public void SetManualAdjustment(bool enabled)
@@ -483,9 +524,10 @@ public sealed class GraphCanvas : Control
 
     private void UpdateTrace(Point pointerPosition)
     {
-        var equation = ViewModel?.GetRenderableEquations()
-            .FirstOrDefault(model => model.Evaluator.Kind == GraphEquationKind.Explicit);
-        if (equation is null)
+        var equations = ViewModel?.GetRenderableEquations()
+            .Where(model => model.Evaluator.Kind == GraphEquationKind.Explicit)
+            .ToArray() ?? [];
+        if (equations.Length == 0)
         {
             _traceScreenPoint = null;
             _traceText = string.Empty;
@@ -494,6 +536,8 @@ public sealed class GraphCanvas : Control
             return;
         }
 
+        _traceEquationIndex = Math.Clamp(_traceEquationIndex, 0, equations.Length - 1);
+        var equation = equations[_traceEquationIndex];
         var x = ScreenToGraphX(pointerPosition.X);
         var y = SafeEvaluate(() => equation.Evaluator.EvaluateExplicit(x));
         if (!double.IsFinite(y))

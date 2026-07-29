@@ -1386,6 +1386,17 @@
               "Control"
             ]
           }
+        ],
+        "macOS": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "C"
+            },
+            "modifiers": [
+              "Command"
+            ]
+          }
         ]
       }
     },
@@ -1405,7 +1416,8 @@
               "Control"
             ]
           }
-        ]
+        ],
+        "macOS": []
       }
     },
     {
@@ -1422,6 +1434,17 @@
             },
             "modifiers": [
               "Control"
+            ]
+          }
+        ],
+        "macOS": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "V"
+            },
+            "modifiers": [
+              "Command"
             ]
           }
         ]
@@ -1443,7 +1466,8 @@
               "Shift"
             ]
           }
-        ]
+        ],
+        "macOS": []
       }
     },
     {
@@ -2194,6 +2218,107 @@
               "Control"
             ]
           }
+        ],
+        "macOS": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "HOME"
+            },
+            "modifiers": [
+              "Command"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "graph.zoom.in",
+      "scope": "graphing",
+      "source": "HardCodedControl",
+      "description": "Zoom in",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "+"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ],
+        "macOS": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "+"
+            },
+            "modifiers": [
+              "Command"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "graph.zoom.out",
+      "scope": "graphing",
+      "source": "HardCodedControl",
+      "description": "Zoom out",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "-"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ],
+        "macOS": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "-"
+            },
+            "modifiers": [
+              "Command"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "graph.view.reset",
+      "scope": "graphing",
+      "source": "HardCodedControl",
+      "description": "Refresh view automatically",
+      "bindings": {
+        "default": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "0"
+            },
+            "modifiers": [
+              "Control"
+            ]
+          }
+        ],
+        "macOS": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "0"
+            },
+            "modifiers": [
+              "Command"
+            ]
+          }
         ]
       }
     },
@@ -2384,6 +2509,17 @@
               "Control"
             ]
           }
+        ],
+        "macOS": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "C"
+            },
+            "modifiers": [
+              "Command"
+            ]
+          }
         ]
       }
     },
@@ -2403,7 +2539,8 @@
               "Control"
             ]
           }
-        ]
+        ],
+        "macOS": []
       }
     },
     {
@@ -2420,6 +2557,17 @@
             },
             "modifiers": [
               "Control"
+            ]
+          }
+        ],
+        "macOS": [
+          {
+            "key": {
+              "kind": "Named",
+              "value": "V"
+            },
+            "modifiers": [
+              "Command"
             ]
           }
         ]
@@ -2441,7 +2589,8 @@
               "Shift"
             ]
           }
-        ]
+        ],
+        "macOS": []
       }
     },
     {

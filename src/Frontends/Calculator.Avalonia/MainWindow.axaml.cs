@@ -43,6 +43,14 @@ public partial class MainWindow : Window
     {
         "graphing",
     };
+    private readonly IReadOnlySet<string> _graphEquationInputShortcutScope = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "equationInput",
+    };
+    private readonly IReadOnlySet<string> _graphSettingsShortcutScope = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "graphSettings",
+    };
     private readonly IReadOnlySet<string> _navigationShortcutScope = new HashSet<string>(StringComparer.Ordinal)
     {
         "navigation",
@@ -59,31 +67,33 @@ public partial class MainWindow : Window
     {
     }
 
-    internal MainWindow(AppSettings settings, bool enableNativeEffects = true)
+    internal MainWindow(
+        AppSettings settings,
+        bool enableNativeEffects = true,
+        ShortcutPlatform? shortcutPlatformOverride = null)
     {
         InitializeComponent();
         var appearance = settings.ToPlatformAppearance();
         _settings = settings;
+        var shortcutPlatform = shortcutPlatformOverride ?? DetectShortcutPlatform();
+        _shortcutService = new ShortcutService(shortcutPlatform);
+        _shortcutRegistrations = ShortcutCatalogLoader.LoadBuiltIn().RegisterAll(_shortcutService);
         _viewModel = new CalculatorViewModel(
             settings.ThemePreference,
             appearance,
             OperatingSystem.IsMacOS(),
             availableFontFamilies: GetInstalledFontFamilyNames(),
-            initialFontFamily: settings.FontFamily);
+            initialFontFamily: settings.FontFamily,
+            shortcutTextRewriter: (shortcutId, localizedText) =>
+                _shortcutService.RewriteText(
+                    shortcutId,
+                    localizedText,
+                    ShortcutTextRewriteMode.ReplaceOrAppend));
         _viewModel.Settings.ThemePreferenceChanged += OnThemePreferenceChanged;
         _viewModel.Settings.FontPreferenceChanged += OnFontPreferenceChanged;
         _viewModel.Settings.PlatformAppearanceChanged += OnAppearancePreferencesChanged;
         DataContext = _viewModel;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
-        var shortcutPlatform = OperatingSystem.IsWindows()
-            ? ShortcutPlatform.Windows
-            : OperatingSystem.IsMacOS()
-                ? ShortcutPlatform.MacOS
-                : OperatingSystem.IsLinux()
-                    ? ShortcutPlatform.Linux
-                    : ShortcutPlatform.Unknown;
-        _shortcutService = new ShortcutService(shortcutPlatform);
-        _shortcutRegistrations = ShortcutCatalogLoader.LoadBuiltIn().RegisterAll(_shortcutService);
         AddHandler(KeyDownEvent, OnCalculatorKeyDown, RoutingStrategies.Tunnel);
         AddHandler(KeyUpEvent, OnCalculatorKeyUp, RoutingStrategies.Tunnel);
         TitleBarChrome.DragRequested += TitleBarChrome_OnDragRequested;
@@ -124,6 +134,15 @@ public partial class MainWindow : Window
             _viewModel.Dispose();
         };
     }
+
+    private static ShortcutPlatform DetectShortcutPlatform() =>
+        OperatingSystem.IsWindows()
+            ? ShortcutPlatform.Windows
+            : OperatingSystem.IsMacOS()
+                ? ShortcutPlatform.MacOS
+                : OperatingSystem.IsLinux()
+                    ? ShortcutPlatform.Linux
+                    : ShortcutPlatform.Unknown;
 
     private void UpdateResponsiveCalculatorLayout(double width, double height)
     {
@@ -323,7 +342,13 @@ public partial class MainWindow : Window
         }
         else if (_viewModel.IsGraphingMode)
         {
-            result = ProcessShortcut(input, _graphingShortcutScope);
+            var graphScope = e.Source switch
+            {
+                TextBox { Name: "EquationExpressionTextBox" } => _graphEquationInputShortcutScope,
+                TextBox => _graphSettingsShortcutScope,
+                _ => _graphingShortcutScope,
+            };
+            result = ProcessShortcut(input, graphScope);
         }
         else
         {
@@ -339,7 +364,7 @@ public partial class MainWindow : Window
         var dispatched = _viewModel.IsUnitConverterMode
             ? _viewModel.Converter.TryDispatchShortcut(match.ShortcutId)
             : _viewModel.IsGraphingMode
-                ? DispatchGraphingShortcut(match.ShortcutId)
+                ? DispatchGraphingShortcut(match)
                 : DispatchCalculatorShortcut(match.ShortcutId);
         if (dispatched)
         {
@@ -367,27 +392,8 @@ public partial class MainWindow : Window
 
     private ShortcutProcessResult ProcessShortcut(
         ShortcutInput input,
-        IReadOnlySet<string> scope)
-    {
-        var result = _shortcutService.Process(input, scope);
-        if (result.WasMatched
-            || !OperatingSystem.IsMacOS()
-            || !input.Gesture.Modifiers.HasFlag(ShortcutModifiers.Command)
-            || input.Gesture.Key.Value is not ("C" or "V"))
-        {
-            return result;
-        }
-
-        // The source catalog intentionally preserves Microsoft's Ctrl+C/V
-        // declarations. At the platform boundary only, treat native Command as
-        // Control for those two editing commands.
-        var normalizedModifiers = (input.Gesture.Modifiers & ~ShortcutModifiers.Command)
-            | ShortcutModifiers.Control;
-        var normalizedInput = new ShortcutInput(
-            new ShortcutGesture(input.Gesture.Key, normalizedModifiers),
-            input.IsRepeat);
-        return _shortcutService.Process(normalizedInput, scope);
-    }
+        IReadOnlySet<string> scope) =>
+        _shortcutService.Process(input, scope);
 
     private void OnCalculatorKeyUp(object? sender, KeyEventArgs e)
     {
@@ -486,11 +492,14 @@ public partial class MainWindow : Window
             {
                 shortcutKey = ShortcutKey.Named(symbol.ToUpperInvariant());
             }
-            if (!hasCommandModifier && !isLetterKey)
+            if (!isLetterKey
+                && shortcutKey.Value.Length == 1
+                && !char.IsLetterOrDigit(shortcutKey.Value[0]))
             {
                 // KeySymbol already contains the layout-resolved shifted glyph
-                // (for example '+' or '%'); UWP shortcut resources describe
-                // those glyphs without a separate Shift modifier.
+                // (for example '+' or '%'). The catalog describes the semantic
+                // glyph, so Shift is not a second shortcut modifier even when
+                // Control or Command is also held.
                 modifiers &= ~ShortcutModifiers.Shift;
             }
         }
@@ -538,11 +547,21 @@ public partial class MainWindow : Window
             Key.Down => "DOWN",
             Key.Left => "LEFT",
             Key.Right => "RIGHT",
+            Key.Home => "HOME",
+            Key.End => "END",
+            Key.Insert => "INSERT",
+            Key.PageUp => "PAGEUP",
+            Key.PageDown => "PAGEDOWN",
             Key.Decimal or Key.OemPeriod or Key.OemComma => "DECIMAL",
+            Key.F2 => "F2",
             Key.F3 => "F3",
             Key.F4 => "F4",
             Key.F5 => "F5",
+            Key.F6 => "F6",
+            Key.F7 => "F7",
+            Key.F8 => "F8",
             Key.F9 => "F9",
+            Key.F12 => "F12",
             >= Key.A and <= Key.Z => key.ToString().ToUpperInvariant(),
             _ => string.Empty,
         };
@@ -628,16 +647,33 @@ public partial class MainWindow : Window
         }
     }
 
-    private bool DispatchGraphingShortcut(string shortcutId)
+    private bool DispatchGraphingShortcut(ShortcutMatch match)
     {
-        switch (shortcutId)
+        switch (match.ShortcutId)
         {
             case "graphViewButton":
+            case "graph.view.reset":
                 GraphingView.ResetView();
+                return true;
+            case "graph.zoom.in":
+                GraphingView.ZoomIn();
+                return true;
+            case "graph.zoom.out":
+                GraphingView.ZoomOut();
                 return true;
             case "plotButton":
                 GraphingView.FocusGraph();
                 return true;
+            case "graph.trace.move":
+                return GraphingView.MoveTrace(match.Gesture.Key.Value, fine: false);
+            case "graph.trace.moveFine":
+                return GraphingView.MoveTrace(match.Gesture.Key.Value, fine: true);
+            case "graph.trace.stop":
+                return GraphingView.StopTracing();
+            case "graph.equation.submit":
+                return GraphingView.SubmitActiveEquation();
+            case "graph.setting.submit":
+                return GraphingView.SubmitGraphSetting();
             default:
                 // Character shortcuts such as x, y and ^ are catalogued for
                 // graphing but remain native TextBox input in this frontend.
