@@ -424,12 +424,14 @@
                         <Button x:Name="LessThanButton" Classes="graphFlyoutKey"
                                 Content="&lt;" Tag="&lt;" Click="InputButton_OnClick"
                                 AutomationProperties.Name="Less than" />
-                        <Button Classes="graphFlyoutKey" Content="≤" Tag="&lt;="
+                        <Button x:Name="LessThanOrEqualButton" Classes="graphFlyoutKey"
+                                Content="≤" Tag="≤"
                                 Click="InputButton_OnClick"
                                 AutomationProperties.Name="Less than or equal" />
                         <Button Classes="graphFlyoutKey" Content="=" Tag="="
                                 Click="InputButton_OnClick" AutomationProperties.Name="Equal" />
-                        <Button Classes="graphFlyoutKey" Content="≥" Tag=">="
+                        <Button x:Name="GreaterThanOrEqualButton" Classes="graphFlyoutKey"
+                                Content="≥" Tag="≥"
                                 Click="InputButton_OnClick"
                                 AutomationProperties.Name="Greater than or equal" />
                         <Button Classes="graphFlyoutKey" Content=">" Tag=">"
