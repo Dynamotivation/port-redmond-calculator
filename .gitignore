@@ -7,7 +7,6 @@
 **/obj/
 build/
 
-src/Frontends/Calculator.Avalonia.Tests/Snapshots/
 *.user
 *.suo
 *.log

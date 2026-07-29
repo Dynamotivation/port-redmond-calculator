@@ -69,8 +69,7 @@ files in this repository.
 2. Leave the submodule worktree untouched.
 3. Configure and build the native targets. A failed generated patch requires an
    adapter update in this repository.
-4. Run all CTest targets, resource tests, managed behavior tests, and visual
-   snapshots.
+4. Run all CTest targets, resource tests, and managed behavior tests.
 5. Review every graph-contract hash or signature change before refreshing its
    expected value.
 6. Commit the submodule pointer and required Redmond-side adapter changes as an
