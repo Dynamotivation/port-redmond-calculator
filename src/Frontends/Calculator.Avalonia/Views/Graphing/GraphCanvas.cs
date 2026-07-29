@@ -67,6 +67,8 @@ public sealed class GraphCanvas : Control
     public bool IsTracing => _isTracing;
     public bool IsManualAdjustment => _isManualAdjustment;
     public string TraceText => _traceText;
+    public Point? TraceScreenPoint => _traceScreenPoint;
+    public Color TraceColor => _traceColor;
     public Point? ActiveTraceCursorPosition => _activeTraceCursorPosition;
 
     public GraphingViewModel? ViewModel
@@ -243,15 +245,6 @@ public sealed class GraphCanvas : Control
             }
         }
 
-        if (_traceScreenPoint is { } tracePoint)
-        {
-            DrawTrace(context, tracePoint);
-        }
-        if (_isTracing && _activeTraceCursorPosition is { } cursorPoint)
-        {
-            DrawActiveTraceCursor(context, cursorPoint);
-        }
-
         UpdateAutomationDescription();
     }
 
@@ -287,6 +280,12 @@ public sealed class GraphCanvas : Control
         {
             return;
         }
+        if (_isTracing)
+        {
+            SetTracing(false);
+            e.Handled = true;
+            return;
+        }
 
         _lastPointerPosition = point.Position;
         _pointerPressedPosition = point.Position;
@@ -310,7 +309,6 @@ public sealed class GraphCanvas : Control
                     : current;
             _pointerPosition = current;
             UpdateTrace(_activeTraceCursorPosition.Value);
-            InvalidateVisual();
         }
         else if (e.Pointer.Captured != this)
         {
@@ -357,11 +355,7 @@ public sealed class GraphCanvas : Control
             && Math.Sqrt(
                 Math.Pow(releasePosition.X - pressed.X, 2)
                 + Math.Pow(releasePosition.Y - pressed.Y, 2)) < 5;
-        if (_isTracing && wasClick)
-        {
-            UpdateTrace(releasePosition);
-        }
-        else if (!wasClick && _panVelocity.Length > 80)
+        if (!wasClick && _panVelocity.Length > 80)
         {
             _inertiaTimer.Start();
         }
@@ -434,7 +428,6 @@ public sealed class GraphCanvas : Control
 
         _activeTraceCursorPosition = ClampToBounds(cursorPosition + movement);
         UpdateTrace(_activeTraceCursorPosition.Value);
-        InvalidateVisual();
         e.Handled = true;
     }
 
@@ -596,49 +589,14 @@ public sealed class GraphCanvas : Control
         context.DrawText(formatted, origin);
     }
 
-    private void DrawTrace(DrawingContext context, Point point)
-    {
-        context.DrawEllipse(new SolidColorBrush(_traceColor), null, point, 3, 3);
-
-        var tooltipOrigin = new Point(
-            Math.Clamp(point.X + 10, 4, Math.Max(4, Bounds.Width - 180)),
-            Math.Clamp(point.Y - 34, 4, Math.Max(4, Bounds.Height - 32)));
-        context.DrawRectangle(
-            new SolidColorBrush(Color.Parse("#E6202020")),
-            null,
-            new RoundedRect(new Rect(tooltipOrigin, new Size(174, 28)), 4));
-        DrawLabel(context, _traceText, tooltipOrigin + new Vector(8, 6), Brushes.White, 11);
-    }
-
-    private static void DrawActiveTraceCursor(DrawingContext context, Point point)
-    {
-        var shadow = CreateTraceCursorGeometry(point + new Vector(2, 2));
-        context.DrawGeometry(new SolidColorBrush(Color.FromArgb(84, 0, 0, 0)), null, shadow);
-
-        var cursor = CreateTraceCursorGeometry(point);
-        context.DrawGeometry(Brushes.White, new Pen(Brushes.Black, 1), cursor);
-    }
-
-    private static StreamGeometry CreateTraceCursorGeometry(Point point)
-    {
-        // This is the Windows Calculator TracePointer vector, normalized from
-        // "M0 0 l1371 1371 H538 l-538 538 Z" into its 18px display box.
-        var geometry = new StreamGeometry();
-        using var context = geometry.Open();
-        context.BeginFigure(point, true);
-        context.LineTo(point + new Vector(12.93, 12.93));
-        context.LineTo(point + new Vector(5.08, 12.93));
-        context.LineTo(point + new Vector(0, 18));
-        context.EndFigure(true);
-        return geometry;
-    }
-
     private void UpdateTrace(Point pointerPosition)
     {
         var candidate = FindNearestTracePoint(pointerPosition);
         if (candidate is null)
         {
-            ClearTrace();
+            _traceScreenPoint = null;
+            _traceText = string.Empty;
+            TraceChanged?.Invoke(this, EventArgs.Empty);
             return;
         }
 
@@ -647,7 +605,6 @@ public sealed class GraphCanvas : Control
         _traceText = $"({candidate.Value.X.ToString("R", CultureInfo.CurrentCulture)}, " +
             $"{candidate.Value.Y.ToString("N15", CultureInfo.CurrentCulture)})";
         TraceChanged?.Invoke(this, EventArgs.Empty);
-        InvalidateVisual();
     }
 
     private TraceCandidate? FindNearestTracePoint(Point pointerPosition)
@@ -825,14 +782,14 @@ public sealed class GraphCanvas : Control
 
     private void ClearTrace()
     {
-        if (_traceScreenPoint is null && string.IsNullOrEmpty(_traceText))
+        var changed = _traceScreenPoint is not null || !string.IsNullOrEmpty(_traceText);
+        if (!changed && !_isTracing)
         {
             return;
         }
         _traceScreenPoint = null;
         _traceText = string.Empty;
         TraceChanged?.Invoke(this, EventArgs.Empty);
-        InvalidateVisual();
     }
 
     private void RefreshTrace()
