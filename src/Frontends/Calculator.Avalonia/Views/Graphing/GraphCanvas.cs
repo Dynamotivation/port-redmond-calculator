@@ -135,7 +135,7 @@ public sealed class GraphCanvas : Control
         _isTracing = enabled;
         if (!enabled)
         {
-            StopTraceMovement();
+            StopAllTraceMovement();
             _activeTraceCursorPosition = null;
             _traceScreenPoint = null;
             _traceText = string.Empty;
@@ -183,6 +183,67 @@ public sealed class GraphCanvas : Control
 
         _activeTraceCursorPosition = ClampToBounds(cursorPosition + movement);
         UpdateTrace(_activeTraceCursorPosition.Value);
+        return true;
+    }
+
+    public bool StartTraceMovement(string direction, bool fine)
+    {
+        if (!_isTracing || _activeTraceCursorPosition is null)
+        {
+            return false;
+        }
+
+        _fineTraceMovement = fine;
+        var wasAlreadyPressed = direction switch
+        {
+            "LEFT" => SetPressed(ref _traceLeftPressed),
+            "RIGHT" => SetPressed(ref _traceRightPressed),
+            "UP" => SetPressed(ref _traceUpPressed),
+            "DOWN" => SetPressed(ref _traceDownPressed),
+            _ => true,
+        };
+        if (direction is not ("LEFT" or "RIGHT" or "UP" or "DOWN"))
+        {
+            return false;
+        }
+
+        if (!wasAlreadyPressed)
+        {
+            MoveActiveTraceCursor();
+        }
+        _traceMovementTimer.Start();
+        return true;
+    }
+
+    public bool StopTraceMovement(string direction)
+    {
+        if (!_isTracing)
+        {
+            return false;
+        }
+
+        switch (direction)
+        {
+            case "LEFT":
+                _traceLeftPressed = false;
+                break;
+            case "RIGHT":
+                _traceRightPressed = false;
+                break;
+            case "UP":
+                _traceUpPressed = false;
+                break;
+            case "DOWN":
+                _traceDownPressed = false;
+                break;
+            default:
+                return false;
+        }
+        if (!HasActiveTraceMovement)
+        {
+            _traceMovementTimer.Stop();
+            _fineTraceMovement = false;
+        }
         return true;
     }
 
@@ -424,26 +485,22 @@ public sealed class GraphCanvas : Control
             return;
         }
 
-        _fineTraceMovement = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
-        var wasAlreadyPressed = e.Key switch
+        var direction = e.Key switch
         {
-            Key.Left => SetPressed(ref _traceLeftPressed),
-            Key.Right => SetPressed(ref _traceRightPressed),
-            Key.Up => SetPressed(ref _traceUpPressed),
-            Key.Down => SetPressed(ref _traceDownPressed),
-            _ => true,
+            Key.Left => "LEFT",
+            Key.Right => "RIGHT",
+            Key.Up => "UP",
+            Key.Down => "DOWN",
+            _ => null,
         };
-        if (e.Key is not (Key.Left or Key.Right or Key.Up or Key.Down))
+        if (direction is null)
         {
             return;
         }
 
-        if (!wasAlreadyPressed)
-        {
-            MoveActiveTraceCursor();
-        }
-        _traceMovementTimer.Start();
-        e.Handled = true;
+        e.Handled = StartTraceMovement(
+            direction,
+            e.KeyModifiers.HasFlag(KeyModifiers.Shift));
     }
 
     protected override void OnKeyUp(KeyEventArgs e)
@@ -454,29 +511,18 @@ public sealed class GraphCanvas : Control
             return;
         }
 
-        _fineTraceMovement = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
-        switch (e.Key)
+        var direction = e.Key switch
         {
-            case Key.Left:
-                _traceLeftPressed = false;
-                break;
-            case Key.Right:
-                _traceRightPressed = false;
-                break;
-            case Key.Up:
-                _traceUpPressed = false;
-                break;
-            case Key.Down:
-                _traceDownPressed = false;
-                break;
-            default:
-                return;
-        }
-        if (!HasActiveTraceMovement)
+            Key.Left => "LEFT",
+            Key.Right => "RIGHT",
+            Key.Up => "UP",
+            Key.Down => "DOWN",
+            _ => null,
+        };
+        if (direction is not null)
         {
-            _traceMovementTimer.Stop();
+            e.Handled = StopTraceMovement(direction);
         }
-        e.Handled = true;
     }
 
     private static bool SetPressed(ref bool pressed)
@@ -518,7 +564,7 @@ public sealed class GraphCanvas : Control
         UpdateTrace(_activeTraceCursorPosition.Value);
     }
 
-    private void StopTraceMovement()
+    private void StopAllTraceMovement()
     {
         _traceMovementTimer.Stop();
         _traceLeftPressed = false;

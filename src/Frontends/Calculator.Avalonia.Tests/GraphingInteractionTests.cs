@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
@@ -21,6 +22,7 @@ internal static class GraphingInteractionTests
         ("editing clear button clears the committed equation", EditingClearButtonClearsEquation),
         ("invalid equation uses the native error presentation", InvalidEquationUsesNativeErrorPresentation),
         ("graphing selector flyouts insert tokens with square keys", SelectorFlyoutsInsertTokens),
+        ("graph options flyout is anchored and light dismissible", GraphOptionsFlyoutIsAnchoredAndLightDismissible),
         ("graph shortcuts use shared contextual scopes", GraphShortcutsUseSharedContextualScopes),
         ("graph tracing matches Windows active cursor behavior", GraphTracingMatchesWindowsBehavior),
     ];
@@ -416,6 +418,95 @@ internal static class GraphingInteractionTests
         }
     }
 
+    private static void GraphOptionsFlyoutIsAnchoredAndLightDismissible()
+    {
+        Application.Current!.RequestedThemeVariant = ThemeVariant.Light;
+        var window = new MainWindow(new AppSettings(
+            AppThemePreference.Light,
+            "Inter",
+            UseMicaEffect: false,
+            WindowCornerStyle.Windows11,
+            WindowControlStyle.Windows11))
+        {
+            Width = 1204,
+            Height = 720,
+        };
+
+        try
+        {
+            window.Show();
+            Pump();
+            window.KeyPressQwerty(PhysicalKey.Digit3, RawInputModifiers.Alt);
+            Pump();
+
+            var graphOptionsButton = window.GetVisualDescendants()
+                .OfType<Button>()
+                .Single(button => button.Name == "GraphOptionsButton");
+            var graphView = window.GetVisualDescendants()
+                .OfType<GraphingCalculatorView>()
+                .Single();
+            var graphOptionsFlyout = graphOptionsButton.Flyout
+                ?? throw new InvalidOperationException("The graph options button has no flyout.");
+            var graphOptionsPanel = graphView.FindControl<Border>("GraphOptionsPanel")
+                ?? throw new InvalidOperationException("The graph options panel is missing.");
+            var plot = window.GetVisualDescendants().OfType<GraphCanvas>().Single();
+            var zoomInButton = window.GetVisualDescendants()
+                .OfType<Button>()
+                .Single(button =>
+                    AutomationProperties.GetName(button) == "Zoom in");
+
+            Click(graphOptionsButton);
+            Pump();
+            Assert(graphOptionsFlyout.IsOpen, "The graph options flyout did not open.");
+            var buttonBottom = graphOptionsButton.PointToScreen(
+                new Point(0, graphOptionsButton.Bounds.Height));
+            var panelTop = graphOptionsPanel.PointToScreen(default);
+            Assert(
+                panelTop.Y >= buttonBottom.Y,
+                "The graph options flyout should open below its invoking button.");
+
+            var xMinimum = graphOptionsPanel.FindControl<TextBox>("XMinimumBox")
+                ?? throw new InvalidOperationException("The X minimum graph setting is missing.");
+            xMinimum.Focus();
+            window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, null);
+            Pump();
+            Assert(!graphOptionsFlyout.IsOpen, "Escape did not dismiss the graph options flyout.");
+
+            Click(graphOptionsButton);
+            Pump();
+            Click(graphOptionsButton);
+            Pump();
+            Assert(
+                !graphOptionsFlyout.IsOpen,
+                "Clicking the graph options button a second time did not dismiss its flyout.");
+
+            var widthBeforeZoom = plot.XMaximum - plot.XMinimum;
+            Click(graphOptionsButton);
+            Pump();
+            Click(zoomInButton);
+            Pump();
+            Assert(!graphOptionsFlyout.IsOpen, "Clicking outside did not dismiss the graph options flyout.");
+            Assert(
+                plot.XMaximum - plot.XMinimum < widthBeforeZoom,
+                "The click that dismissed graph options did not reach the underlying zoom button.");
+
+            void Click(Control control)
+            {
+                var center = control.TranslatePoint(
+                        new Point(control.Bounds.Width / 2, control.Bounds.Height / 2),
+                        window)
+                    ?? throw new InvalidOperationException($"Could not locate {control.Name}.");
+                window.MouseDown(center, MouseButton.Left, RawInputModifiers.None);
+                window.MouseUp(center, MouseButton.Left, RawInputModifiers.None);
+            }
+        }
+        finally
+        {
+            window.Close();
+            Dispatcher.UIThread.RunJobs();
+        }
+    }
+
     private static void GraphShortcutsUseSharedContextualScopes()
     {
         Application.Current!.RequestedThemeVariant = ThemeVariant.Dark;
@@ -457,12 +548,16 @@ internal static class GraphingInteractionTests
             plot.SetTracing(true);
             plot.Focus();
             Pump();
-            var traceBefore = plot.TraceText;
+            var traceCursorBefore = plot.ActiveTraceCursorPosition
+                ?? throw new InvalidOperationException("The active trace cursor is missing.");
             window.KeyPress(Key.Right, RawInputModifiers.None, PhysicalKey.ArrowRight, null);
             Pump();
             Assert(
-                plot.TraceText != traceBefore,
+                plot.ActiveTraceCursorPosition is { } traceCursorAfter
+                && traceCursorAfter.X > traceCursorBefore.X,
                 "Right arrow did not move the trace cursor through the graph shortcut scope");
+            window.KeyRelease(Key.Right, RawInputModifiers.None, PhysicalKey.ArrowRight, null);
+            Pump();
             window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, null);
             Pump();
             Assert(!plot.IsTracing, "Escape did not stop tracing through the graph shortcut scope");
@@ -470,9 +565,9 @@ internal static class GraphingInteractionTests
             var graphView = window.GetVisualDescendants()
                 .OfType<GraphingCalculatorView>()
                 .Single();
-            var graphOptions = graphView.FindControl<Border>("GraphOptionsPanel")
-                ?? throw new InvalidOperationException("The graph options panel is missing.");
-            graphOptions.IsVisible = true;
+            var graphOptionsButton = graphView.FindControl<Button>("GraphOptionsButton")
+                ?? throw new InvalidOperationException("The graph options button is missing.");
+            graphOptionsButton.Flyout?.ShowAt(graphOptionsButton);
             Pump();
             var xMinimum = graphView.FindControl<TextBox>("XMinimumBox")
                 ?? throw new InvalidOperationException("The X minimum graph setting is missing.");

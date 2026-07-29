@@ -24,6 +24,7 @@ public partial class MainWindow : Window
     private readonly ShortcutService _shortcutService;
     private readonly IReadOnlyList<IDisposable> _shortcutRegistrations;
     private readonly Dictionary<Key, string> _pressedShortcutIds = [];
+    private readonly Dictionary<Key, string> _pressedTraceDirections = [];
     private IReadOnlyList<IShortcutPressedTarget> _shortcutPressedTargets = [];
     private readonly IReadOnlySet<string> _calculatorShortcutScope = new HashSet<string>(StringComparer.Ordinal)
     {
@@ -96,6 +97,7 @@ public partial class MainWindow : Window
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         AddHandler(KeyDownEvent, OnCalculatorKeyDown, RoutingStrategies.Tunnel);
         AddHandler(KeyUpEvent, OnCalculatorKeyUp, RoutingStrategies.Tunnel);
+        GraphingView.ShortcutKeyDown += OnCalculatorKeyDown;
         TitleBarChrome.DragRequested += TitleBarChrome_OnDragRequested;
         TitleBarChrome.MinimizeRequested += TitleBarChrome_OnMinimizeRequested;
         TitleBarChrome.MaximizeRequested += TitleBarChrome_OnMaximizeRequested;
@@ -126,6 +128,7 @@ public partial class MainWindow : Window
             _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
             RemoveHandler(KeyDownEvent, OnCalculatorKeyDown);
             RemoveHandler(KeyUpEvent, OnCalculatorKeyUp);
+            GraphingView.ShortcutKeyDown -= OnCalculatorKeyDown;
             Deactivated -= OnWindowDeactivated;
             foreach (var registration in _shortcutRegistrations)
             {
@@ -368,6 +371,11 @@ public partial class MainWindow : Window
                 : DispatchCalculatorShortcut(match.ShortcutId);
         if (dispatched)
         {
+            if (match.ShortcutId is "graph.trace.move" or "graph.trace.moveFine")
+            {
+                _pressedTraceDirections[e.Key] = match.Gesture.Key.Value;
+            }
+
             // Holding a key that maps to a different button than the one this
             // key last pressed has to release the earlier one first.
             if (_pressedShortcutIds.TryGetValue(e.Key, out var previousShortcutId))
@@ -397,6 +405,11 @@ public partial class MainWindow : Window
 
     private void OnCalculatorKeyUp(object? sender, KeyEventArgs e)
     {
+        if (_pressedTraceDirections.Remove(e.Key, out var traceDirection))
+        {
+            GraphingView.StopTraceMovement(traceDirection);
+        }
+
         if (_pressedShortcutIds.Remove(e.Key, out var shortcutId))
         {
             SetShortcutPressed(shortcutId, isPressed: false);
@@ -405,6 +418,12 @@ public partial class MainWindow : Window
 
     private void OnWindowDeactivated(object? sender, EventArgs e)
     {
+        foreach (var traceDirection in _pressedTraceDirections.Values)
+        {
+            GraphingView.StopTraceMovement(traceDirection);
+        }
+        _pressedTraceDirections.Clear();
+
         foreach (var shortcutId in _pressedShortcutIds.Values)
         {
             SetShortcutPressed(shortcutId, isPressed: false);
@@ -665,9 +684,9 @@ public partial class MainWindow : Window
                 GraphingView.FocusGraph();
                 return true;
             case "graph.trace.move":
-                return GraphingView.MoveTrace(match.Gesture.Key.Value, fine: false);
+                return GraphingView.StartTraceMovement(match.Gesture.Key.Value, fine: false);
             case "graph.trace.moveFine":
-                return GraphingView.MoveTrace(match.Gesture.Key.Value, fine: true);
+                return GraphingView.StartTraceMovement(match.Gesture.Key.Value, fine: true);
             case "graph.trace.stop":
                 return GraphingView.StopTracing();
             case "graph.equation.submit":
