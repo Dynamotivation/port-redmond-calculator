@@ -36,9 +36,84 @@
               </ToggleButton>
               <Button x:Name="GraphOptionsButton" Classes="graphCommandButton"
                       Margin="4"
-                      Click="GraphOptionsButton_OnClick"
                       AutomationProperties.Name="{Binding Graphing.Strings.GraphOptionsHeading}"
                       ToolTip.Tip="{Binding Graphing.Strings.GraphOptionsHeading}">
+                <Button.Flyout>
+                  <Flyout Placement="BottomEdgeAlignedRight"
+                          PlacementConstraintAdjustment="SlideX,SlideY,ResizeX,ResizeY"
+                          VerticalOffset="4"
+                          OverlayDismissEventPassThrough="True"
+                          Opened="GraphOptionsFlyout_OnOpened">
+                    <Border x:Name="GraphOptionsPanel" Width="318" MaxHeight="468"
+                            Padding="18,14" CornerRadius="8"
+                            Background="{DynamicResource CardBrush}" BoxShadow="0 6 18 0 #70000000">
+                      <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="9">
+                          <TextBlock FontSize="20" FontWeight="Medium"
+                                     Text="{Binding Graphing.Strings.GraphOptionsHeading}" />
+                          <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold"
+                                       Text="{Binding Graphing.Strings.WindowHeading}" />
+                            <Button Grid.Column="1" Classes="graphLinkButton" Click="ResetView_OnClick"
+                                    Content="{Binding Graphing.Strings.ResetViewText}" />
+                          </Grid>
+                          <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+                            <StackPanel>
+                              <TextBlock Opacity="0.72" Text="{Binding Graphing.Strings.XMinimumHeading}" />
+                              <TextBox x:Name="XMinimumBox" Text="-10" LostFocus="BoundsBox_OnLostFocus" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                              <TextBlock Opacity="0.72" Text="{Binding Graphing.Strings.XMaximumHeading}" />
+                              <TextBox x:Name="XMaximumBox" Text="10" LostFocus="BoundsBox_OnLostFocus" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1">
+                              <TextBlock Opacity="0.72" Text="{Binding Graphing.Strings.YMinimumHeading}" />
+                              <TextBox x:Name="YMinimumBox" Text="-10" LostFocus="BoundsBox_OnLostFocus" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1">
+                              <TextBlock Opacity="0.72" Text="{Binding Graphing.Strings.YMaximumHeading}" />
+                              <TextBox x:Name="YMaximumBox" Text="10" LostFocus="BoundsBox_OnLostFocus" />
+                            </StackPanel>
+                          </Grid>
+                          <TextBlock Margin="0,4,0,0" FontSize="15" FontWeight="SemiBold"
+                                     Text="{Binding Graphing.Strings.UnitsHeading}" />
+                          <UniformGrid Columns="3">
+                            <RadioButton Classes="graphSegment" GroupName="GraphUnits" IsChecked="True"
+                                         Content="{Binding Graphing.Strings.RadiansText}" />
+                            <RadioButton Classes="graphSegment" GroupName="GraphUnits"
+                                         Content="{Binding Graphing.Strings.DegreesText}" />
+                            <RadioButton Classes="graphSegment" GroupName="GraphUnits"
+                                         Content="{Binding Graphing.Strings.GradiansText}" />
+                          </UniformGrid>
+                          <TextBlock Margin="0,4,0,0" FontSize="15" FontWeight="SemiBold"
+                                     Text="{Binding Graphing.Strings.LineThicknessHeading}" />
+                          <ComboBox x:Name="LineWidthBox" SelectedIndex="1" SelectionChanged="LineWidthBox_OnSelectionChanged">
+                            <ComboBoxItem AutomationProperties.Name="{Binding Graphing.Strings.SmallLineWidthName}" Tag="1">
+                              <Border Width="200" Height="1" Background="{DynamicResource ChromeForegroundBrush}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem AutomationProperties.Name="{Binding Graphing.Strings.MediumLineWidthName}" Tag="2">
+                              <Border Width="200" Height="2" Background="{DynamicResource ChromeForegroundBrush}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem AutomationProperties.Name="{Binding Graphing.Strings.LargeLineWidthName}" Tag="3">
+                              <Border Width="200" Height="3" Background="{DynamicResource ChromeForegroundBrush}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem AutomationProperties.Name="{Binding Graphing.Strings.ExtraLargeLineWidthName}" Tag="4">
+                              <Border Width="200" Height="4" Background="{DynamicResource ChromeForegroundBrush}" />
+                            </ComboBoxItem>
+                          </ComboBox>
+                          <TextBlock Margin="0,4,0,0" FontSize="15" FontWeight="SemiBold"
+                                     Text="{Binding Graphing.Strings.GraphThemeHeading}" />
+                          <RadioButton x:Name="AlwaysLightThemeButton" GroupName="GraphTheme" IsChecked="True"
+                                       IsCheckedChanged="GraphTheme_OnChanged"
+                                       Content="{Binding Graphing.Strings.AlwaysLightText}" />
+                          <RadioButton x:Name="MatchAppThemeButton" GroupName="GraphTheme"
+                                       IsCheckedChanged="GraphTheme_OnChanged"
+                                       Content="{Binding Graphing.Strings.MatchAppThemeText}" />
+                        </StackPanel>
+                      </ScrollViewer>
+                    </Border>
+                  </Flyout>
+                </Button.Flyout>
                 <TextBlock FontFamily="{StaticResource CalculatorIconFont}" FontSize="16" Text="&#xE3B4;" />
               </Button>
             </StackPanel>
@@ -81,82 +156,6 @@
               </ToggleButton>
             </StackPanel>
           </Border>
-
-          <Popup x:Name="GraphOptionsPopup"
-                 PlacementTarget="{Binding #GraphOptionsButton}"
-                 Placement="BottomEdgeAlignedRight"
-                 VerticalOffset="4"
-                 IsLightDismissEnabled="True"
-                 OverlayDismissEventPassThrough="True">
-          <Border x:Name="GraphOptionsPanel" Width="318" MaxHeight="468"
-                  Padding="18,14" CornerRadius="8"
-                  Background="{DynamicResource CardBrush}" BoxShadow="0 6 18 0 #70000000">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-              <StackPanel Spacing="9">
-                <TextBlock FontSize="20" FontWeight="Medium"
-                           Text="{Binding Graphing.Strings.GraphOptionsHeading}" />
-                <Grid ColumnDefinitions="*,Auto">
-                  <TextBlock VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold"
-                             Text="{Binding Graphing.Strings.WindowHeading}" />
-                  <Button Grid.Column="1" Classes="graphLinkButton" Click="ResetView_OnClick"
-                          Content="{Binding Graphing.Strings.ResetViewText}" />
-                </Grid>
-                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
-                  <StackPanel>
-                    <TextBlock Opacity="0.72" Text="{Binding Graphing.Strings.XMinimumHeading}" />
-                    <TextBox x:Name="XMinimumBox" Text="-10" LostFocus="BoundsBox_OnLostFocus" />
-                  </StackPanel>
-                  <StackPanel Grid.Column="1">
-                    <TextBlock Opacity="0.72" Text="{Binding Graphing.Strings.XMaximumHeading}" />
-                    <TextBox x:Name="XMaximumBox" Text="10" LostFocus="BoundsBox_OnLostFocus" />
-                  </StackPanel>
-                  <StackPanel Grid.Row="1">
-                    <TextBlock Opacity="0.72" Text="{Binding Graphing.Strings.YMinimumHeading}" />
-                    <TextBox x:Name="YMinimumBox" Text="-10" LostFocus="BoundsBox_OnLostFocus" />
-                  </StackPanel>
-                  <StackPanel Grid.Row="1" Grid.Column="1">
-                    <TextBlock Opacity="0.72" Text="{Binding Graphing.Strings.YMaximumHeading}" />
-                    <TextBox x:Name="YMaximumBox" Text="10" LostFocus="BoundsBox_OnLostFocus" />
-                  </StackPanel>
-                </Grid>
-                <TextBlock Margin="0,4,0,0" FontSize="15" FontWeight="SemiBold"
-                           Text="{Binding Graphing.Strings.UnitsHeading}" />
-                <UniformGrid Columns="3">
-                  <RadioButton Classes="graphSegment" GroupName="GraphUnits" IsChecked="True"
-                               Content="{Binding Graphing.Strings.RadiansText}" />
-                  <RadioButton Classes="graphSegment" GroupName="GraphUnits"
-                               Content="{Binding Graphing.Strings.DegreesText}" />
-                  <RadioButton Classes="graphSegment" GroupName="GraphUnits"
-                               Content="{Binding Graphing.Strings.GradiansText}" />
-                </UniformGrid>
-                <TextBlock Margin="0,4,0,0" FontSize="15" FontWeight="SemiBold"
-                           Text="{Binding Graphing.Strings.LineThicknessHeading}" />
-                <ComboBox x:Name="LineWidthBox" SelectedIndex="1" SelectionChanged="LineWidthBox_OnSelectionChanged">
-                  <ComboBoxItem AutomationProperties.Name="{Binding Graphing.Strings.SmallLineWidthName}" Tag="1">
-                    <Border Width="200" Height="1" Background="{DynamicResource ChromeForegroundBrush}" />
-                  </ComboBoxItem>
-                  <ComboBoxItem AutomationProperties.Name="{Binding Graphing.Strings.MediumLineWidthName}" Tag="2">
-                    <Border Width="200" Height="2" Background="{DynamicResource ChromeForegroundBrush}" />
-                  </ComboBoxItem>
-                  <ComboBoxItem AutomationProperties.Name="{Binding Graphing.Strings.LargeLineWidthName}" Tag="3">
-                    <Border Width="200" Height="3" Background="{DynamicResource ChromeForegroundBrush}" />
-                  </ComboBoxItem>
-                  <ComboBoxItem AutomationProperties.Name="{Binding Graphing.Strings.ExtraLargeLineWidthName}" Tag="4">
-                    <Border Width="200" Height="4" Background="{DynamicResource ChromeForegroundBrush}" />
-                  </ComboBoxItem>
-                </ComboBox>
-                <TextBlock Margin="0,4,0,0" FontSize="15" FontWeight="SemiBold"
-                           Text="{Binding Graphing.Strings.GraphThemeHeading}" />
-                <RadioButton x:Name="AlwaysLightThemeButton" GroupName="GraphTheme" IsChecked="True"
-                             IsCheckedChanged="GraphTheme_OnChanged"
-                             Content="{Binding Graphing.Strings.AlwaysLightText}" />
-                <RadioButton x:Name="MatchAppThemeButton" GroupName="GraphTheme"
-                             IsCheckedChanged="GraphTheme_OnChanged"
-                             Content="{Binding Graphing.Strings.MatchAppThemeText}" />
-              </StackPanel>
-            </ScrollViewer>
-          </Border>
-          </Popup>
 
           <Border x:Name="TraceLiveRegion" Margin="10" HorizontalAlignment="Left" VerticalAlignment="Bottom"
                   IsVisible="False" Opacity="0"

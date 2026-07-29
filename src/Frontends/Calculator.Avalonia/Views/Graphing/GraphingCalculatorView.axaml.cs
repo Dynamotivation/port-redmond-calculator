@@ -24,20 +24,16 @@ public partial class GraphingCalculatorView : UserControl
     private bool _showsEquationPanelOnNarrow;
     private bool _showsInverseKeypad;
     private bool _plotEventsAttached;
-    private bool _graphOptionsDismissedDuringPointerClick;
     private TextBox? _activeTextBox;
 
     public GraphingCalculatorView()
     {
         InitializeComponent();
+        GraphOptionsPanel.AddHandler(
+            KeyDownEvent,
+            OnGraphOptionsKeyDown,
+            RoutingStrategies.Tunnel);
         SizeChanged += (_, _) => UpdateResponsiveLayout(Bounds.Width);
-        GraphOptionsPopup.Closed += (_, _) =>
-            _graphOptionsDismissedDuringPointerClick = true;
-        AddHandler(
-            PointerReleasedEvent,
-            (_, _) => _graphOptionsDismissedDuringPointerClick = false,
-            RoutingStrategies.Tunnel,
-            handledEventsToo: true);
         AttachedToVisualTree += (_, _) =>
         {
             if (!_plotEventsAttached)
@@ -54,6 +50,8 @@ public partial class GraphingCalculatorView : UserControl
             GraphTheme_OnChanged(null, new RoutedEventArgs());
         };
     }
+
+    public event EventHandler<KeyEventArgs>? ShortcutKeyDown;
 
     private GraphingViewModel? Graphing => (DataContext as CalculatorViewModel)?.Graphing;
 
@@ -87,6 +85,11 @@ public partial class GraphingCalculatorView : UserControl
     public void ZoomOut() => Plot.ZoomOut();
 
     public bool MoveTrace(string direction, bool fine) => Plot.MoveTrace(direction, fine);
+
+    public bool StartTraceMovement(string direction, bool fine) =>
+        Plot.StartTraceMovement(direction, fine);
+
+    public bool StopTraceMovement(string direction) => Plot.StopTraceMovement(direction);
 
     public bool StopTracing()
     {
@@ -128,6 +131,8 @@ public partial class GraphingCalculatorView : UserControl
     private void UpdateResponsiveLayout(double width)
     {
         var isNarrow = width < ColumnsThreshold;
+        GraphOptionsPanel.Width = Math.Min(318, Math.Max(0, width - 16));
+        GraphOptionsPanel.MaxHeight = Math.Min(468, Math.Max(100, Bounds.Height - 64));
         if (!isNarrow)
         {
             var editorWidth = Math.Clamp(width / 3, 300, 420);
@@ -147,8 +152,6 @@ public partial class GraphingCalculatorView : UserControl
         GraphPanel.IsVisible = !_showsEquationPanelOnNarrow;
         EquationPanel.IsVisible = _showsEquationPanelOnNarrow;
 
-        GraphOptionsPanel.Width = Math.Min(318, Math.Max(0, width - 16));
-        GraphOptionsPanel.MaxHeight = Math.Min(468, Math.Max(100, Bounds.Height - 64));
     }
 
     public bool ShowsEquationPanelOnNarrow => _showsEquationPanelOnNarrow;
@@ -224,20 +227,13 @@ public partial class GraphingCalculatorView : UserControl
         ToolTip.SetTip(TraceButton, label);
     }
 
-    private void GraphOptionsButton_OnClick(object? sender, RoutedEventArgs e)
+    private void GraphOptionsFlyout_OnOpened(object? sender, EventArgs e)
     {
-        if (_graphOptionsDismissedDuringPointerClick)
-        {
-            _graphOptionsDismissedDuringPointerClick = false;
-            return;
-        }
-
-        GraphOptionsPopup.IsOpen = !GraphOptionsPopup.IsOpen;
-        if (GraphOptionsPopup.IsOpen)
-        {
-            UpdateBoundsEditors();
-        }
+        UpdateBoundsEditors();
     }
+
+    private void OnGraphOptionsKeyDown(object? sender, KeyEventArgs e) =>
+        ShortcutKeyDown?.Invoke(this, e);
 
     private void Plot_OnViewportChanged(object? sender, EventArgs e) => UpdateBoundsEditors();
 
