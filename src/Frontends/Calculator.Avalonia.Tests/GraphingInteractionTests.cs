@@ -20,6 +20,7 @@ internal static class GraphingInteractionTests
         ("editing clear button clears the committed equation", EditingClearButtonClearsEquation),
         ("invalid equation uses the native error presentation", InvalidEquationUsesNativeErrorPresentation),
         ("graphing selector flyouts insert tokens with square keys", SelectorFlyoutsInsertTokens),
+        ("graph shortcuts use shared contextual scopes", GraphShortcutsUseSharedContextualScopes),
     ];
 
     private static void EquationContextMenuIsAttached()
@@ -405,6 +406,82 @@ internal static class GraphingInteractionTests
                 flyout.Hide();
                 Pump();
             }
+        }
+        finally
+        {
+            window.Close();
+            Dispatcher.UIThread.RunJobs();
+        }
+    }
+
+    private static void GraphShortcutsUseSharedContextualScopes()
+    {
+        Application.Current!.RequestedThemeVariant = ThemeVariant.Dark;
+        var window = new MainWindow(new AppSettings(
+            AppThemePreference.Dark,
+            "Inter",
+            UseMicaEffect: false,
+            WindowCornerStyle.Windows11,
+            WindowControlStyle.Windows11))
+        {
+            Width = 1204,
+            Height = 720,
+        };
+
+        try
+        {
+            window.Show();
+            Pump();
+            window.KeyPressQwerty(PhysicalKey.Digit3, RawInputModifiers.Alt);
+            Pump();
+
+            var viewModel = (CalculatorViewModel)window.DataContext!;
+            var equation = viewModel.Graphing.Equations[0];
+            var editor = window.GetVisualDescendants()
+                .OfType<TextBox>()
+                .First(textBox =>
+                    textBox.Name == "EquationExpressionTextBox"
+                    && ReferenceEquals(textBox.DataContext, equation));
+            editor.Text = "x^2";
+            editor.Focus();
+            Pump();
+            window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
+            Pump();
+            Assert(
+                equation.Expression == "x^2" && viewModel.Graphing.Equations.Count == 2,
+                "Enter in the equation editor did not use the equation-input shortcut scope");
+
+            var plot = window.GetVisualDescendants().OfType<GraphCanvas>().Single();
+            plot.SetTracing(true);
+            plot.Focus();
+            Pump();
+            var traceBefore = plot.TraceText;
+            window.KeyPress(Key.Right, RawInputModifiers.None, PhysicalKey.ArrowRight, null);
+            Pump();
+            Assert(
+                plot.TraceText != traceBefore,
+                "Right arrow did not move the trace cursor through the graph shortcut scope");
+            window.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, null);
+            Pump();
+            Assert(!plot.IsTracing, "Escape did not stop tracing through the graph shortcut scope");
+
+            var graphView = window.GetVisualDescendants()
+                .OfType<GraphingCalculatorView>()
+                .Single();
+            var graphOptions = graphView.FindControl<Border>("GraphOptionsPanel")
+                ?? throw new InvalidOperationException("The graph options panel is missing.");
+            graphOptions.IsVisible = true;
+            Pump();
+            var xMinimum = graphView.FindControl<TextBox>("XMinimumBox")
+                ?? throw new InvalidOperationException("The X minimum graph setting is missing.");
+            xMinimum.Text = "-4";
+            xMinimum.Focus();
+            Pump();
+            window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
+            Pump();
+            Assert(
+                Math.Abs(plot.XMinimum - (-4)) < 0.001,
+                "Enter in a graph setting did not use the graph-settings shortcut scope");
         }
         finally
         {

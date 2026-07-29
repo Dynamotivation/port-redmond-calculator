@@ -15,6 +15,7 @@ var tests = new (string Name, Action Run)[]
     ("template formatting", TemplateFormatting),
     ("legacy suffix rewriting", LegacySuffixRewriting),
     ("catalog completeness", CatalogCompleteness),
+    ("built-in macOS bindings and text", BuiltInMacBindingsAndText),
     ("alternate gesture dispatch", AlternateGestureDispatch),
     ("input handling result", InputHandlingResult),
     ("platform convention validation", PlatformConventionValidation),
@@ -168,6 +169,12 @@ static void LegacySuffixRewriting()
         service.RewriteText("copy", "コピー（Ctrl+C）", ShortcutTextRewriteMode.ReplaceTrailingParenthetical) == "コピー（⌘C）",
         "A fullwidth legacy shortcut suffix was not replaced.");
     Require(
+        service.RewriteText(
+            "copy",
+            "Zoom in (Ctrl + plus (+) key)",
+            ShortcutTextRewriteMode.ReplaceTrailingParenthetical) == "Zoom in (⌘C)",
+        "A nested legacy shortcut suffix was not replaced.");
+    Require(
         service.RewriteText("copy", "Copy", ShortcutTextRewriteMode.ReplaceOrAppend) == "Copy (⌘C)",
         "A missing shortcut suffix was not appended when requested.");
     Require(
@@ -178,14 +185,17 @@ static void LegacySuffixRewriting()
 static void CatalogCompleteness()
 {
     Require(
-        CalculatorShortcutCatalog.Bindings.Count(item => item.Source == ShortcutCatalogSource.UwpResource) == 129,
+        CalculatorShortcutCatalog.Bindings.Count(item =>
+            item.Source == ShortcutCatalogSource.UwpResource && item.Platform is null) == 129,
         "The catalog does not contain all 129 resource-defined bindings from the matrix.");
     Require(
-        CalculatorShortcutCatalog.Bindings.Count(item => item.Source == ShortcutCatalogSource.UwpNavigation) == 13,
+        CalculatorShortcutCatalog.Bindings.Count(item =>
+            item.Source == ShortcutCatalogSource.UwpNavigation && item.Platform is null) == 13,
         "The catalog does not contain all 13 navigation accelerators from the matrix.");
     Require(
-        CalculatorShortcutCatalog.Bindings.Count(item => item.Source == ShortcutCatalogSource.HardCodedControl) == 17,
-        "The 10 hard-coded matrix behaviors did not expand to all 17 concrete gestures.");
+        CalculatorShortcutCatalog.Bindings.Count(item =>
+            item.Source == ShortcutCatalogSource.HardCodedControl && item.Platform is null) == 20,
+        "The hard-coded matrix behaviors did not expand to all 20 concrete gestures.");
 
     var service = ShortcutServices.Create(ShortcutPlatform.Windows);
     var registrations = CalculatorShortcutCatalog.RegisterAll(service);
@@ -194,6 +204,75 @@ static void CatalogCompleteness()
     foreach (var registration in registrations)
     {
         registration.Dispose();
+    }
+}
+
+static void BuiltInMacBindingsAndText()
+{
+    var mac = ShortcutServices.Create(ShortcutPlatform.MacOS);
+    var registrations = CalculatorShortcutCatalog.RegisterAll(mac);
+    try
+    {
+        var calculatorScope = new HashSet<string>(StringComparer.Ordinal) { "calculator" };
+        Require(
+            mac.IsMatch(
+                "copyButton",
+                new ShortcutInput(new ShortcutGesture(
+                    ShortcutKey.Named("C"),
+                    ShortcutModifiers.Command)),
+                calculatorScope),
+            "The built-in copy shortcut did not use Command on macOS.");
+        Require(
+            !mac.IsMatch(
+                "copyButton",
+                new ShortcutInput(new ShortcutGesture(
+                    ShortcutKey.Named("C"),
+                    ShortcutModifiers.Control)),
+                calculatorScope),
+            "The Windows copy gesture unexpectedly remained active on macOS.");
+        Require(
+            mac.GetGestureDisplayText("graph.view.reset") == "⌘0",
+            "The graph reset display text did not come from its macOS binding.");
+        Require(
+            mac.RewriteText(
+                "graph.view.reset",
+                "Refresh view automatically (Ctrl + 0)",
+                ShortcutTextRewriteMode.ReplaceOrAppend) ==
+            "Refresh view automatically (⌘0)",
+            "The graph reset tooltip did not use the shared text rewriter.");
+        Require(
+            mac.GetGestureDisplayText("graph.zoom.in") == "⌘+",
+            "The graph zoom-in display text did not use Command on macOS.");
+        Require(
+            mac.GetGestureDisplayText("HistoryButton") == "⌃H",
+            "A calculator-specific physical Control binding was not displayed accurately on macOS.");
+        Require(
+            mac.TryGetDefinition("copyButtonAlternate", out var copyAlternate)
+            && copyAlternate!.ResolveGestures(ShortcutPlatform.MacOS).Count == 0,
+            "The unavailable Insert-based copy binding remained active on macOS.");
+    }
+    finally
+    {
+        foreach (var registration in registrations)
+        {
+            registration.Dispose();
+        }
+    }
+
+    var windows = ShortcutServices.Create(ShortcutPlatform.Windows);
+    var windowsRegistrations = CalculatorShortcutCatalog.RegisterAll(windows);
+    try
+    {
+        Require(
+            windows.GetGestureDisplayText("graph.view.reset") == "Ctrl+0",
+            "The graph reset binding did not preserve the Windows shortcut.");
+    }
+    finally
+    {
+        foreach (var registration in windowsRegistrations)
+        {
+            registration.Dispose();
+        }
     }
 }
 

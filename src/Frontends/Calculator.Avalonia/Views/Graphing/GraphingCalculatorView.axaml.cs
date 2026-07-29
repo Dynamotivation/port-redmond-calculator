@@ -72,6 +72,44 @@ public partial class GraphingCalculatorView : UserControl
     }
 
     public void FocusGraph() => Plot.Focus();
+
+    public void ZoomIn() => Plot.ZoomIn();
+
+    public void ZoomOut() => Plot.ZoomOut();
+
+    public bool MoveTrace(string direction, bool fine) => Plot.MoveTrace(direction, fine);
+
+    public bool StopTracing()
+    {
+        if (!Plot.IsTracing)
+        {
+            return false;
+        }
+
+        TraceButton.IsChecked = false;
+        Plot.SetTracing(false);
+        UpdateTraceButtonLabel();
+        return true;
+    }
+
+    public bool SubmitActiveEquation()
+    {
+        if (_activeTextBox is null)
+        {
+            return false;
+        }
+
+        SubmitEquation(_activeTextBox);
+        return true;
+    }
+
+    public bool SubmitGraphSetting()
+    {
+        BoundsBox_OnLostFocus(null, new RoutedEventArgs());
+        FocusGraph();
+        return true;
+    }
+
     public void ResetView()
     {
         Plot.RefreshViewAutomatically();
@@ -156,6 +194,11 @@ public partial class GraphingCalculatorView : UserControl
     private void TraceButton_OnClick(object? sender, RoutedEventArgs e)
     {
         Plot.SetTracing(TraceButton.IsChecked == true);
+        UpdateTraceButtonLabel();
+    }
+
+    private void UpdateTraceButtonLabel()
+    {
         var label = Plot.IsTracing
             ? Graphing?.Strings.StopTracingTooltip ?? "Stop tracing"
             : Graphing?.Strings.StartTracingTooltip ?? "Start tracing";
@@ -299,16 +342,6 @@ public partial class GraphingCalculatorView : UserControl
             .OfType<Border>()
             .FirstOrDefault(border => border.Classes.Contains("graphEquationCard"));
         card?.Classes.Set("focused", isFocused);
-    }
-
-    private void EquationTextBox_OnKeyDown(object? sender, KeyEventArgs e)
-    {
-        if (e.Key != Key.Enter || sender is not TextBox textBox)
-        {
-            return;
-        }
-        SubmitEquation(textBox);
-        e.Handled = true;
     }
 
     private void FormattedEquation_OnPointerPressed(object? sender, PointerPressedEventArgs e)

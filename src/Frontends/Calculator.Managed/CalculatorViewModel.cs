@@ -163,12 +163,19 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         bool supportsPlatformAppearanceSettings = false,
         CultureInfo? numberCulture = null,
         IEnumerable<string>? availableFontFamilies = null,
-        string? initialFontFamily = null)
+        string? initialFontFamily = null,
+        Func<string, string, string>? shortcutTextRewriter = null)
     {
         var platformAppearance = initialPlatformAppearance ?? new PlatformAppearancePreferences();
         var numberFormat = CalculatorNumberFormat.FromCulture(numberCulture);
         DecimalSeparator = numberFormat.DecimalSeparator;
         var appResources = ResourceLoader.GetForViewIndependentUse();
+        string ShortcutText(string shortcutId, string resourceName)
+        {
+            var localizedText = appResources.GetString(resourceName);
+            return shortcutTextRewriter?.Invoke(shortcutId, localizedText) ?? localizedText;
+        }
+
         Settings = new SettingsViewModel(
             initialThemePreference,
             platformAppearance,
@@ -208,8 +215,12 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         SettingsName = appResources.GetString("SettingsHeader.Text");
         BackAutomationName = appResources.GetString("TitleBarBackButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
         SettingsBackTooltip = appResources.GetString("AboutControlBackButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
-        EnterAlwaysOnTopTooltip = appResources.GetString("EnterAlwaysOnTopButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
-        ExitAlwaysOnTopTooltip = appResources.GetString("ExitAlwaysOnTopButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
+        EnterAlwaysOnTopTooltip = ShortcutText(
+            "window.alwaysOnTop.enter",
+            "EnterAlwaysOnTopButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
+        ExitAlwaysOnTopTooltip = ShortcutText(
+            "window.alwaysOnTop.exit",
+            "ExitAlwaysOnTopButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip");
         EnterAlwaysOnTopAutomationName = appResources.GetString("EnterAlwaysOnTopButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
         ExitAlwaysOnTopAutomationName = appResources.GetString("ExitAlwaysOnTopButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name");
         _calculator = new NativeCalculator(ResourceLoader.GetForViewIndependentUse("CEngineStrings"), numberFormat);
@@ -235,11 +246,21 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             Synchronize,
             new MemoryStrings(
                 appResources.GetString("MemoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
-                appResources.GetString("ClearMemoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
-                appResources.GetString("memButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
-                appResources.GetString("MemRecall/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
-                appResources.GetString("MemPlus/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
-                appResources.GetString("MemMinus/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                ShortcutText(
+                    "ClearMemoryButton",
+                    "ClearMemoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                ShortcutText(
+                    "memButton",
+                    "memButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                ShortcutText(
+                    "MemRecall",
+                    "MemRecall/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                ShortcutText(
+                    "MemPlus",
+                    "MemPlus/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                ShortcutText(
+                    "MemMinus",
+                    "MemMinus/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
                 appResources.GetString("ClearMemoryItemButton/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name"),
                 appResources.GetString("MemPlusItem/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name"),
                 appResources.GetString("MemMinusItem/[using:Windows.UI.Xaml.Automation]AutomationProperties/Name")));
@@ -250,8 +271,12 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             new HistoryStrings(
                 appResources.GetString("HistoryLabel/Text"),
                 appResources.GetString("HistoryEmpty/Text"),
-                appResources.GetString("ClearHistory/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
-                appResources.GetString("HistoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                ShortcutText(
+                    "ClearHistory",
+                    "ClearHistory/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                ShortcutText(
+                    "HistoryButton",
+                    "HistoryButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
                 appResources.GetString("DeleteHistoryMenuItem/Text")));
         History.PropertyChanged += (_, _) => NotifyHistoryVisibilityChanged();
         Graphing = new GraphingViewModel(
@@ -259,9 +284,15 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
                 appResources.GetString("mathRichEditBox.PlaceholderText"),
                 appResources.GetString("EquationTextBoxAddPanel/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
                 appResources.GetString("VaiablesHeader.Text"),
-                appResources.GetString("zoomInButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
-                appResources.GetString("zoomOutButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
-                appResources.GetString("graphViewButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                ShortcutText(
+                    "graph.zoom.in",
+                    "zoomInButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                ShortcutText(
+                    "graph.zoom.out",
+                    "zoomOutButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+                ShortcutText(
+                    "graph.view.reset",
+                    "graphViewButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
                 appResources.GetString("GraphSwitchToEquationMode"),
                 appResources.GetString("GraphSwitchToGraphMode"),
                 appResources.GetString("enableTracingButtonToolTip"),
