@@ -28,6 +28,7 @@ public partial class GraphingCalculatorView : UserControl
     private bool _suppressGraphOptionsButtonClick;
     private TopLevel? _graphOptionsInputRoot;
     private TextBox? _activeTextBox;
+    private EditableMathView? _activeMathView;
 
     public GraphingCalculatorView()
     {
@@ -424,6 +425,7 @@ public partial class GraphingCalculatorView : UserControl
         if (sender is TextBox textBox)
         {
             _activeTextBox = textBox;
+            _activeMathView = null;
             SetEquationCardFocused(textBox, true);
             if (textBox.DataContext is GraphEquationViewModel equation && Graphing is not null)
             {
@@ -502,11 +504,12 @@ public partial class GraphingCalculatorView : UserControl
 
     private void FormattedEquation_OnGotFocus(object? sender, FocusChangedEventArgs e)
     {
-        if (sender is not EditableMathView { DataContext: GraphEquationViewModel equation })
+        if (sender is not EditableMathView { DataContext: GraphEquationViewModel equation } mathView)
         {
             return;
         }
 
+        _activeMathView = mathView;
         if (Graphing is not null)
         {
             Graphing.SelectedEquation = equation;
@@ -527,23 +530,59 @@ public partial class GraphingCalculatorView : UserControl
             return;
         }
 
-        ActivateLinearEditor(equation, e.SuggestedCaretIndex, editor =>
+        var draft = equation.DraftExpression;
+        var caretIndex = Math.Clamp(e.SuggestedCaretIndex, 0, draft.Length);
+        switch (e.Action)
         {
-            switch (e.Action)
+            case LinearMathEditAction.InsertText:
+                equation.DraftExpression = draft.Insert(caretIndex, e.Text);
+                break;
+            case LinearMathEditAction.Backspace when caretIndex > 0:
+                equation.DraftExpression = draft.Remove(caretIndex - 1, 1);
+                break;
+            case LinearMathEditAction.Delete when caretIndex < draft.Length:
+                equation.DraftExpression = draft.Remove(caretIndex, 1);
+                break;
+            case LinearMathEditAction.Clear:
+                equation.DraftExpression = string.Empty;
+                break;
+        }
+        equation.IsEditing = true;
+    }
+
+    private void FormattedEquation_OnCommitRequested(object? sender, EventArgs e)
+    {
+        if (sender is EditableMathView { DataContext: GraphEquationViewModel equation })
+        {
+            CommitFormattedEquation(equation);
+        }
+    }
+
+    private void FormattedEquation_OnLostFocus(object? sender, FocusChangedEventArgs e)
+    {
+        if (sender is not EditableMathView { DataContext: GraphEquationViewModel equation } mathView)
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!mathView.IsFocused)
             {
-                case LinearMathEditAction.InsertText:
-                    InsertText(editor, e.Text);
-                    break;
-                case LinearMathEditAction.Backspace:
-                    Backspace(editor);
-                    break;
-                case LinearMathEditAction.Delete when editor.CaretIndex < (editor.Text?.Length ?? 0):
-                    editor.SelectionStart = editor.CaretIndex;
-                    editor.SelectionEnd = editor.CaretIndex + 1;
-                    DeleteSelection(editor);
-                    break;
+                CommitFormattedEquation(equation);
             }
-        });
+        }, DispatcherPriority.Background);
+    }
+
+    private void CommitFormattedEquation(GraphEquationViewModel equation)
+    {
+        if (Graphing is null)
+        {
+            return;
+        }
+
+        Graphing.CommitEquation(equation);
+        equation.IsEditing = false;
     }
 
     private void ActivateLinearEditor(
@@ -625,7 +664,34 @@ public partial class GraphingCalculatorView : UserControl
         var token = button.Tag?.ToString() ?? string.Empty;
         if (token == "submit-input")
         {
+            if (_activeMathView is
+                {
+                    IsEffectivelyVisible: true,
+                    DataContext: GraphEquationViewModel formattedEquation,
+                })
+            {
+                CommitFormattedEquation(formattedEquation);
+                _activeMathView.Focus();
+                return;
+            }
             SubmitEquation();
+            return;
+        }
+        if (_activeMathView is { IsEffectivelyVisible: true } mathView)
+        {
+            if (token == "clear-input")
+            {
+                mathView.Clear();
+            }
+            else if (token == "backspace-input")
+            {
+                mathView.Backspace();
+            }
+            else
+            {
+                mathView.InsertLinearText(ApplyTrigModifiers(token));
+            }
+            mathView.Focus();
             return;
         }
         if (_activeTextBox is null)
