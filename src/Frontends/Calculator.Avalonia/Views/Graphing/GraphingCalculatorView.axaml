@@ -51,32 +51,43 @@
                   BorderBrush="{DynamicResource GraphCommandPanelBorderBrush}"
                   BorderThickness="1">
             <StackPanel>
-              <Button Classes="graphCommandButton" Click="ZoomIn_OnClick"
+              <Button x:Name="ZoomInButton"
+                      Classes="graphCommandButton" Click="ZoomIn_OnClick"
                       Margin="4"
                       AutomationProperties.Name="Zoom in"
                       ToolTip.Tip="{Binding Graphing.Strings.ZoomInTooltip}">
-                <TextBlock FontFamily="{StaticResource CalculatorIconFont}"
+                <TextBlock Classes="graphCommandGlyph"
+                           FontFamily="{StaticResource CalculatorIconFont}"
                            FontSize="14" Text="&#xE948;" />
               </Button>
-              <Button Classes="graphCommandButton" Click="ZoomOut_OnClick"
+              <Button x:Name="ZoomOutButton"
+                      Classes="graphCommandButton" Click="ZoomOut_OnClick"
                       Margin="4,0"
                       AutomationProperties.Name="Zoom out"
                       ToolTip.Tip="{Binding Graphing.Strings.ZoomOutTooltip}">
-                <TextBlock FontFamily="{StaticResource CalculatorIconFont}"
+                <TextBlock Classes="graphCommandGlyph"
+                           FontFamily="{StaticResource CalculatorIconFont}"
                            FontSize="14" Text="&#xE949;" />
               </Button>
               <ToggleButton x:Name="GraphViewButton"
-                            Classes="graphCommandButton"
+                            Classes="graphCommandButton graphViewToggle"
                             Click="GraphViewButton_OnClick"
                             Margin="4"
+                            Background="Transparent"
+                            Foreground="{DynamicResource ChromeForegroundBrush}"
                             AutomationProperties.Name="Graph view">
-                <TextBlock x:Name="GraphViewGlyph"
-                           Width="18" Height="18"
-                           TextAlignment="Center"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                           FontFamily="{StaticResource CalculatorIconFont}"
-                           FontSize="15"
-                           Text="&#xE45E;" />
+                <Grid Width="18" Height="18">
+                  <TextBlock x:Name="GraphViewGlyph"
+                             Classes="graphCommandGlyph"
+                             FontFamily="{StaticResource CalculatorIconFont}"
+                             FontSize="15"
+                             Text="&#xE45E;" />
+                  <TextBlock x:Name="GraphViewFillGlyph"
+                             Classes="graphCommandGlyph graphViewFillGlyph"
+                             FontFamily="{StaticResource CalculatorIconFont}"
+                             FontSize="15"
+                             Text="&#xE45D;" />
+                </Grid>
               </ToggleButton>
             </StackPanel>
           </Border>

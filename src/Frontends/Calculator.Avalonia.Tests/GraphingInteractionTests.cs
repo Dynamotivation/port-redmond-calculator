@@ -5,6 +5,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -808,21 +809,42 @@ internal static class GraphingInteractionTests
             Pump();
 
             var viewModel = (CalculatorViewModel)window.DataContext!;
+            var graphView = window.GetVisualDescendants()
+                .OfType<GraphingCalculatorView>()
+                .Single();
             var plot = window.GetVisualDescendants()
                 .OfType<GraphCanvas>()
                 .Single();
             var button = window.GetVisualDescendants()
                 .OfType<ToggleButton>()
                 .Single(control => control.Name == "GraphViewButton");
+            var zoomInButton = graphView.FindControl<Button>("ZoomInButton")
+                ?? throw new InvalidOperationException("The zoom-in button is missing.");
+            var zoomOutButton = graphView.FindControl<Button>("ZoomOutButton")
+                ?? throw new InvalidOperationException("The zoom-out button is missing.");
             var glyphs = button.GetVisualDescendants()
                 .OfType<TextBlock>()
                 .ToArray();
+            var outlineGlyph = glyphs.Single(glyph => glyph.Name == "GraphViewGlyph");
+            var fillGlyph = glyphs.Single(glyph => glyph.Name == "GraphViewFillGlyph");
 
             Assert(
-                glyphs.Length == 1
-                && glyphs[0].Text == "\uE45E"
+                glyphs.Length == 2
+                && outlineGlyph.Text == "\uE45E"
+                && fillGlyph.Text == "\uE45D"
+                && fillGlyph.Opacity == 1
                 && button.IsChecked == true,
-                "Automatic best fit should be the checked state with one stable toggle glyph.");
+                "Automatic best fit should fill the stable graph-view glyph.");
+            Assert(
+                IsTransparent(button.Background),
+                "The active graph-view mode should not retain a pressed-button backdrop.");
+            Assert(
+                new ContentControl[] { zoomInButton, zoomOutButton, button }.All(control =>
+                    control.Bounds.Width == 32
+                    && control.Bounds.Height == 32
+                    && control.HorizontalContentAlignment == HorizontalAlignment.Center
+                    && control.VerticalContentAlignment == VerticalAlignment.Center),
+                "Graph command icons should use consistently centered 32-pixel buttons.");
             Assert(
                 Equals(ToolTip.GetTip(button), viewModel.Graphing.Strings.AutomaticViewTooltip),
                 "The toggle should be labelled as automatic best fit.");
@@ -830,9 +852,10 @@ internal static class GraphingInteractionTests
             plot.SetManualAdjustment(true);
             Pump();
             Assert(
-                glyphs[0].Text == "\uE45E"
+                outlineGlyph.Text == "\uE45E"
+                && fillGlyph.Opacity == 0
                 && button.IsChecked != true,
-                "Manual view should be the unchecked state without replacing the toggle glyph.");
+                "Manual view should remove only the graph-view glyph's active fill.");
             Assert(
                 Equals(ToolTip.GetTip(button), viewModel.Graphing.Strings.AutomaticViewTooltip),
                 "The toggle label should remain stable between states.");
@@ -840,9 +863,10 @@ internal static class GraphingInteractionTests
             plot.RefreshViewAutomatically();
             Pump();
             Assert(
-                glyphs[0].Text == "\uE45E"
+                outlineGlyph.Text == "\uE45E"
+                && fillGlyph.Opacity == 1
                 && button.IsChecked == true,
-                "Returning to automatic best fit should restore the checked state.");
+                "Returning to automatic best fit should restore the glyph fill.");
         }
         finally
         {
@@ -867,4 +891,9 @@ internal static class GraphingInteractionTests
             throw new InvalidOperationException(message);
         }
     }
+
+    private static bool IsTransparent(IBrush? brush) =>
+        brush is null
+        || brush.Opacity == 0
+        || brush is ISolidColorBrush solid && solid.Color.A == 0;
 }
