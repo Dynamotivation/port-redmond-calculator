@@ -587,9 +587,9 @@ internal static class GraphingInteractionTests
             Pump();
             var continuedCursor = plot.ActiveTraceCursorPosition!.Value;
             Assert(
-                Math.Abs(continuedCursor.X - fineCursor.X - 10) < 0.01
+                Math.Abs(continuedCursor.X - fineCursor.X - 20) < 0.01
                 && Math.Abs(continuedCursor.Y - fineCursor.Y) < 0.01,
-                "Mouse movement should continue from the keyboard-moved virtual cursor without snapping back.");
+                "Mouse movement should continue at double speed from the keyboard-moved virtual cursor.");
 
             window.KeyPress(
                 Key.Escape,
