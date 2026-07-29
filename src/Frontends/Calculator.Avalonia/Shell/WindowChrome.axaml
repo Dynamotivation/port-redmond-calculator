@@ -23,12 +23,15 @@
               Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.25"
               Data="M 12.5,5.5 L 6,12 L 12.5,18.5 M 6,12 L 20,12" />
       </Button>
-      <Image Width="22"
-             Height="22"
-             Margin="18,10,12,10"
-             Stretch="Uniform"
-             IsHitTestVisible="False"
-             Source="avares://Redmond%20Calculator/Assets/RedmondCalculatorIcon.png" />
+      <Grid Width="22"
+            Height="22"
+            Margin="18,10,12,10">
+        <Image Width="18"
+               Height="18"
+               Stretch="Uniform"
+               IsHitTestVisible="False"
+               Source="avares://Redmond%20Calculator/Assets/RedmondCalculatorIcon.png" />
+      </Grid>
       <TextBlock Margin="0,0,12,0"
                  VerticalAlignment="Center"
                  FontSize="13.2"
