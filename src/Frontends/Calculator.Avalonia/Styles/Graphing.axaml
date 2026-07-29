@@ -1,25 +1,69 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <Style Selector="Button.graphCommandButton">
+    <Setter Property="Width" Value="32" />
+    <Setter Property="Height" Value="32" />
     <Setter Property="MinWidth" Value="32" />
     <Setter Property="MinHeight" Value="32" />
-    <Setter Property="Padding" Value="8" />
+    <Setter Property="Padding" Value="0" />
     <Setter Property="Margin" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}" />
   </Style>
   <Style Selector="ToggleButton.graphCommandButton">
+    <Setter Property="Width" Value="32" />
+    <Setter Property="Height" Value="32" />
     <Setter Property="MinWidth" Value="32" />
     <Setter Property="MinHeight" Value="32" />
-    <Setter Property="Padding" Value="8" />
+    <Setter Property="Padding" Value="0" />
     <Setter Property="Margin" Value="0" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}" />
   </Style>
   <Style Selector="ToggleButton.graphCommandButton:checked">
     <Setter Property="Background" Value="{DynamicResource AccentButtonBrush}" />
+  </Style>
+  <Style Selector="TextBlock.graphCommandGlyph">
+    <Setter Property="Width" Value="18" />
+    <Setter Property="Height" Value="18" />
+    <Setter Property="LineHeight" Value="18" />
+    <Setter Property="TextAlignment" Value="Center" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="ToggleButton.graphCommandButton.graphViewToggle">
+    <!-- The stock Fluent toggle template paints an accent tile for :checked.
+         This mode toggle communicates its state through the glyph fill instead. -->
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="{TemplateBinding CornerRadius}">
+          <ContentPresenter Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            Foreground="{TemplateBinding Foreground}"
+                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="ToggleButton.graphCommandButton.graphViewToggle:checked">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource ChromeForegroundBrush}" />
+  </Style>
+  <Style Selector="ToggleButton.graphViewToggle TextBlock.graphViewFillGlyph">
+    <Setter Property="Opacity" Value="0" />
+  </Style>
+  <Style Selector="ToggleButton.graphViewToggle:checked TextBlock.graphViewFillGlyph">
+    <Setter Property="Opacity" Value="1" />
   </Style>
   <Style Selector="Button.calcButton.graphSecond.selected">
     <Setter Property="Background" Value="{DynamicResource AccentButtonBrush}" />
