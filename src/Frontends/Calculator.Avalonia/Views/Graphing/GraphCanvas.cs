@@ -34,6 +34,7 @@ public sealed class GraphCanvas : Control
     private const double TraceSearchRadius = 24;
     private const double ActiveTraceOffset = 40;
     private const double ActiveTracePointerSpeed = 2;
+    private const double HeldTraceMovementScale = 0.5;
     private Point? _lastPointerPosition;
     private Point? _pointerPressedPosition;
     private Point? _pointerPosition;
@@ -497,16 +498,17 @@ public sealed class GraphCanvas : Control
             _traceMovementTimer.Stop();
             return;
         }
-        MoveActiveTraceCursor();
+        MoveActiveTraceCursor(isHeldFrame: true);
     }
 
-    private void MoveActiveTraceCursor()
+    private void MoveActiveTraceCursor(bool isHeldFrame = false)
     {
         if (_activeTraceCursorPosition is not { } cursorPosition)
         {
             return;
         }
-        var delta = _fineTraceMovement ? 1d : 5d;
+        var delta = (_fineTraceMovement ? 1d : 5d)
+            * (isHeldFrame ? HeldTraceMovementScale : 1d);
         var movement = new Vector(
             (_traceRightPressed ? delta : 0) - (_traceLeftPressed ? delta : 0),
             (_traceDownPressed ? delta : 0) - (_traceUpPressed ? delta : 0));

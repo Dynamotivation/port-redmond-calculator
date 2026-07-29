@@ -606,7 +606,7 @@ internal static class GraphingInteractionTests
             Assert(
                 Math.Abs(afterInitialKeyDown.Y - holdStart.Y - 5) < 0.01
                 && plot.IsTraceMovementActive
-                && Math.Abs(afterHeldKey.Y - afterInitialKeyDown.Y - 15) < 0.01,
+                && Math.Abs(afterHeldKey.Y - afterInitialKeyDown.Y - 7.5) < 0.01,
                 "Holding an arrow key should advance the cursor continuously on render ticks.");
             window.KeyRelease(
                 Key.Down,
