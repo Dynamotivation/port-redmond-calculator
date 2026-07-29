@@ -543,6 +543,20 @@ internal static class GraphingInteractionTests
                 plot.IsTracing && plot.IsFocused && plot.ActiveTraceCursorPosition is not null,
                 "Starting tracing should focus the graph and show the Windows active trace cursor.");
 
+            var physicalPointer = new Point(
+                plot.Bounds.Width / 2 + 80,
+                plot.Bounds.Height / 2 + 80);
+            var physicalPointerInWindow = plot.TranslatePoint(physicalPointer, window)
+                ?? throw new InvalidOperationException("Could not locate the active pointer position.");
+            window.MouseMove(physicalPointerInWindow, RawInputModifiers.None);
+            Pump();
+            Assert(
+                plot.ActiveTraceCursorPosition is { } mouseCursor
+                && Math.Abs(mouseCursor.X - physicalPointer.X) < 0.01
+                && Math.Abs(mouseCursor.Y - physicalPointer.Y) < 0.01
+                && string.IsNullOrEmpty(plot.TraceText),
+                "The custom cursor should follow the mouse and repaint even when no curve is nearby.");
+
             var initialCursor = plot.ActiveTraceCursorPosition!.Value;
             window.KeyPress(
                 Key.Right,
@@ -565,6 +579,17 @@ internal static class GraphingInteractionTests
             Assert(
                 Math.Abs(fineCursor.X - normalCursor.X - 1) < 0.01,
                 "Shift plus an arrow key should move the active cursor by one pixel.");
+
+            var movedPhysicalPointer = physicalPointer + new Vector(10, 0);
+            var movedPhysicalPointerInWindow = plot.TranslatePoint(movedPhysicalPointer, window)
+                ?? throw new InvalidOperationException("Could not locate the moved pointer position.");
+            window.MouseMove(movedPhysicalPointerInWindow, RawInputModifiers.None);
+            Pump();
+            var continuedCursor = plot.ActiveTraceCursorPosition!.Value;
+            Assert(
+                Math.Abs(continuedCursor.X - fineCursor.X - 10) < 0.01
+                && Math.Abs(continuedCursor.Y - fineCursor.Y) < 0.01,
+                "Mouse movement should continue from the keyboard-moved virtual cursor without snapping back.");
 
             window.KeyPress(
                 Key.Escape,

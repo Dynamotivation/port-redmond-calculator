@@ -300,15 +300,24 @@ public sealed class GraphCanvas : Control
     {
         base.OnPointerMoved(e);
         var current = ClampToBounds(e.GetPosition(this));
-        _pointerPosition = current;
         if (_isTracing)
         {
-            _activeTraceCursorPosition = current;
-            UpdateTrace(current);
+            _activeTraceCursorPosition = _pointerPosition is { } previousPointer
+                && _activeTraceCursorPosition is { } activeCursor
+                    ? ClampToBounds(activeCursor + (current - previousPointer))
+                    : current;
+            _pointerPosition = current;
+            UpdateTrace(_activeTraceCursorPosition.Value);
+            InvalidateVisual();
         }
         else if (e.Pointer.Captured != this)
         {
+            _pointerPosition = current;
             UpdateTrace(current);
+        }
+        else
+        {
+            _pointerPosition = current;
         }
 
         if (_lastPointerPosition is not { } previous
@@ -423,6 +432,7 @@ public sealed class GraphCanvas : Control
 
         _activeTraceCursorPosition = ClampToBounds(cursorPosition + movement);
         UpdateTrace(_activeTraceCursorPosition.Value);
+        InvalidateVisual();
         e.Handled = true;
     }
 
