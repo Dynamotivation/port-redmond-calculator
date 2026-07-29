@@ -24,6 +24,9 @@ public partial class GraphingCalculatorView : UserControl
     private bool _showsEquationPanelOnNarrow;
     private bool _showsInverseKeypad;
     private bool _plotEventsAttached;
+    private bool? _displayedManualAdjustment;
+    private bool _suppressGraphOptionsButtonClick;
+    private TopLevel? _graphOptionsInputRoot;
     private TextBox? _activeTextBox;
 
     public GraphingCalculatorView()
@@ -33,9 +36,18 @@ public partial class GraphingCalculatorView : UserControl
             KeyDownEvent,
             OnGraphOptionsKeyDown,
             RoutingStrategies.Tunnel);
+        DataContextChanged += (_, _) =>
+        {
+            _displayedManualAdjustment = null;
+            if (_plotEventsAttached)
+            {
+                UpdateGraphViewButton();
+            }
+        };
         SizeChanged += (_, _) => UpdateResponsiveLayout(Bounds.Width);
         AttachedToVisualTree += (_, _) =>
         {
+            AttachGraphOptionsInputRoot();
             if (!_plotEventsAttached)
             {
                 Plot.ViewportChanged += Plot_OnViewportChanged;
@@ -49,6 +61,7 @@ public partial class GraphingCalculatorView : UserControl
             UpdateGraphViewButton();
             GraphTheme_OnChanged(null, new RoutedEventArgs());
         };
+        DetachedFromVisualTree += (_, _) => DetachGraphOptionsInputRoot();
     }
 
     public event EventHandler<KeyEventArgs>? ShortcutKeyDown;
@@ -194,11 +207,11 @@ public partial class GraphingCalculatorView : UserControl
     {
         if (GraphViewButton.IsChecked == true)
         {
-            Plot.SetManualAdjustment(true);
+            Plot.RefreshViewAutomatically();
         }
         else
         {
-            Plot.RefreshViewAutomatically();
+            Plot.SetManualAdjustment(true);
         }
         UpdateGraphViewButton();
     }
@@ -227,13 +240,113 @@ public partial class GraphingCalculatorView : UserControl
         ToolTip.SetTip(TraceButton, label);
     }
 
-    private void GraphOptionsFlyout_OnOpened(object? sender, EventArgs e)
+    private void GraphOptionsButton_OnClick(object? sender, RoutedEventArgs e)
     {
-        UpdateBoundsEditors();
+        if (_suppressGraphOptionsButtonClick)
+        {
+            _suppressGraphOptionsButtonClick = false;
+            return;
+        }
+
+        GraphOptionsPopup.IsOpen = !GraphOptionsPopup.IsOpen;
+        if (GraphOptionsPopup.IsOpen)
+        {
+            UpdateBoundsEditors();
+        }
     }
 
-    private void OnGraphOptionsKeyDown(object? sender, KeyEventArgs e) =>
+    private void AttachGraphOptionsInputRoot()
+    {
+        var inputRoot = TopLevel.GetTopLevel(this);
+        if (ReferenceEquals(inputRoot, _graphOptionsInputRoot))
+        {
+            return;
+        }
+
+        DetachGraphOptionsInputRoot();
+        _graphOptionsInputRoot = inputRoot;
+        _graphOptionsInputRoot?.AddHandler(
+            PointerPressedEvent,
+            OnGraphOptionsRootPointerPressed,
+            RoutingStrategies.Tunnel,
+            handledEventsToo: true);
+        _graphOptionsInputRoot?.AddHandler(
+            PointerReleasedEvent,
+            OnGraphOptionsRootPointerReleased,
+            RoutingStrategies.Bubble,
+            handledEventsToo: true);
+        _graphOptionsInputRoot?.AddHandler(
+            KeyDownEvent,
+            OnGraphOptionsRootKeyDown,
+            RoutingStrategies.Tunnel,
+            handledEventsToo: true);
+    }
+
+    private void DetachGraphOptionsInputRoot()
+    {
+        if (_graphOptionsInputRoot is null)
+        {
+            return;
+        }
+
+        _graphOptionsInputRoot.RemoveHandler(
+            PointerPressedEvent,
+            OnGraphOptionsRootPointerPressed);
+        _graphOptionsInputRoot.RemoveHandler(
+            PointerReleasedEvent,
+            OnGraphOptionsRootPointerReleased);
+        _graphOptionsInputRoot.RemoveHandler(
+            KeyDownEvent,
+            OnGraphOptionsRootKeyDown);
+        _graphOptionsInputRoot = null;
+    }
+
+    private void OnGraphOptionsRootPointerPressed(
+        object? sender,
+        PointerPressedEventArgs e)
+    {
+        if (!GraphOptionsPopup.IsOpen || e.Source is not Visual source)
+        {
+            return;
+        }
+
+        if (ReferenceEquals(source, GraphOptionsPanel)
+            || GraphOptionsPanel.IsVisualAncestorOf(source))
+        {
+            return;
+        }
+
+        _suppressGraphOptionsButtonClick =
+            ReferenceEquals(source, GraphOptionsButton)
+            || GraphOptionsButton.IsVisualAncestorOf(source);
+        GraphOptionsPopup.IsOpen = false;
+    }
+
+    private void OnGraphOptionsRootPointerReleased(
+        object? sender,
+        PointerReleasedEventArgs e) =>
+        _suppressGraphOptionsButtonClick = false;
+
+    private void OnGraphOptionsRootKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (GraphOptionsPopup.IsOpen && e.Key == Key.Escape)
+        {
+            GraphOptionsPopup.IsOpen = false;
+            e.Handled = true;
+        }
+    }
+
+    private void OnGraphOptionsKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (GraphOptionsPopup.IsOpen && e.Key == Key.Escape)
+        {
+            GraphOptionsPopup.IsOpen = false;
+            e.Handled = true;
+            return;
+        }
+
         ShortcutKeyDown?.Invoke(this, e);
+    }
 
     private void Plot_OnViewportChanged(object? sender, EventArgs e) => UpdateBoundsEditors();
 
@@ -242,8 +355,18 @@ public partial class GraphingCalculatorView : UserControl
 
     private void UpdateGraphViewButton()
     {
-        GraphViewButton.IsChecked = Plot.IsManualAdjustment;
-        AutomaticViewGlyph.IsVisible = !Plot.IsManualAdjustment;
+        var isManualAdjustment = Plot.IsManualAdjustment;
+        if (_displayedManualAdjustment == isManualAdjustment)
+        {
+            return;
+        }
+
+        _displayedManualAdjustment = isManualAdjustment;
+        GraphViewButton.IsChecked = !isManualAdjustment;
+
+        var label = Graphing?.Strings.AutomaticViewTooltip ?? "Automatic best fit";
+        AutomationProperties.SetName(GraphViewButton, label);
+        ToolTip.SetTip(GraphViewButton, label);
     }
 
     private void UpdateBoundsEditors()

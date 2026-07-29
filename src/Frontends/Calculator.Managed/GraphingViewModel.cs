@@ -81,7 +81,8 @@ public sealed record GraphingStrings(
     string PasteEquationText = "Paste",
     string UndoEquationText = "Undo",
     string SelectAllEquationText = "Select all",
-    string UnexpectedEndOfExpression = "Unexpected end of expression");
+    string UnexpectedEndOfExpression = "Unexpected end of expression",
+    string AutomaticViewTooltip = "Automatic best fit");
 
 public sealed record GraphEquationRenderModel(
     uint ExpressionId,
