@@ -1,3 +1,4 @@
+using Calculator.Avalonia.Views.Graphing;
 using Calculator.Managed;
 using Calculator.Managed.Graphing;
 
@@ -11,10 +12,14 @@ internal static class GraphingTests
         ("graphing evaluates implicit equations", EvaluatesImplicitEquations),
         ("graphing evaluates polar expressions", EvaluatesPolarExpressions),
         ("graphing evaluates inequalities", EvaluatesInequalities),
-        ("graphing forces dotted area rendering", ForcesDottedAreaRendering),
+        ("graphing forces dashed inequality boundaries", ForcesDashedInequalityBoundaries),
+        ("graphing automatically fits explicit functions on independent axes", AutomaticallyFitsExplicitFunctions),
+        ("graphing automatically fits polar and implicit relations", AutomaticallyFitsPolarAndImplicitRelations),
+        ("graphing preserves a manually adjusted viewport", PreservesManuallyAdjustedViewport),
         ("graphing view model tracks parameters", ViewModelTracksParameters),
         ("graphing equation presentation state is preserved", EquationPresentationStateIsPreserved),
         ("graphing formats committed equations as latex", FormatsCommittedEquationsAsLatex),
+        ("graphing uses localized native parse errors", UsesLocalizedNativeParseErrors),
         ("graphing commits drafts and maintains a placeholder", DraftsCommitAtTheFourteenFunctionLimit),
         ("graphing cleared equations remain allocated placeholders", ClearedEquationsRemainAllocated),
         ("graphing invalid rows consume slots and colors", InvalidRowsConsumeSlotsAndColors),
@@ -69,7 +74,7 @@ internal static class GraphingTests
         Assert(!evaluator.EvaluateInequality(0, 2), "(0,2) should not satisfy y <= x + 1");
     }
 
-    private static void ForcesDottedAreaRendering()
+    private static void ForcesDashedInequalityBoundaries()
     {
         var viewModel = new GraphingViewModel(CreateStrings());
         var equation = viewModel.Equations.Single();
@@ -78,13 +83,106 @@ internal static class GraphingTests
         Assert(equation.UsesAreaRendering, "an inequality should use area rendering");
         Assert(!equation.CanCustomizeLineStyle,
             "area-rendering equations should disable line-style customization");
-        Assert(equation.EffectiveLineStyle == GraphLineStyle.Dot,
-            "area-rendering equations should force the dotted style");
+        Assert(equation.EffectiveLineStyle == GraphLineStyle.Dash,
+            "area-rendering equations should force a dashed boundary");
 
         equation.LineStyle = GraphLineStyle.Solid;
         var rendered = viewModel.GetRenderableEquations().Single();
-        Assert(rendered.LineStyle == GraphLineStyle.Dot,
-            "programmatic style changes must not override dotted area rendering");
+        Assert(rendered.LineStyle == GraphLineStyle.Dash,
+            "programmatic style changes must not override the dashed inequality boundary");
+    }
+
+    private static void AutomaticallyFitsExplicitFunctions()
+    {
+        var viewModel = new GraphingViewModel(CreateStrings());
+        viewModel.Equations.Single().Expression = "y = 1000 + sin(x)";
+
+        var viewport = GraphViewportFitter.Calculate(viewModel.GetRenderableEquations());
+        Assert(viewport.XMinimum < 0 && viewport.XMaximum > 0,
+            "the standard x-domain should remain visible");
+        Assert(viewport.YMinimum < 999 && viewport.YMaximum > 1001,
+            "the fitted y-axis should contain the complete translated sine wave");
+        Assert(viewport.YMinimum > 990 && viewport.YMaximum < 1010,
+            "the y-axis should center the translated graph rather than retaining -10..10");
+        Assert(
+            viewport.XMaximum - viewport.XMinimum
+                > viewport.YMaximum - viewport.YMinimum,
+            "x and y must be scaled independently");
+
+        var translated = new GraphingViewModel(CreateStrings());
+        translated.Equations.Single().Expression = "y = (x - 100)^2";
+        var translatedViewport = GraphViewportFitter.Calculate(
+            translated.GetRenderableEquations());
+        Assert(translatedViewport.XMinimum < 100 && translatedViewport.XMaximum > 100,
+            "the x-axis should follow a translated function's central feature");
+        Assert(translatedViewport.XMinimum > 80 && translatedViewport.XMaximum < 120,
+            "the translated feature should be centered in a standard-width x window");
+        Assert(translatedViewport.YMinimum < 0 && translatedViewport.YMaximum > 0,
+            "the translated vertex should remain visible with padding");
+    }
+
+    private static void AutomaticallyFitsPolarAndImplicitRelations()
+    {
+        var polar = new GraphingViewModel(CreateStrings());
+        polar.Equations.Single().Expression = "r = 2";
+        var polarViewport = GraphViewportFitter.Calculate(polar.GetRenderableEquations());
+        AssertContains(polarViewport, -2, 0, "polar left point");
+        AssertContains(polarViewport, 2, 0, "polar right point");
+        AssertContains(polarViewport, 0, -2, "polar bottom point");
+        AssertContains(polarViewport, 0, 2, "polar top point");
+        Assert(polarViewport.XMaximum - polarViewport.XMinimum < 6
+            && polarViewport.YMaximum - polarViewport.YMinimum < 6,
+            "a radius-two polar graph should receive a close padded fit");
+
+        var implicitGraph = new GraphingViewModel(CreateStrings());
+        implicitGraph.Equations.Single().Expression = "x^2 + y^2 = 4";
+        var implicitViewport = GraphViewportFitter.Calculate(
+            implicitGraph.GetRenderableEquations());
+        AssertContains(implicitViewport, -2, 0, "implicit left point");
+        AssertContains(implicitViewport, 2, 0, "implicit right point");
+        AssertContains(implicitViewport, 0, -2, "implicit bottom point");
+        AssertContains(implicitViewport, 0, 2, "implicit top point");
+        Assert(implicitViewport.XMaximum - implicitViewport.XMinimum < 6
+            && implicitViewport.YMaximum - implicitViewport.YMinimum < 6,
+            "a radius-two implicit circle should receive a close padded fit");
+
+        var translatedImplicit = new GraphingViewModel(CreateStrings());
+        translatedImplicit.Equations.Single().Expression = "(x - 100)^2 + y^2 = 4";
+        var translatedImplicitViewport = GraphViewportFitter.Calculate(
+            translatedImplicit.GetRenderableEquations());
+        AssertContains(translatedImplicitViewport, 98, 0, "translated implicit left point");
+        AssertContains(translatedImplicitViewport, 102, 0, "translated implicit right point");
+        Assert(translatedImplicitViewport.XMinimum > 90
+            && translatedImplicitViewport.XMaximum < 110,
+            "implicit discovery should recenter relations outside the default window");
+    }
+
+    private static void PreservesManuallyAdjustedViewport()
+    {
+        var viewModel = new GraphingViewModel(CreateStrings());
+        var canvas = new GraphCanvas { ViewModel = viewModel };
+        canvas.SetViewport(-3, 7, -4, 6);
+
+        Assert(canvas.IsManualAdjustment, "setting graph bounds should activate manual mode");
+        viewModel.Equations.Single().Expression = "y = 1000";
+        AssertNear(canvas.XMinimum, -3, "manual x-minimum");
+        AssertNear(canvas.XMaximum, 7, "manual x-maximum");
+        AssertNear(canvas.YMinimum, -4, "manual y-minimum");
+        AssertNear(canvas.YMaximum, 6, "manual y-maximum");
+
+        canvas.RefreshViewAutomatically();
+        Assert(!canvas.IsManualAdjustment, "automatic refresh should leave manual mode");
+        Assert(canvas.YMinimum < 1000 && canvas.YMaximum > 1000,
+            "automatic refresh should fit the current equation");
+        Assert(canvas.YMinimum > 900,
+            "automatic refresh should center the constant function near its value");
+
+        var automaticMinimum = canvas.YMinimum;
+        viewModel.Equations.Single().Expression = "y = -500";
+        Assert(canvas.YMinimum < -500 && canvas.YMaximum > -500,
+            "geometry changes should refit while automatic mode is active");
+        Assert(canvas.YMinimum != automaticMinimum,
+            "the automatic viewport should change with graph geometry");
     }
 
     private static void ViewModelTracksParameters()
@@ -156,6 +254,25 @@ internal static class GraphingTests
         Assert(equation.ShowFormattedExpression
             && equation.FormattedExpression.Contains("3"),
             "leaving the editor should parse and retypeset the new expression");
+    }
+
+    private static void UsesLocalizedNativeParseErrors()
+    {
+        const string localizedError = "Localized unexpected end";
+        var viewModel = new GraphingViewModel(
+            CreateStrings() with { UnexpectedEndOfExpression = localizedError });
+        var equation = viewModel.Equations.Single();
+
+        equation.Expression = "≤";
+
+        Assert(equation.ErrorMessage == localizedError,
+            "a missing inequality operand should use the native localized resource");
+        Assert(equation.ShowErrorIcon,
+            "an unfocused invalid equation should expose the native-style error icon");
+
+        equation.IsEditing = true;
+        Assert(!equation.ShowErrorIcon,
+            "the native-style error icon should be hidden while the equation is focused");
     }
 
     private static void DraftsCommitAtTheFourteenFunctionLimit()
@@ -515,6 +632,18 @@ internal static class GraphingTests
         "Reset view",
         "Show equations",
         "Show graph");
+
+    private static void AssertContains(
+        GraphViewport viewport,
+        double x,
+        double y,
+        string message)
+    {
+        Assert(
+            x >= viewport.XMinimum && x <= viewport.XMaximum
+                && y >= viewport.YMinimum && y <= viewport.YMaximum,
+            $"{message} should be inside {viewport}");
+    }
 
     private static void AssertNear(double actual, double expected, string message)
     {

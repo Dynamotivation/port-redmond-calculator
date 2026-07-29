@@ -106,8 +106,18 @@ public interface IMathSolver
         CancellationToken cancellationToken);
 }
 
-public sealed class GraphingParseException(string message, int errorOffset = -1)
+public enum GraphingParseErrorCode
+{
+    Unknown,
+    UnexpectedEndOfExpression,
+}
+
+public sealed class GraphingParseException(
+    string message,
+    int errorOffset = -1,
+    GraphingParseErrorCode errorCode = GraphingParseErrorCode.Unknown)
     : FormatException(message)
 {
     public int ErrorOffset { get; } = errorOffset;
+    public GraphingParseErrorCode ErrorCode { get; } = errorCode;
 }

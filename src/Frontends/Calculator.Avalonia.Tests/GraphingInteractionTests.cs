@@ -18,6 +18,7 @@ internal static class GraphingInteractionTests
         ("equation context menu is attached before right click", EquationContextMenuIsAttached),
         ("committed equation switches between typeset and linear editing", CommittedEquationSwitchesPresentation),
         ("editing clear button clears the committed equation", EditingClearButtonClearsEquation),
+        ("invalid equation uses the native error presentation", InvalidEquationUsesNativeErrorPresentation),
         ("graphing selector flyouts insert tokens with square keys", SelectorFlyoutsInsertTokens),
     ];
 
@@ -267,6 +268,67 @@ internal static class GraphingInteractionTests
             Assert(
                 viewModel.Graphing.GetRenderableEquations().Count == 0,
                 "Clearing the equation should remove its graph immediately.");
+        }
+        finally
+        {
+            window.Close();
+            Dispatcher.UIThread.RunJobs();
+        }
+    }
+
+    private static void InvalidEquationUsesNativeErrorPresentation()
+    {
+        Application.Current!.RequestedThemeVariant = ThemeVariant.Light;
+        var window = new MainWindow(new AppSettings(
+            AppThemePreference.Light,
+            "Inter",
+            UseMicaEffect: false,
+            WindowCornerStyle.Windows11,
+            WindowControlStyle.Windows11))
+        {
+            Width = 1204,
+            Height = 720,
+        };
+
+        try
+        {
+            window.Show();
+            Pump();
+            window.KeyPressQwerty(PhysicalKey.Digit3, RawInputModifiers.Alt);
+            Pump();
+
+            var viewModel = (CalculatorViewModel)window.DataContext!;
+            var equation = viewModel.Graphing.Equations[0];
+            equation.Expression = "≤";
+            equation.IsEditing = false;
+            Pump();
+
+            var errorIcon = window.GetVisualDescendants()
+                .OfType<TextBlock>()
+                .First(control =>
+                    control.Name == "EquationErrorIcon"
+                    && ReferenceEquals(control.DataContext, equation));
+            var actions = window.GetVisualDescendants()
+                .OfType<Button>()
+                .Where(button =>
+                    ReferenceEquals(button.DataContext, equation)
+                    && (button.Classes.Contains("graphEquationAction")
+                        || button.Classes.Contains("graphEquationErrorAction"))
+                    && button.IsEffectivelyVisible)
+                .ToArray();
+
+            Assert(equation.ErrorMessage == viewModel.Graphing.Strings.UnexpectedEndOfExpression,
+                "The parser should use the localized Windows Calculator error resource.");
+            Assert(errorIcon.IsEffectivelyVisible
+                && Equals(ToolTip.GetTip(errorIcon), equation.ErrorMessage),
+                "The native error glyph should expose the localized error as its tooltip.");
+            Assert(actions.Length == 1,
+                "An invalid row should expose only its remove action, not analyze or line style.");
+
+            equation.IsEditing = true;
+            Pump();
+            Assert(!errorIcon.IsEffectivelyVisible,
+                "The native error glyph should be hidden while the invalid row is focused.");
         }
         finally
         {

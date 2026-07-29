@@ -36,10 +36,12 @@ public partial class GraphingCalculatorView : UserControl
             {
                 Plot.ViewportChanged += Plot_OnViewportChanged;
                 Plot.TraceChanged += Plot_OnTraceChanged;
+                Plot.ManualAdjustmentChanged += Plot_OnManualAdjustmentChanged;
                 _plotEventsAttached = true;
             }
             UpdateResponsiveLayout(Bounds.Width);
             UpdateBoundsEditors();
+            UpdateGraphViewButton();
             GraphTheme_OnChanged(null, new RoutedEventArgs());
         };
     }
@@ -70,7 +72,11 @@ public partial class GraphingCalculatorView : UserControl
     }
 
     public void FocusGraph() => Plot.Focus();
-    public void ResetView() => Plot.ResetView();
+    public void ResetView()
+    {
+        Plot.RefreshViewAutomatically();
+        UpdateGraphViewButton();
+    }
 
     private void UpdateResponsiveLayout(double width)
     {
@@ -129,8 +135,22 @@ public partial class GraphingCalculatorView : UserControl
 
     private void ResetView_OnClick(object? sender, RoutedEventArgs e)
     {
-        Plot.ResetView();
+        Plot.RefreshViewAutomatically();
+        UpdateGraphViewButton();
         UpdateBoundsEditors();
+    }
+
+    private void GraphViewButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (GraphViewButton.IsChecked == true)
+        {
+            Plot.SetManualAdjustment(true);
+        }
+        else
+        {
+            Plot.RefreshViewAutomatically();
+        }
+        UpdateGraphViewButton();
     }
 
     private void TraceButton_OnClick(object? sender, RoutedEventArgs e)
@@ -159,6 +179,15 @@ public partial class GraphingCalculatorView : UserControl
     }
 
     private void Plot_OnViewportChanged(object? sender, EventArgs e) => UpdateBoundsEditors();
+
+    private void Plot_OnManualAdjustmentChanged(object? sender, EventArgs e) =>
+        UpdateGraphViewButton();
+
+    private void UpdateGraphViewButton()
+    {
+        GraphViewButton.IsChecked = Plot.IsManualAdjustment;
+        AutomaticViewGlyph.IsVisible = !Plot.IsManualAdjustment;
+    }
 
     private void UpdateBoundsEditors()
     {
@@ -794,6 +823,9 @@ public partial class GraphingCalculatorView : UserControl
             {
                 Width = segmentWidth,
                 Height = 2.5,
+                CornerRadius = lineStyle == GraphLineStyle.Dot
+                    ? new CornerRadius(1.25)
+                    : default,
                 Margin = new Thickness(0, 0, segmentGap, 0),
                 Background = new SolidColorBrush(Color.Parse("#808080")),
             });
