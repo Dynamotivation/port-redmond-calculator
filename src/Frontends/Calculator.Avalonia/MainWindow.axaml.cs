@@ -12,6 +12,7 @@ using Avalonia.Threading;
 using Calculator.Avalonia.Controls;
 using Calculator.Avalonia.Services;
 using Calculator.Avalonia.Services.Platform;
+using Calculator.Avalonia.Views.Graphing;
 using Calculator.Managed;
 using Calculator.Shortcuts;
 using Redmond.Shortcuts;
@@ -349,9 +350,15 @@ public partial class MainWindow : Window
         }
         else if (_viewModel.IsGraphingMode)
         {
+            if (e.Source is EditableMathView
+                && e.PhysicalKey == PhysicalKey.NumPadEnter)
+            {
+                return;
+            }
             var graphScope = e.Source switch
             {
                 TextBox { Name: "EquationExpressionTextBox" } => _graphEquationInputShortcutScope,
+                EditableMathView => _graphEquationInputShortcutScope,
                 TextBox => _graphSettingsShortcutScope,
                 _ => _graphingShortcutScope,
             };

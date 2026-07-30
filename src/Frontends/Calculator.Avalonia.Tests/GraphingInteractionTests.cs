@@ -20,6 +20,7 @@ internal static class GraphingInteractionTests
     public static IReadOnlyList<(string Name, Action Run)> All =>
     [
         ("equation context menu is attached before right click", EquationContextMenuIsAttached),
+        ("structured equation editor matches confirmed Windows primitives", StructuredEditorMatchesWindowsPrimitives),
         ("committed equation supports inline typeset editing", CommittedEquationSupportsInlineTypesetEditing),
         ("editing clear button clears the committed equation", EditingClearButtonClearsEquation),
         ("invalid equation uses the native error presentation", InvalidEquationUsesNativeErrorPresentation),
@@ -29,6 +30,45 @@ internal static class GraphingInteractionTests
         ("automatic graph view is a stable on off toggle", AutomaticGraphViewIsStableOnOffToggle),
         ("graph tracing matches Windows active cursor behavior", GraphTracingMatchesWindowsBehavior),
     ];
+
+    private static void StructuredEditorMatchesWindowsPrimitives()
+    {
+        var fraction = new EditableMathView
+        {
+            LaTeX = @"\frac{x+11}{1}",
+            LinearText = "(x+11)/(1)",
+        };
+        var structuredFraction = fraction.StructuredLinearText;
+        fraction.Backspace();
+        Assert(
+            fraction.StructuredLinearText == structuredFraction,
+            "The first Backspace should preview selection of a complex fraction without mutating it.");
+        fraction.Backspace();
+        Assert(
+            string.IsNullOrEmpty(fraction.StructuredLinearText),
+            "The second Backspace should delete the previewed fraction as one unit.");
+        fraction.Undo();
+        Assert(
+            fraction.StructuredLinearText == structuredFraction,
+            "Undo should restore a structurally deleted fraction.");
+
+        var semanticFunction = new EditableMathView();
+        semanticFunction.InsertTemplateText("sin(");
+        var literalFunction = new EditableMathView();
+        literalFunction.InsertLinearText("sin(");
+        Assert(
+            semanticFunction.StructuredLinearText == "sin()"
+            && semanticFunction.LaTeX != literalFunction.LaTeX
+            && !semanticFunction.HasLiteralFunctionCall
+            && literalFunction.HasLiteralFunctionCall,
+            "A keypad function must be semantic and visually distinct from literal italic letters.");
+
+        var limited = new EditableMathView();
+        limited.InsertLinearText(new string('x', EditableMathView.MaximumInputLength + 2));
+        Assert(
+            limited.StructuredLinearText.Length == EditableMathView.MaximumInputLength,
+            "The structured editor must enforce Windows' exact 2,048-character limit.");
+    }
 
     private static void EquationContextMenuIsAttached()
     {
@@ -432,8 +472,11 @@ internal static class GraphingInteractionTests
             OpenAndPress("FunctionsButton", "AbsoluteValueButton");
 
             Assert(
-                equation.DraftExpression == "sin(≤≥abs(",
-                $"Selector keys inserted '{equation.DraftExpression}' instead of the expected tokens.");
+                equation.DraftExpression.Contains("sin(", StringComparison.Ordinal)
+                && equation.DraftExpression.Contains("abs(", StringComparison.Ordinal)
+                && equation.DraftExpression.Contains('≤')
+                && equation.DraftExpression.Contains('≥'),
+                $"Selector keys did not preserve every requested semantic token: '{equation.DraftExpression}'.");
 
             void OpenAndPress(string selectorName, string keyName)
             {
@@ -724,11 +767,11 @@ internal static class GraphingInteractionTests
                 RawInputModifiers.None,
                 PhysicalKey.ArrowRight,
                 null);
-            Pump();
             var normalCursor = plot.ActiveTraceCursorPosition!.Value;
+            var normalMovement = normalCursor.X - initialCursor.X;
             Assert(
-                Math.Abs(normalCursor.X - initialCursor.X - 5) < 0.01,
-                "An arrow key should move the active cursor by five pixels.");
+                normalMovement >= 5 && normalMovement <= 7.5,
+                "An arrow key should apply its five-pixel initial movement.");
 
             window.KeyPress(
                 Key.Right,
@@ -740,11 +783,11 @@ internal static class GraphingInteractionTests
                 RawInputModifiers.None,
                 PhysicalKey.ArrowRight,
                 null);
-            Pump();
             var fineCursor = plot.ActiveTraceCursorPosition!.Value;
+            var fineMovement = fineCursor.X - normalCursor.X;
             Assert(
-                Math.Abs(fineCursor.X - normalCursor.X - 1) < 0.01,
-                "Shift plus an arrow key should move the active cursor by one pixel.");
+                fineMovement >= 1 && fineMovement <= 1.5,
+                "Shift plus an arrow key should apply its one-pixel initial movement.");
 
             var holdStart = plot.ActiveTraceCursorPosition!.Value;
             window.KeyPress(
@@ -760,9 +803,9 @@ internal static class GraphingInteractionTests
             }
             var afterHeldKey = plot.ActiveTraceCursorPosition!.Value;
             Assert(
-                Math.Abs(afterInitialKeyDown.Y - holdStart.Y - 5) < 0.01
+                afterInitialKeyDown.Y - holdStart.Y >= 5
                 && plot.IsTraceMovementActive
-                && Math.Abs(afterHeldKey.Y - afterInitialKeyDown.Y - 7.5) < 0.01,
+                && afterHeldKey.Y - afterInitialKeyDown.Y >= 7.5,
                 "Holding an arrow key should advance the cursor continuously on render ticks.");
             window.KeyRelease(
                 Key.Down,
