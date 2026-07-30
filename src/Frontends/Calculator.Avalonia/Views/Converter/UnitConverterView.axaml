@@ -1,101 +1,175 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="using:Calculator.Avalonia"
              xmlns:managed="using:Calculator.Managed"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              x:Class="Calculator.Avalonia.Views.UnitConverterView"
              x:DataType="managed:CalculatorViewModel"
              IsVisible="{Binding IsUnitConverterMode}">
-  <!-- Unit converter: the controls are backed by CalcViewModel's native
-       UnitConverter and the original Microsoft conversion catalog. -->
-  <Grid Margin="12,2,12,12"
-        RowDefinitions="Auto,1.12*,Auto,1.12*,Auto,1.65*">
-    <ui:FAComboBox Grid.Row="0" Classes="unitSelector" Margin="0,0,0,7" TabIndex="0"
-                   Padding="12,0,0,0"
-                   VerticalContentAlignment="Center"
-                   ItemsSource="{Binding Converter.Categories}"
-                   SelectedItem="{Binding Converter.SelectedCategory}">
-      <ui:FAComboBox.ItemTemplate>
-        <DataTemplate x:DataType="managed:UnitConverterCategory">
-          <TextBlock Text="{Binding Name}" />
-        </DataTemplate>
-      </ui:FAComboBox.ItemTemplate>
-    </ui:FAComboBox>
-
-    <Grid Grid.Row="1" RowDefinitions="*,Auto" Margin="6,0">
-      <TextBlock Classes="unitDisplay" Text="{Binding Converter.FromDisplay}" />
-      <ui:FAComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4" TabIndex="2"
-                     Padding="12,0,0,0"
-                     VerticalContentAlignment="Center"
-                     ItemsSource="{Binding Converter.Definitions}"
-                     SelectedItem="{Binding Converter.SelectedFromUnit}">
+  <Grid Margin="12,2,12,12" RowDefinitions="1.95*,1.65*">
+    <!-- The original static converter stays backed by Microsoft's native
+         catalog. Currency is a managed network boundary with provider-native
+         parsers and never sends the value being converted. -->
+    <Grid IsVisible="{Binding IsStaticUnitConverterMode}"
+          RowDefinitions="Auto,1.12*,Auto,1.12*,Auto">
+      <ui:FAComboBox Grid.Row="0" Classes="unitSelector" Margin="0,0,0,7" TabIndex="0"
+                     Padding="12,0,0,0" VerticalContentAlignment="Center"
+                     ItemsSource="{Binding Converter.Categories}"
+                     SelectedItem="{Binding Converter.SelectedCategory}">
         <ui:FAComboBox.ItemTemplate>
-          <DataTemplate x:DataType="managed:UnitConverterUnit">
-            <Grid ColumnDefinitions="*,Auto">
-              <TextBlock Text="{Binding Name}" />
-              <TextBlock Grid.Column="1" Margin="16,0,0,0" Opacity="0.65" Text="{Binding Abbreviation}" />
-            </Grid>
+          <DataTemplate x:DataType="managed:UnitConverterCategory">
+            <TextBlock Text="{Binding Name}" />
           </DataTemplate>
         </ui:FAComboBox.ItemTemplate>
       </ui:FAComboBox>
-    </Grid>
 
-    <Button Grid.Row="2" Width="42" Height="34" Padding="0" HorizontalAlignment="Right" TabIndex="5"
-            Margin="0,-1,6,-1" Background="Transparent" BorderThickness="0"
-            FontSize="19" Content="⇅" AutomationProperties.Name="Swap units"
-            Command="{Binding Converter.SwapCommand}" />
+      <Grid Grid.Row="1" RowDefinitions="*,Auto" Margin="6,0">
+        <TextBlock Classes="unitDisplay" Text="{Binding Converter.FromDisplay}" />
+        <ui:FAComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4" TabIndex="2"
+                       Padding="12,0,0,0" VerticalContentAlignment="Center"
+                       ItemsSource="{Binding Converter.Definitions}"
+                       SelectedItem="{Binding Converter.SelectedFromUnit}">
+          <ui:FAComboBox.ItemTemplate>
+            <DataTemplate x:DataType="managed:UnitConverterUnit">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding Name}" />
+                <TextBlock Grid.Column="1" Margin="16,0,0,0" Opacity="0.65" Text="{Binding Abbreviation}" />
+              </Grid>
+            </DataTemplate>
+          </ui:FAComboBox.ItemTemplate>
+        </ui:FAComboBox>
+      </Grid>
 
-    <Grid Grid.Row="3" RowDefinitions="*,Auto" Margin="6,0">
-      <TextBlock Classes="unitDisplay" Text="{Binding Converter.ToDisplay}" />
-      <ui:FAComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4" TabIndex="4"
-                     Padding="12,0,0,0"
-                     VerticalContentAlignment="Center"
-                     ItemsSource="{Binding Converter.Definitions}"
-                     SelectedItem="{Binding Converter.SelectedToUnit}">
-        <ui:FAComboBox.ItemTemplate>
-          <DataTemplate x:DataType="managed:UnitConverterUnit">
-            <Grid ColumnDefinitions="*,Auto">
-              <TextBlock Text="{Binding Name}" />
-              <TextBlock Grid.Column="1" Margin="16,0,0,0" Opacity="0.65" Text="{Binding Abbreviation}" />
-            </Grid>
+      <Button Grid.Row="2" Width="42" Height="34" Padding="0" HorizontalAlignment="Right" TabIndex="5"
+              Margin="0,-1,6,-1" Background="Transparent" BorderThickness="0"
+              FontSize="19" Content="⇅" AutomationProperties.Name="Swap units"
+              Command="{Binding SwapConverterCommand}" />
+
+      <Grid Grid.Row="3" RowDefinitions="*,Auto" Margin="6,0">
+        <TextBlock Classes="unitDisplay" Text="{Binding Converter.ToDisplay}" />
+        <ui:FAComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4" TabIndex="4"
+                       Padding="12,0,0,0" VerticalContentAlignment="Center"
+                       ItemsSource="{Binding Converter.Definitions}"
+                       SelectedItem="{Binding Converter.SelectedToUnit}">
+          <ui:FAComboBox.ItemTemplate>
+            <DataTemplate x:DataType="managed:UnitConverterUnit">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding Name}" />
+                <TextBlock Grid.Column="1" Margin="16,0,0,0" Opacity="0.65" Text="{Binding Abbreviation}" />
+              </Grid>
+            </DataTemplate>
+          </ui:FAComboBox.ItemTemplate>
+        </ui:FAComboBox>
+      </Grid>
+
+      <ItemsControl Grid.Row="4" Margin="6,5,6,8" ItemsSource="{Binding Converter.Suggestions}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Margin="0,0,6,4" Padding="8,3" CornerRadius="4" Background="{DynamicResource CardBrush}">
+              <TextBlock FontSize="13" Opacity="0.8" Text="{Binding}" />
+            </Border>
           </DataTemplate>
-        </ui:FAComboBox.ItemTemplate>
-      </ui:FAComboBox>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
     </Grid>
 
-    <ItemsControl Grid.Row="4" Margin="6,5,6,8" ItemsSource="{Binding Converter.Suggestions}">
-      <ItemsControl.ItemsPanel>
-        <ItemsPanelTemplate>
-          <WrapPanel Orientation="Horizontal" />
-        </ItemsPanelTemplate>
-      </ItemsControl.ItemsPanel>
-      <ItemsControl.ItemTemplate>
-        <DataTemplate>
-          <Border Margin="0,0,6,4" Padding="8,3" CornerRadius="4" Background="{DynamicResource CardBrush}">
-            <TextBlock FontSize="13" Opacity="0.8" Text="{Binding}" />
-          </Border>
-        </DataTemplate>
-      </ItemsControl.ItemTemplate>
-    </ItemsControl>
+    <Grid IsVisible="{Binding IsCurrencyMode}"
+          RowDefinitions="Auto,*,Auto,*,Auto">
+      <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,Auto,*" Margin="0,0,0,5">
+        <ui:FAComboBox Classes="unitSelector" Padding="12,0,0,0" TabIndex="0"
+                       MinWidth="230" MaxWidth="340" VerticalContentAlignment="Center"
+                       PlaceholderText="Choose a source"
+                       ItemsSource="{Binding Currency.SelectableProviders}"
+                       SelectedItem="{Binding Currency.SelectedProvider}">
+          <ui:FAComboBox.ItemTemplate>
+            <DataTemplate x:DataType="managed:CurrencyProviderOption">
+              <TextBlock Text="{Binding SelectorLabel}" />
+            </DataTemplate>
+          </ui:FAComboBox.ItemTemplate>
+        </ui:FAComboBox>
+        <Button Grid.Column="1" Width="34" Height="34" Margin="4,0,0,0" Padding="0"
+                Background="Transparent" BorderThickness="0" Content="ⓘ"
+                AutomationProperties.Name="Currency provider information"
+                ToolTip.Tip="{Binding Currency.ProviderInformationText}" />
+        <Button Grid.Column="2" Width="34" Height="34" Margin="2,0,0,0"
+                Padding="0" Background="Transparent" BorderThickness="0"
+                FontSize="18" Content="↻"
+                IsEnabled="{Binding Currency.SelectedProvider.IsConsented}"
+                AutomationProperties.Name="Force refresh currency rates"
+                ToolTip.Tip="Force refresh"
+                Command="{Binding Currency.RefreshCommand}" />
+        <TextBlock Grid.Column="3" Margin="8,0,0,0" HorizontalAlignment="Right"
+                   VerticalAlignment="Center" FontSize="11" Opacity="0.72"
+                   TextAlignment="Right" TextTrimming="CharacterEllipsis"
+                   Text="{Binding Currency.RateSummary}" />
+      </Grid>
 
-    <Grid Grid.Row="5" Margin="-9,0,-9,-9" RowDefinitions="*,*,*,*" ColumnDefinitions="*,*,*">
-      <Button x:Name="SevenButton" TabIndex="10" Classes="calcButton numeric" Content="7" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Seven" />
-      <Button x:Name="EightButton" TabIndex="11" Grid.Column="1" Classes="calcButton numeric" Content="8" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Eight" />
-      <Button x:Name="NineButton" TabIndex="12" Grid.Column="2" Classes="calcButton numeric" Content="9" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Nine" />
+      <Grid Grid.Row="1" RowDefinitions="*,Auto" Margin="6,0">
+        <TextBlock Classes="unitDisplay" Text="{Binding Currency.FromDisplay}" />
+        <ui:FAComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4" TabIndex="2"
+                       Padding="12,0,0,0" VerticalContentAlignment="Center"
+                       ItemsSource="{Binding Currency.Currencies}"
+                       SelectedItem="{Binding Currency.SelectedFromCurrency}">
+          <ui:FAComboBox.ItemTemplate>
+            <DataTemplate x:DataType="managed:CurrencyUnit">
+              <TextBlock Text="{Binding DisplayName}" />
+            </DataTemplate>
+          </ui:FAComboBox.ItemTemplate>
+        </ui:FAComboBox>
+      </Grid>
 
-      <Button x:Name="FourButton" TabIndex="13" Grid.Row="1" Classes="calcButton numeric" Content="4" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Four" />
-      <Button x:Name="FiveButton" TabIndex="14" Grid.Row="1" Grid.Column="1" Classes="calcButton numeric" Content="5" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Five" />
-      <Button x:Name="SixButton" TabIndex="15" Grid.Row="1" Grid.Column="2" Classes="calcButton numeric" Content="6" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Six" />
+      <Button Grid.Row="2" Width="42" Height="30" Padding="0" HorizontalAlignment="Right" TabIndex="5"
+              Margin="0,-2,6,-2" Background="Transparent" BorderThickness="0"
+              FontSize="19" Content="⇅" AutomationProperties.Name="Swap currencies"
+              Command="{Binding SwapConverterCommand}" />
 
-      <Button x:Name="OneButton" TabIndex="16" Grid.Row="2" Classes="calcButton numeric" Content="1" Command="{Binding Converter.SendCommandCommand}" CommandParameter="One" />
-      <Button x:Name="TwoButton" TabIndex="17" Grid.Row="2" Grid.Column="1" Classes="calcButton numeric" Content="2" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Two" />
-      <Button x:Name="ThreeButton" TabIndex="18" Grid.Row="2" Grid.Column="2" Classes="calcButton numeric" Content="3" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Three" />
+      <Grid Grid.Row="3" RowDefinitions="*,Auto" Margin="6,0">
+        <TextBlock Classes="unitDisplay" Text="{Binding Currency.ToDisplay}" />
+        <ui:FAComboBox Grid.Row="1" Classes="unitSelector" Margin="0,2,0,4" TabIndex="4"
+                       Padding="12,0,0,0" VerticalContentAlignment="Center"
+                       ItemsSource="{Binding Currency.Currencies}"
+                       SelectedItem="{Binding Currency.SelectedToCurrency}">
+          <ui:FAComboBox.ItemTemplate>
+            <DataTemplate x:DataType="managed:CurrencyUnit">
+              <TextBlock Text="{Binding DisplayName}" />
+            </DataTemplate>
+          </ui:FAComboBox.ItemTemplate>
+        </ui:FAComboBox>
+      </Grid>
 
-      <Button x:Name="NegateButton" TabIndex="19" Grid.Row="3" Classes="calcButton numeric symbolOperator" Content="&#xF898;" FontSize="23.1" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Negate" />
-      <Button x:Name="ZeroButton" TabIndex="20" Grid.Row="3" Grid.Column="1" Classes="calcButton numeric" Content="0" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Zero" />
+      <Grid Grid.Row="4" Margin="6,4,6,7" ColumnDefinitions="*,Auto"
+            RowDefinitions="Auto,Auto">
+        <TextBlock FontSize="11" Opacity="0.62" TextTrimming="CharacterEllipsis"
+                   Text="{Binding Currency.StatusMessage}" />
+        <Button Grid.Column="1" MinWidth="112" Height="28" Margin="8,0,0,0"
+                Padding="10,0" Content="Review consent" IsVisible="{Binding Currency.NeedsConsent}"
+                AutomationProperties.Name="Review consent for selected currency source"
+                Click="ConsentButton_OnClick" />
+        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Margin="0,2,0,0" FontSize="10" Opacity="0.58"
+                   TextWrapping="Wrap" Text="{Binding Currency.LastRefreshedText}" />
+      </Grid>
+    </Grid>
+
+    <Grid Grid.Row="1" Margin="-9,0,-9,-9" RowDefinitions="*,*,*,*" ColumnDefinitions="*,*,*">
+      <Button x:Name="SevenButton" TabIndex="10" Classes="calcButton numeric" Content="7" Command="{Binding SendConverterCommandCommand}" CommandParameter="Seven" />
+      <Button x:Name="EightButton" TabIndex="11" Grid.Column="1" Classes="calcButton numeric" Content="8" Command="{Binding SendConverterCommandCommand}" CommandParameter="Eight" />
+      <Button x:Name="NineButton" TabIndex="12" Grid.Column="2" Classes="calcButton numeric" Content="9" Command="{Binding SendConverterCommandCommand}" CommandParameter="Nine" />
+
+      <Button x:Name="FourButton" TabIndex="13" Grid.Row="1" Classes="calcButton numeric" Content="4" Command="{Binding SendConverterCommandCommand}" CommandParameter="Four" />
+      <Button x:Name="FiveButton" TabIndex="14" Grid.Row="1" Grid.Column="1" Classes="calcButton numeric" Content="5" Command="{Binding SendConverterCommandCommand}" CommandParameter="Five" />
+      <Button x:Name="SixButton" TabIndex="15" Grid.Row="1" Grid.Column="2" Classes="calcButton numeric" Content="6" Command="{Binding SendConverterCommandCommand}" CommandParameter="Six" />
+
+      <Button x:Name="OneButton" TabIndex="16" Grid.Row="2" Classes="calcButton numeric" Content="1" Command="{Binding SendConverterCommandCommand}" CommandParameter="One" />
+      <Button x:Name="TwoButton" TabIndex="17" Grid.Row="2" Grid.Column="1" Classes="calcButton numeric" Content="2" Command="{Binding SendConverterCommandCommand}" CommandParameter="Two" />
+      <Button x:Name="ThreeButton" TabIndex="18" Grid.Row="2" Grid.Column="2" Classes="calcButton numeric" Content="3" Command="{Binding SendConverterCommandCommand}" CommandParameter="Three" />
+
+      <Button x:Name="NegateButton" TabIndex="19" Grid.Row="3" Classes="calcButton numeric symbolOperator" Content="&#xF898;" FontSize="23.1" Command="{Binding SendConverterCommandCommand}" CommandParameter="Negate" />
+      <Button x:Name="ZeroButton" TabIndex="20" Grid.Row="3" Grid.Column="1" Classes="calcButton numeric" Content="0" Command="{Binding SendConverterCommandCommand}" CommandParameter="Zero" />
       <Grid Grid.Row="3" Grid.Column="2" ColumnDefinitions="*,*">
-        <Button x:Name="DecimalButton" TabIndex="21" Classes="calcButton numeric" Content="{Binding DecimalSeparator}" FontSize="24.2" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Decimal" />
-        <Button x:Name="BackspaceButton" TabIndex="22" Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xE94F;" FontSize="19.36" Command="{Binding Converter.SendCommandCommand}" CommandParameter="Backspace" />
+        <Button x:Name="DecimalButton" TabIndex="21" Classes="calcButton numeric" Content="{Binding DecimalSeparator}" FontSize="24.2" Command="{Binding SendConverterCommandCommand}" CommandParameter="Decimal" />
+        <Button x:Name="BackspaceButton" TabIndex="22" Grid.Column="1" Classes="calcButton operator symbolOperator" Content="&#xE94F;" FontSize="19.36" Command="{Binding SendConverterCommandCommand}" CommandParameter="Backspace" />
       </Grid>
     </Grid>
   </Grid>

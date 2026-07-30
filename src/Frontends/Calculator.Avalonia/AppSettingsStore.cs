@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using Calculator.Managed;
 
@@ -32,6 +34,14 @@ internal static class AppSettingsStore
                 ?? (persisted?.UseNativeTitleBar ?? persisted?.UseNativeWindowFrame ?? false
                     ? WindowControlStyle.MacOS
                     : WindowControlStyle.Windows11);
+            var currencyPreferences = persisted?.CurrencyProviderPreferences
+                ?? persisted?.CurrencyProviders?.ToDictionary(
+                    pair => pair.Key,
+                    pair => new CurrencyProviderPreference(
+                        IsConsented: false,
+                        IsVisibleInSelector: pair.Value),
+                    StringComparer.Ordinal)
+                ?? new Dictionary<string, CurrencyProviderPreference>(StringComparer.Ordinal);
             return persisted is null
                 ? new AppSettings()
                 : new AppSettings(
@@ -39,7 +49,8 @@ internal static class AppSettingsStore
                     persisted.FontFamily ?? "Inter",
                     persisted.UseMicaEffect ?? true,
                     cornerStyle,
-                    controlStyle);
+                    controlStyle,
+                    currencyPreferences);
         }
         catch (IOException)
         {
@@ -84,7 +95,9 @@ internal static class AppSettingsStore
         bool? UseNativeTitleBar,
         bool? UseSquareWindowCorners,
         bool? UsePlatformCornerRadius,
-        bool? UseNativeWindowFrame);
+        bool? UseNativeWindowFrame,
+        Dictionary<string, CurrencyProviderPreference>? CurrencyProviderPreferences,
+        Dictionary<string, bool>? CurrencyProviders);
 
 }
 
@@ -93,7 +106,8 @@ internal sealed record AppSettings(
     string FontFamily = "Inter",
     bool UseMicaEffect = true,
     WindowCornerStyle WindowCornerStyle = WindowCornerStyle.Windows11,
-    WindowControlStyle WindowControlStyle = WindowControlStyle.Windows11)
+    WindowControlStyle WindowControlStyle = WindowControlStyle.Windows11,
+    IReadOnlyDictionary<string, CurrencyProviderPreference>? CurrencyProviderPreferences = null)
 {
     public PlatformAppearancePreferences ToPlatformAppearance() => new(
         UseMicaEffect,

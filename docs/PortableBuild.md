@@ -156,10 +156,10 @@ unrelated custom window-surface colors cannot leak into the flyout. History
 selection, clear, keyboard toggling, and empty state are wired on both
 responsive surfaces.
 
-Standard, Scientific, Programmer, Date calculation, and all 12 static converter
-categories route to working cross-platform surfaces. Settings routes to a
-functional cross-platform page with persisted Light, Dark, and system theme
-preferences.
+Standard, Scientific, Programmer, Date calculation, all 12 static converter
+categories, and Currency route to working cross-platform surfaces. Settings
+routes to a functional cross-platform page with persisted Light, Dark, and
+system theme preferences plus per-provider currency network controls.
 
 Graphing uses a platform-neutral managed backend behind the pristine public
 `GraphingInterfaces` contract. Compile-time signature probes and full-header
@@ -172,8 +172,12 @@ graph/equation-panel breakpoint. Structured math input, equation styling,
 tracing, graph settings, key-feature analysis, and the graphing numpad remain
 to be ported.
 
-Currency remains unavailable until its Windows HTTP/cache implementation is
-replaced with a real cross-platform loader.
+Currency uses a managed cross-platform provider boundary rather than the
+Windows-only retail loader. ECB, Federal Reserve H.10, Bank of Canada Valet,
+and Frankfurter each have a dedicated parser and disclosure. Provider currency
+codes come from the returned table, amounts are converted on device, and
+responses are cached only in memory for the app session. No request contains
+the entered amount or selected pair.
 
 ## Cross-platform UWP resources
 
@@ -232,11 +236,14 @@ verifies US customary, SI, Fahrenheit, and Japanese Pyeong selection along with
 localized metadata and explicit temperature conversion data. Required resource
 keys are checked rather than silently replaced by blank strings.
 
-## Remaining portability boundary
+## Currency portability boundary
 
 The non-currency `UnitConverterDataLoader` and its complete catalog are now
-portable. The remaining Windows-only conversion component is
-`CurrencyDataLoader`, whose HTTP, cache storage, JSON, and network-policy code
-still uses Windows APIs. Frontends must also provide the current two-letter
-region code; the portable catalog itself has no dependency on
-`Windows.Globalization.GeographicRegion`.
+portable. Microsoft's original `CurrencyDataLoader` remains Windows-only and
+is not compiled into the portable frontend because its retail service contract
+and licensed feed are not public. `CurrencyConverterViewModel` instead owns a
+narrow managed contract implemented by provider-specific rate-table clients.
+This leaves the pinned Microsoft submodule pristine while supplying real
+cross-platform currency behavior. Frontends must also provide the current
+two-letter region code; the portable static catalog itself has no dependency
+on `Windows.Globalization.GeographicRegion`.

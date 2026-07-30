@@ -85,6 +85,8 @@ public partial class MainWindow : Window
             OperatingSystem.IsMacOS(),
             availableFontFamilies: GetInstalledFontFamilyNames(),
             initialFontFamily: settings.FontFamily,
+            initialCurrencyProviderPreferences: settings.CurrencyProviderPreferences
+                ?? new Dictionary<string, CurrencyProviderPreference>(StringComparer.Ordinal),
             shortcutTextRewriter: (shortcutId, localizedText) =>
                 _shortcutService.RewriteText(
                     shortcutId,
@@ -93,6 +95,7 @@ public partial class MainWindow : Window
         _viewModel.Settings.ThemePreferenceChanged += OnThemePreferenceChanged;
         _viewModel.Settings.FontPreferenceChanged += OnFontPreferenceChanged;
         _viewModel.Settings.PlatformAppearanceChanged += OnAppearancePreferencesChanged;
+        _viewModel.Currency.ProviderPreferenceChanged += OnCurrencyProviderPreferenceChanged;
         DataContext = _viewModel;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         AddHandler(KeyDownEvent, OnCalculatorKeyDown, RoutingStrategies.Tunnel);
@@ -125,6 +128,7 @@ public partial class MainWindow : Window
             _viewModel.Settings.ThemePreferenceChanged -= OnThemePreferenceChanged;
             _viewModel.Settings.FontPreferenceChanged -= OnFontPreferenceChanged;
             _viewModel.Settings.PlatformAppearanceChanged -= OnAppearancePreferencesChanged;
+            _viewModel.Currency.ProviderPreferenceChanged -= OnCurrencyProviderPreferenceChanged;
             _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
             RemoveHandler(KeyDownEvent, OnCalculatorKeyDown);
             RemoveHandler(KeyUpEvent, OnCalculatorKeyUp);
@@ -365,7 +369,7 @@ public partial class MainWindow : Window
 
         var match = result[0];
         var dispatched = _viewModel.IsUnitConverterMode
-            ? _viewModel.Converter.TryDispatchShortcut(match.ShortcutId)
+            ? _viewModel.TryDispatchConverterShortcut(match.ShortcutId)
             : _viewModel.IsGraphingMode
                 ? DispatchGraphingShortcut(match)
                 : DispatchCalculatorShortcut(match.ShortcutId);
@@ -727,7 +731,7 @@ public partial class MainWindow : Window
         var text = await clipboard.TryGetTextAsync();
         if (_viewModel.IsUnitConverterMode)
         {
-            _viewModel.Converter.TryPaste(text, _viewModel.DecimalSeparator);
+            _viewModel.TryPasteConverter(text);
         }
         else
         {
@@ -810,6 +814,21 @@ public partial class MainWindow : Window
     {
         ApplyFontFamily(fontFamily);
         _settings = _settings with { FontFamily = fontFamily };
+        AppSettingsStore.Save(_settings);
+    }
+
+    private void OnCurrencyProviderPreferenceChanged(CurrencyProviderOption provider)
+    {
+        var preferences = new Dictionary<string, CurrencyProviderPreference>(
+            _settings.CurrencyProviderPreferences
+                ?? new Dictionary<string, CurrencyProviderPreference>(StringComparer.Ordinal),
+            StringComparer.Ordinal)
+        {
+            [provider.Id] = new CurrencyProviderPreference(
+                provider.IsConsented,
+                provider.IsVisibleInSelector),
+        };
+        _settings = _settings with { CurrencyProviderPreferences = preferences };
         AppSettingsStore.Save(_settings);
     }
 

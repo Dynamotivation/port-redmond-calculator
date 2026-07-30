@@ -30,6 +30,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
     public UnitConverterViewModel Converter { get; }
 
+    public CurrencyConverterViewModel Currency { get; }
+
     public DateCalculatorViewModel DateCalculator { get; }
 
     public SettingsViewModel Settings { get; }
@@ -59,6 +61,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(IsCalculatorMode))]
     [NotifyPropertyChangedFor(nameof(IsStandardOrScientificMode))]
     [NotifyPropertyChangedFor(nameof(IsUnitConverterMode))]
+    [NotifyPropertyChangedFor(nameof(IsCurrencyMode))]
+    [NotifyPropertyChangedFor(nameof(IsStaticUnitConverterMode))]
     [NotifyPropertyChangedFor(nameof(IsDateCalculatorMode))]
     [NotifyPropertyChangedFor(nameof(IsHistoryPaneVisible))]
     [NotifyPropertyChangedFor(nameof(IsDockedHistoryPaneVisible))]
@@ -129,7 +133,9 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public bool IsGraphingMode => CurrentViewMode == CalculatorViewMode.Graphing;
     public bool IsCalculatorMode => IsStandardMode || IsScientificMode || IsProgrammerMode;
     public bool IsStandardOrScientificMode => IsStandardMode || IsScientificMode;
-    public bool IsUnitConverterMode => CurrentViewMode is >= CalculatorViewMode.Volume and <= CalculatorViewMode.Angle;
+    public bool IsUnitConverterMode => CurrentViewMode is >= CalculatorViewMode.Volume and <= CalculatorViewMode.Currency;
+    public bool IsCurrencyMode => CurrentViewMode == CalculatorViewMode.Currency;
+    public bool IsStaticUnitConverterMode => CurrentViewMode is >= CalculatorViewMode.Volume and <= CalculatorViewMode.Angle;
     public bool IsDateCalculatorMode => CurrentViewMode == CalculatorViewMode.Date;
 
     [ObservableProperty]
@@ -164,6 +170,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         CultureInfo? numberCulture = null,
         IEnumerable<string>? availableFontFamilies = null,
         string? initialFontFamily = null,
+        IReadOnlyDictionary<string, CurrencyProviderPreference>? initialCurrencyProviderPreferences = null,
         Func<string, string, string>? shortcutTextRewriter = null)
     {
         var platformAppearance = initialPlatformAppearance ?? new PlatformAppearancePreferences();
@@ -394,6 +401,9 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
                 appResources.GetString("Date_ResultingDateAutomationName")),
             numberCulture);
         var regionCode = GetCurrentRegionCode();
+        Currency = new CurrencyConverterViewModel(
+            numberFormat,
+            CurrencyProviderCatalog.Create(initialCurrencyProviderPreferences));
         Converter = new UnitConverterViewModel(
             new NativeUnitConverter(appResources, regionCode, numberFormat),
             appResources.GetString("ConverterModeTextCaps"));
@@ -752,6 +762,14 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         }
 
         CurrentViewMode = item.Mode;
+        if (item.Mode == CalculatorViewMode.Currency)
+        {
+            _ = Currency.ActivateAsync();
+        }
+        else
+        {
+            Currency.Deactivate();
+        }
         IsSettingsOpen = false;
         History.CloseOverlay();
         ModeDisplayName = item.Name;
@@ -776,7 +794,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             Synchronize();
         }
 
-        if (item.Group == CalculatorNavigationGroup.Converter)
+        if (item.Group == CalculatorNavigationGroup.Converter && item.Mode != CalculatorViewMode.Currency)
         {
             Converter.SelectCategoryForMode((int)item.Mode);
         }
@@ -803,11 +821,48 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         return true;
     }
 
+    [RelayCommand]
+    private void SendConverterCommand(string commandName)
+    {
+        if (IsCurrencyMode)
+        {
+            Currency.SendCommand(commandName);
+        }
+        else
+        {
+            Converter.SendCommandCommand.Execute(commandName);
+        }
+    }
+
+    [RelayCommand]
+    private void SwapConverter()
+    {
+        if (IsCurrencyMode)
+        {
+            Currency.Swap();
+        }
+        else
+        {
+            Converter.SwapCommand.Execute(null);
+        }
+    }
+
+    public bool TryDispatchConverterShortcut(string shortcutId) =>
+        IsCurrencyMode
+            ? Currency.TryDispatchShortcut(shortcutId)
+            : Converter.TryDispatchShortcut(shortcutId);
+
+    public bool TryPasteConverter(string? text) =>
+        IsCurrencyMode
+            ? Currency.TryPaste(text)
+            : Converter.TryPaste(text, DecimalSeparator);
+
 
 
     public void Dispose()
     {
         _calculator.Dispose();
+        Currency.Dispose();
         Converter.Dispose();
         GC.SuppressFinalize(this);
     }
@@ -895,8 +950,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         CalculatorNavigationItems.Add(new(CalculatorViewMode.Date, CalculatorNavigationGroup.Calculator,
             resources.GetString("DateCalculationModeText"), "\uE787", true));
 
-        // Currency remains disabled until its HTTP/cache loader is made portable.
-        AddConverterNavigationItem(resources, CalculatorViewMode.Currency, "CategoryName_CurrencyText", "\uEB0D", false);
+        AddConverterNavigationItem(resources, CalculatorViewMode.Currency, "CategoryName_CurrencyText", "\uEB0D");
         AddConverterNavigationItem(resources, CalculatorViewMode.Volume, "CategoryName_VolumeText", "\uF1AA");
         AddConverterNavigationItem(resources, CalculatorViewMode.Length, "CategoryName_LengthText", "\uECC6");
         AddConverterNavigationItem(resources, CalculatorViewMode.Weight, "CategoryName_WeightText", "\uF4C1");

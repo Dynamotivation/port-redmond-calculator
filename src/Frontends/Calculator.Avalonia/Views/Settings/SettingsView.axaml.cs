@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using Calculator.Managed;
 
 namespace Calculator.Avalonia.Views;
 
@@ -43,6 +44,23 @@ public partial class SettingsView : UserControl
 
     private async void Feedback_OnClick(object? sender, RoutedEventArgs e) =>
         await LaunchAsync("https://github.com/Dynamotivation/port-redmond-calculator/issues");
+
+    private async void ProviderConsent_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { DataContext: CurrencyProviderOption provider })
+        {
+            return;
+        }
+        if (provider.IsConsented)
+        {
+            return;
+        }
+        if (TopLevel.GetTopLevel(this) is Window owner
+            && await new CurrencyConsentDialog(provider).ShowDialog<bool>(owner))
+        {
+            provider.GrantConsent();
+        }
+    }
 
     private async Task LaunchPackagedDocumentAsync(string fileName, string fallbackUrl)
     {

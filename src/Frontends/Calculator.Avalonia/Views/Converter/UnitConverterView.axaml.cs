@@ -1,5 +1,7 @@
+using Avalonia.Interactivity;
 using Avalonia.Controls;
 using Calculator.Avalonia.Controls;
+using Calculator.Managed;
 
 namespace Calculator.Avalonia.Views;
 
@@ -10,6 +12,22 @@ namespace Calculator.Avalonia.Views;
 public partial class UnitConverterView : UserControl, IShortcutPressedTarget
 {
     public UnitConverterView() => InitializeComponent();
+
+    private async void ConsentButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not CalculatorViewModel calculator
+            || calculator.Currency.SelectedProvider is not { IsConsented: false } provider
+            || TopLevel.GetTopLevel(this) is not Window owner)
+        {
+            return;
+        }
+
+        var dialog = new CurrencyConsentDialog(provider);
+        if (await dialog.ShowDialog<bool>(owner))
+        {
+            calculator.Currency.ConsentSelectedProviderCommand.Execute(null);
+        }
+    }
 
     public bool TrySetShortcutPressed(string shortcutId, bool isPressed)
     {

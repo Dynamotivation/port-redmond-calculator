@@ -14,6 +14,7 @@ ResourceLoader.Configure(new ResourceLoaderConfiguration(
     Path.Combine(AppContext.BaseDirectory, "Resources")));
 
 var tests = RouterTests.All
+    .Concat(CurrencyTests.All)
     .Concat(GraphingTests.All)
     .Concat(GraphingInteractionTests.All)
     .Concat(DateCalculatorTests.All)
