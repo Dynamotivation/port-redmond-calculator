@@ -666,6 +666,9 @@ internal static class GraphingInteractionTests
             var equation = viewModel.Graphing.Equations[0];
             equation.DraftExpression = "x";
             viewModel.Graphing.CommitEquation(equation);
+            var overlappingEquation = viewModel.Graphing.Equations[1];
+            overlappingEquation.DraftExpression = "x";
+            viewModel.Graphing.CommitEquation(overlappingEquation);
             Pump();
 
             var plot = window.GetVisualDescendants()
@@ -685,6 +688,9 @@ internal static class GraphingInteractionTests
             Assert(
                 !plot.IsTracing && !string.IsNullOrEmpty(plot.TraceText),
                 "Ordinary hover should expose the nearest graph coordinates without active tracing.");
+            Assert(
+                plot.TraceColor == Color.Parse(overlappingEquation.Color),
+                "Overlapping graphs should trace the later-painted graph.");
 
             ClickTraceButton();
             Pump();

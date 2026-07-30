@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Avalonia;
@@ -280,8 +281,9 @@ public sealed class GraphCanvas : Control
             null,
             new Rect(Bounds.Size));
 
-        var equations = ViewModel?.GetRenderableEquations() ?? [];
-        foreach (var equation in equations.Where(equation =>
+        var equations = GetEquationsInRenderOrder(
+            ViewModel?.GetRenderableEquations() ?? []);
+        foreach (var equation in equations.TakeWhile(equation =>
                      equation.Evaluator.Kind == GraphEquationKind.Inequality))
         {
             DrawInequality(context, equation);
@@ -289,8 +291,8 @@ public sealed class GraphCanvas : Control
 
         DrawGrid(context);
 
-        foreach (var equation in equations.Where(equation =>
-                     equation.Evaluator.Kind != GraphEquationKind.Inequality))
+        foreach (var equation in equations.SkipWhile(equation =>
+                     equation.Evaluator.Kind == GraphEquationKind.Inequality))
         {
             var color = ParseColor(equation.Color);
             var dashStyle = equation.LineStyle switch
@@ -753,7 +755,8 @@ public sealed class GraphCanvas : Control
     private TraceCandidate? FindNearestTracePoint(Point pointerPosition)
     {
         TraceCandidate? nearest = null;
-        foreach (var equation in ViewModel?.GetRenderableEquations() ?? [])
+        foreach (var equation in GetEquationsInRenderOrder(
+                     ViewModel?.GetRenderableEquations() ?? []))
         {
             switch (equation.Evaluator.Kind)
             {
@@ -911,7 +914,7 @@ public sealed class GraphCanvas : Control
     {
         var difference = screenPoint - pointerPosition;
         var distanceSquared = difference.X * difference.X + difference.Y * difference.Y;
-        if (nearest is not null && distanceSquared >= nearest.Value.DistanceSquared)
+        if (nearest is not null && distanceSquared > nearest.Value.DistanceSquared)
         {
             return;
         }
@@ -922,6 +925,13 @@ public sealed class GraphCanvas : Control
             Color.Parse(equation.Color),
             distanceSquared);
     }
+
+    private static IReadOnlyList<GraphEquationRenderModel> GetEquationsInRenderOrder(
+        IReadOnlyList<GraphEquationRenderModel> equations) =>
+        equations
+            .OrderBy(equation =>
+                equation.Evaluator.Kind == GraphEquationKind.Inequality ? 0 : 1)
+            .ToArray();
 
     private void ClearTrace()
     {
