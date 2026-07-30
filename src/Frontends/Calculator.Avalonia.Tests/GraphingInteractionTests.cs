@@ -500,7 +500,7 @@ internal static class GraphingInteractionTests
                 .Single();
             var graphOptionsPopup = graphView.FindControl<Popup>("GraphOptionsPopup")
                 ?? throw new InvalidOperationException("The graph options popup is missing.");
-            var graphOptionsPanel = graphView.FindControl<Border>("GraphOptionsPanel")
+            var graphOptionsPanel = graphView.FindControl<FlyoutPresenter>("GraphOptionsPanel")
                 ?? throw new InvalidOperationException("The graph options panel is missing.");
             var plot = window.GetVisualDescendants().OfType<GraphCanvas>().Single();
             var zoomInButton = window.GetVisualDescendants()
