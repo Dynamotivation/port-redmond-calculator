@@ -232,7 +232,7 @@
                                  VerticalContentAlignment="Center"
                                  Background="Transparent" BorderThickness="0"
                                  FontFamily="{StaticResource GraphEquationFont}"
-                                 FontSize="14" FontWeight="Normal"
+                                 FontSize="14" FontStyle="Italic" FontWeight="Normal"
                                  Text="{Binding DraftExpression, Mode=TwoWay}"
                                  AutomationProperties.Name="Open the context menu for available actions"
                                  AutomationProperties.HelpText="{Binding ErrorMessage}"

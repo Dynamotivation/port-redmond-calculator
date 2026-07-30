@@ -136,8 +136,9 @@ internal static class GraphingInteractionTests
                 editor.TryFindResource("GraphEquationFont", out var fontResource)
                 && fontResource is FontFamily equationFont
                 && editor.FontFamily.Equals(equationFont)
+                && editor.FontStyle == FontStyle.Italic
                 && equationFont.Name.Contains("Latin Modern Math", StringComparison.Ordinal),
-                "The linear equation editor should use the same Latin Modern Math face as the typeset renderer.");
+                "The linear equation editor should use the italic Latin Modern Math face used for variables.");
             Assert(
                 typeset.IsEffectivelyVisible && !editor.IsEffectivelyVisible,
                 "A committed equation should show its typeset presentation, not the linear editor.");
