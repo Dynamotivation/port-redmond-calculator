@@ -168,7 +168,7 @@ internal static class GraphingInteractionTests
                 "Modifying input should remain inline in the focused typeset equation.");
 
             window.KeyPress(
-                Key.Enter,
+                Key.Return,
                 RawInputModifiers.None,
                 PhysicalKey.Enter,
                 null);

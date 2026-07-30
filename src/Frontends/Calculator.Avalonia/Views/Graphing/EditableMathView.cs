@@ -180,7 +180,7 @@ public sealed class EditableMathView : MathView
             e.Handled = true;
             return;
         }
-        if (e.Key == Key.Enter)
+        if (e.Key is Key.Enter or Key.Return)
         {
             CommitRequested?.Invoke(this, EventArgs.Empty);
             e.Handled = true;
