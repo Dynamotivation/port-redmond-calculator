@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CSharpMath.Atom;
+using CSharpMath.Atom.Atoms;
 using CSharpMath.Avalonia;
 using CSharpMath.Editor;
 using CSharpMath.Rendering.BackEnd;
@@ -62,6 +63,17 @@ public sealed class EditableMathView : MathView
 
     internal string StructuredInsertionIndex =>
         _keyboard?.InsertionIndex.ToString() ?? string.Empty;
+
+    internal string StructuredLinearText
+    {
+        get
+        {
+            EnsureKeyboard();
+            return _keyboard is null
+                ? LinearText
+                : SerializeMathList(_keyboard.MathList);
+        }
+    }
 
     public override void Render(DrawingContext context)
     {
@@ -395,6 +407,63 @@ public sealed class EditableMathView : MathView
         }
         return -1;
     }
+
+    private static string SerializeMathList(MathList list)
+    {
+        var builder = new System.Text.StringBuilder();
+        foreach (var atom in list)
+        {
+            if (atom is Space or Comment or Placeholder)
+            {
+                continue;
+            }
+
+            var value = atom switch
+            {
+                Fraction fraction =>
+                    $"({SerializeMathList(fraction.Numerator)})/({SerializeMathList(fraction.Denominator)})",
+                Radical radical when radical.Degree.Count == 0 =>
+                    $"sqrt({SerializeMathList(radical.Radicand)})",
+                Radical radical =>
+                    $"({SerializeMathList(radical.Radicand)})^(1/({SerializeMathList(radical.Degree)}))",
+                Inner inner =>
+                    $"{NormalizeNucleus(inner.LeftBoundary.Nucleus)}"
+                    + SerializeMathList(inner.InnerList)
+                    + NormalizeNucleus(inner.RightBoundary.Nucleus),
+                _ => NormalizeNucleus(atom.Nucleus),
+            };
+            builder.Append(value);
+
+            if (atom.Subscript.Count > 0)
+            {
+                builder.Append("_(")
+                    .Append(SerializeMathList(atom.Subscript))
+                    .Append(')');
+            }
+            if (atom.Superscript.Count > 0)
+            {
+                builder.Append("^(")
+                    .Append(SerializeMathList(atom.Superscript))
+                    .Append(')');
+            }
+        }
+        return builder.ToString();
+    }
+
+    private static string NormalizeNucleus(string? nucleus) =>
+        nucleus switch
+        {
+            null => string.Empty,
+            "−" => "-",
+            "×" or "·" => "*",
+            "÷" => "/",
+            "π" => "pi",
+            "θ" => "theta",
+            "≤" => "<=",
+            "≥" => ">=",
+            "≠" => "!=",
+            _ => nucleus,
+        };
 
     private void EnsureKeyboard()
     {

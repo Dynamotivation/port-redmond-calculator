@@ -525,28 +525,18 @@ public partial class GraphingCalculatorView : UserControl
         object? sender,
         LinearMathEditRequestedEventArgs e)
     {
-        if (sender is not EditableMathView { DataContext: GraphEquationViewModel equation })
+        if (sender is not EditableMathView
+            {
+                DataContext: GraphEquationViewModel equation,
+            } mathView)
         {
             return;
         }
 
-        var draft = equation.DraftExpression;
-        var caretIndex = Math.Clamp(e.SuggestedCaretIndex, 0, draft.Length);
-        switch (e.Action)
-        {
-            case LinearMathEditAction.InsertText:
-                equation.DraftExpression = draft.Insert(caretIndex, e.Text);
-                break;
-            case LinearMathEditAction.Backspace when caretIndex > 0:
-                equation.DraftExpression = draft.Remove(caretIndex - 1, 1);
-                break;
-            case LinearMathEditAction.Delete when caretIndex < draft.Length:
-                equation.DraftExpression = draft.Remove(caretIndex, 1);
-                break;
-            case LinearMathEditAction.Clear:
-                equation.DraftExpression = string.Empty;
-                break;
-        }
+        // The math tree is authoritative while this control is active. Flattening
+        // edits into the old source string loses grouping; for example, editing
+        // the numerator of x/1 into x+11 used to produce x+11/1.
+        equation.DraftExpression = mathView.StructuredLinearText;
         equation.IsEditing = true;
     }
 

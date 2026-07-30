@@ -90,6 +90,15 @@ internal static class GraphingInteractionTests
     private static void CommittedEquationSupportsInlineTypesetEditing()
     {
         Application.Current!.RequestedThemeVariant = ThemeVariant.Dark;
+        var fractionGroupingProbe = new EditableMathView
+        {
+            LaTeX = @"\frac{x+11}{1}",
+            LinearText = "x+11/1",
+        };
+        Assert(
+            fractionGroupingProbe.StructuredLinearText == "(x+11)/(1)",
+            "Linearizing an edited numerator must preserve the fraction boundary.");
+
         var window = new MainWindow(new AppSettings(
             AppThemePreference.Dark,
             "Inter",
@@ -166,6 +175,9 @@ internal static class GraphingInteractionTests
                 && equation.DraftExpression.Contains('z')
                 && typeset.LaTeX?.Contains('z') == true,
                 "Modifying input should remain inline in the focused typeset equation.");
+            Assert(
+                typeset.StructuredLinearText.Contains("/(", StringComparison.Ordinal),
+                "Inline fraction edits should preserve their structured division grouping.");
 
             window.KeyPress(
                 Key.Return,
