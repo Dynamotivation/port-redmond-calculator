@@ -96,10 +96,9 @@
                  PlacementTarget="{Binding #GraphOptionsButton}"
                  Placement="BottomEdgeAlignedRight"
                  PlacementConstraintAdjustment="SlideX,SlideY,ResizeX,ResizeY"
-                 VerticalOffset="4">
-            <Border x:Name="GraphOptionsPanel" Width="318" MaxHeight="468"
-                    Padding="18,14" CornerRadius="8"
-                    Background="{DynamicResource CardBrush}" BoxShadow="0 6 18 0 #70000000">
+                 VerticalOffset="8">
+            <FlyoutPresenter x:Name="GraphOptionsPanel"
+                             Width="318" MaxHeight="468">
               <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="9">
                   <TextBlock FontSize="20" FontWeight="Medium"
@@ -164,7 +163,7 @@
                                Content="{Binding Graphing.Strings.MatchAppThemeText}" />
                 </StackPanel>
               </ScrollViewer>
-            </Border>
+            </FlyoutPresenter>
           </Popup>
 
           <Border x:Name="TraceLiveRegion" Margin="10" HorizontalAlignment="Left" VerticalAlignment="Bottom"
