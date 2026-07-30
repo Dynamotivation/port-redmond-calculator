@@ -1,0 +1,98 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:managed="using:Calculator.Managed"
+        x:Class="Calculator.Avalonia.Views.CurrencyConsentDialog"
+        x:DataType="managed:CurrencyProviderOption"
+        Title="Currency source consent"
+        Width="460" Height="530"
+        MinWidth="400" MinHeight="460"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+  <Window.Styles>
+    <Style Selector="Button.consentPrimary">
+      <Setter Property="Background" Value="{DynamicResource AccentButtonBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource GraphModeSwitchSelectedForegroundBrush}" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.consentPrimary:pointerover">
+      <Setter Property="Background" Value="{DynamicResource AccentButtonHoverBrush}" />
+    </Style>
+    <Style Selector="Button.consentPrimary:pressed">
+      <Setter Property="Background" Value="{DynamicResource AccentButtonPressedBrush}" />
+    </Style>
+    <Style Selector="Button.providerLink">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentButtonBrush}" />
+      <Setter Property="FontSize" Value="11" />
+    </Style>
+    <Style Selector="Button.providerLink:pointerover">
+      <Setter Property="Foreground" Value="{DynamicResource AccentButtonHoverBrush}" />
+    </Style>
+    <Style Selector="Button.providerLink:pressed">
+      <Setter Property="Foreground" Value="{DynamicResource AccentButtonPressedBrush}" />
+    </Style>
+  </Window.Styles>
+  <Grid Margin="24" RowDefinitions="Auto,Auto,*,Auto">
+    <StackPanel>
+      <TextBlock FontSize="22" FontWeight="SemiBold" Text="Allow this currency source?" />
+      <TextBlock Margin="0,6,0,0" FontSize="15" FontWeight="SemiBold" Text="{Binding Name}" />
+      <TextBlock Margin="0,2,0,0" FontSize="12" Opacity="0.7" Text="{Binding Organization}" />
+    </StackPanel>
+
+    <TextBlock Grid.Row="1" Margin="0,16,0,14" TextWrapping="Wrap"
+               Text="Redmond Calculator will contact this independent third-party service only after you allow it. Your conversion amount and selected currency pair stay on this device." />
+
+    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+      <StackPanel Spacing="12">
+        <Border Padding="12" CornerRadius="6" Background="{DynamicResource CardBrush}">
+          <StackPanel Spacing="5">
+            <TextBlock FontWeight="SemiBold" Text="Sent to the provider" />
+            <TextBlock TextWrapping="Wrap" Text="{Binding DataShared}" />
+          </StackPanel>
+        </Border>
+
+        <Border Padding="12" CornerRadius="6" Background="{DynamicResource CardBrush}">
+          <StackPanel Spacing="5">
+            <TextBlock FontWeight="SemiBold" Text="Stored on this device" />
+            <TextBlock TextWrapping="Wrap" Text="{Binding DataStored}" />
+          </StackPanel>
+        </Border>
+
+        <StackPanel Spacing="5">
+          <TextBlock FontWeight="SemiBold" Text="Request made" />
+          <TextBlock TextWrapping="Wrap" Text="{Binding RequestSummary}" />
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+          <TextBlock FontWeight="SemiBold" Text="Important" />
+          <TextBlock TextWrapping="Wrap" Text="{Binding Disclaimer}" />
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+          <TextBlock FontSize="11" Opacity="0.65" Text="Provider policies" />
+          <Button Classes="providerLink" Content="{Binding TermsUrl}"
+                  AutomationProperties.Name="Open provider terms"
+                  Click="Terms_OnClick" />
+          <Button Classes="providerLink" Content="{Binding PrivacyUrl}"
+                  AutomationProperties.Name="Open provider privacy policy"
+                  Click="Privacy_OnClick" />
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+
+    <Grid Grid.Row="3" Margin="0,18,0,0" ColumnDefinitions="*,Auto,Auto">
+      <TextBlock VerticalAlignment="Center" FontSize="11" Opacity="0.65"
+                 TextWrapping="Wrap"
+                 Text="Consent remains recorded. You can hide this source in Settings." />
+      <Button Grid.Column="1" MinWidth="82" Margin="12,0,0,0"
+              Content="Cancel" Click="Cancel_OnClick" />
+      <Button Grid.Column="2" MinWidth="112" Margin="8,0,0,0"
+              Classes="consentPrimary" Content="Allow source" Click="Allow_OnClick" />
+    </Grid>
+  </Grid>
+</Window>

@@ -34,6 +34,25 @@ See [PortableBuild.md](docs/PortableBuild.md) for frontend and packaging
 details, and [UpstreamCompatibility.md](docs/UpstreamCompatibility.md) for the
 strict submodule compatibility contract.
 
+## Currency data
+
+Currency conversion is opt-in by provider at use time and always calculates
+entered amounts locally. The app offers four independently selectable sources:
+
+- European Central Bank Data Portal
+- Federal Reserve H.10
+- Bank of Canada Valet
+- Frankfurter
+
+Each source has its own response parser, currency coverage, publication cadence,
+disclosure, explicit consent state, source-list switch, and informational-use
+disclaimer. No source is contacted until it has consent and the user selects it.
+A provider receives only a fixed latest-rate-table request plus ordinary HTTPS
+connection metadata; selected currency pairs and entered values are never
+included. Consent and source-list choices are persisted locally, while downloaded
+rates are held only for the app session. Cross-pairs are reconstructed locally
+from the selected provider's base table.
+
 ## Upstream ownership boundary
 
 - Never modify files below `upstream/windows-calculator`.

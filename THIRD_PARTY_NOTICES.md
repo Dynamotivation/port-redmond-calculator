@@ -48,6 +48,27 @@ Run `scripts/update-licensing.sh` whenever package references or resolved
 versions change. The verifier rejects native platform packages with divergent
 notice sets until each variant is preserved explicitly.
 
+## Optional online currency data services
+
+Currency mode can contact one selected third-party service to retrieve a
+latest rate table. These services are not bundled with Redmond Calculator and
+their data is not relicensed under this repository's MIT License:
+
+- European Central Bank Data Portal:
+  <https://data.ecb.europa.eu/help/api/overview>
+- Board of Governors of the Federal Reserve System, H.10:
+  <https://www.federalreserve.gov/datadownload/choose.aspx?rel=h10>
+- Bank of Canada Valet API:
+  <https://www.bankofcanada.ca/valet-api-how-to/>
+- Frankfurter:
+  <https://frankfurter.dev/>
+
+The Settings page exposes the applicable terms/privacy links, what is shared,
+what Redmond Calculator stores, explicit consent, and an independent
+source-list switch for each provider. No provider is contacted before consent
+and selection. Rates are informational and are not provided for transaction
+settlement. No entered amount or selected currency pair is transmitted.
+
 ## Bundled fonts
 
 ### Inter

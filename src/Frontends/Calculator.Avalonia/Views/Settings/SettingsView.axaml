@@ -82,7 +82,6 @@
                              FontFamily="{StaticResource CalculatorIconFont}" FontSize="20" Text="&#xE790;" />
                   <TextBlock Grid.Column="1" Margin="16,0,0,0" FontSize="15" FontWeight="Normal" Text="{Binding Settings.Strings.AppThemeName}" />
                   <TextBlock Grid.Row="1" Grid.Column="1" Margin="16,2,0,0" FontSize="13"
-                             Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
                              Text="{Binding Settings.Strings.AppThemeDescription}" />
                   <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
                         Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
@@ -122,7 +121,6 @@
                   <TextBlock Grid.Column="1" Margin="16,0,0,0" FontSize="15" FontWeight="Normal"
                              Text="{Binding Settings.Strings.AppFontName}" />
                   <TextBlock Grid.Row="1" Grid.Column="1" Margin="16,2,0,0" FontSize="13"
-                             Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
                              Text="{Binding Settings.Strings.AppFontDescription}" />
                   <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
                         Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
@@ -180,7 +178,6 @@
                                FontSize="20" Text="⌜" />
                     <TextBlock Grid.Column="1" Margin="16,0,0,0" FontSize="14" FontWeight="Normal" Text="{Binding WindowCornersName}" />
                     <TextBlock Grid.Row="1" Grid.Column="1" Margin="16,2,0,0" FontSize="12"
-                               Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
                                Text="{Binding WindowCornersDescription}" />
                     <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
                           Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
@@ -219,7 +216,6 @@
                                FontSize="18" Text="•••" />
                     <TextBlock Grid.Column="1" Margin="16,0,0,0" FontSize="14" FontWeight="Normal" Text="{Binding WindowControlsName}" />
                     <TextBlock Grid.Row="1" Grid.Column="1" Margin="16,2,0,0" FontSize="12"
-                               Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
                                Text="{Binding WindowControlsDescription}" />
                     <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
                           Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
@@ -246,6 +242,80 @@
           </Border>
         </StackPanel>
 
+        <TextBlock Classes="sectionHeading" Margin="0,26,0,4" Text="Online services" />
+        <Border Classes="settingsCard" Background="Transparent"
+                CornerRadius="6" Padding="0" ClipToBounds="True">
+          <shared:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                    Background="Transparent">
+            <Expander.Header>
+              <Grid Height="72">
+                <Grid Classes="settingsExpanderHeader" VerticalAlignment="Center"
+                      ColumnDefinitions="36,*,32" RowDefinitions="Auto,Auto">
+                  <TextBlock Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center"
+                             FontSize="18" Text="¤" />
+                  <TextBlock Grid.Column="1" Margin="16,0,0,0" FontSize="14"
+                             Text="Currency sources" />
+                  <TextBlock Grid.Row="1" Grid.Column="1" Margin="16,2,0,0" FontSize="12"
+                             Text="Consent and choose which sources appear" />
+                  <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
+                        Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
+                        Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
+                        Data="M 1,1 L 6,6 L 11,1" />
+                </Grid>
+                <Border Height="1" VerticalAlignment="Bottom" ZIndex="3"
+                        Background="{DynamicResource SettingsCardBorderBrush}"
+                        IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" />
+              </Grid>
+            </Expander.Header>
+
+            <StackPanel Margin="16,12,16,16" Spacing="8">
+              <Grid ColumnDefinitions="1.15*,1.55*,74,62">
+                <TextBlock FontSize="10" FontWeight="SemiBold" Text="Source" />
+                <TextBlock Grid.Column="1" Margin="6,0" FontSize="10" FontWeight="SemiBold" Text="What it collects" />
+                <TextBlock Grid.Column="2" FontSize="10" FontWeight="SemiBold" Text="Consent" />
+                <TextBlock Grid.Column="3" FontSize="10" FontWeight="SemiBold" Text="Listed" />
+              </Grid>
+
+              <ItemsControl ItemsSource="{Binding Currency.Providers}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="managed:CurrencyProviderOption">
+                    <Border Padding="0,8" BorderThickness="0,1,0,0"
+                            BorderBrush="{DynamicResource SettingsCardBorderBrush}">
+                      <Grid ColumnDefinitions="1.15*,1.55*,74,62">
+                        <StackPanel Spacing="2">
+                          <TextBlock FontSize="11" FontWeight="SemiBold" TextWrapping="Wrap"
+                                     Text="{Binding Name}" />
+                          <Button Width="24" Height="22" Padding="0" HorizontalAlignment="Left"
+                                  Background="Transparent" BorderThickness="0" Content="ⓘ"
+                                  AutomationProperties.Name="{Binding Name}"
+                                  ToolTip.Tip="{Binding DisclosureText}" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Margin="6,0" FontSize="10" Opacity="0.72"
+                                   TextWrapping="Wrap" Text="{Binding CollectionSummary}" />
+                        <StackPanel Grid.Column="2" Spacing="3">
+                          <TextBlock FontSize="9" Opacity="0.7" Text="{Binding ConsentStatus}" />
+                          <Button MinWidth="66" Height="25" Padding="6,0"
+                                  Content="Review"
+                                  IsVisible="{Binding CanConsent}"
+                                  Click="ProviderConsent_OnClick" />
+                        </StackPanel>
+                        <ToggleSwitch Grid.Column="3" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                      OnContent="" OffContent=""
+                                      AutomationProperties.Name="{Binding Name}"
+                                      IsChecked="{Binding IsVisibleInSelector}" />
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <TextBlock FontSize="10" Opacity="0.66" TextWrapping="Wrap"
+                         Text="No source is contacted before consent and selection. Consent remains recorded; turn Listed off to hide a source from the selector. Downloaded rate tables remain in memory for this app session. Select ⓘ for that source’s independent third-party, risk, warranty, settlement, terms, privacy, and publication disclosures." />
+            </StackPanel>
+          </shared:AnimatedSettingsExpander>
+        </Border>
+
         <TextBlock Classes="sectionHeading" Margin="0,26,0,4"
                    Text="{Binding Settings.Strings.AboutGroupName}" />
         <Border Classes="settingsCard" Background="Transparent"
@@ -262,7 +332,7 @@
                          IsHitTestVisible="False"
                          Source="avares://Redmond%20Calculator/Assets/RedmondCalculatorIcon.png" />
                   <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0"
-                             FontSize="14" Foreground="{DynamicResource SettingsSecondaryForegroundBrush}"
+                             FontSize="14"
                              Text="{Binding Settings.Strings.AboutVersionText}" />
                   <Path Grid.Column="2" Classes="settingsExpanderChevron"
                         Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
