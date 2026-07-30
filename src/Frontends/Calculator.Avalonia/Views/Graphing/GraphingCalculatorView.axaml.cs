@@ -71,10 +71,25 @@ public partial class GraphingCalculatorView : UserControl
 
     public void FocusEquationInput()
     {
-        var textBox = EquationPanel.GetVisualDescendants().OfType<TextBox>().FirstOrDefault();
+        var mathView = EquationPanel.GetVisualDescendants()
+            .OfType<EditableMathView>()
+            .FirstOrDefault(view =>
+                view.DataContext is GraphEquationViewModel { HasError: false });
+        if (mathView is not null)
+        {
+            _activeMathView = mathView;
+            _activeTextBox = null;
+            mathView.Focus();
+            return;
+        }
+
+        var textBox = EquationPanel.GetVisualDescendants()
+            .OfType<TextBox>()
+            .FirstOrDefault(textBox => textBox.Name == "EquationExpressionTextBox");
         if (textBox is not null)
         {
             _activeTextBox = textBox;
+            _activeMathView = null;
             textBox.Focus();
         }
     }
@@ -120,6 +135,15 @@ public partial class GraphingCalculatorView : UserControl
 
     public bool SubmitActiveEquation()
     {
+        if (_activeMathView is
+            {
+                IsEffectivelyVisible: true,
+                DataContext: GraphEquationViewModel equation,
+            } mathView)
+        {
+            CommitFormattedEquation(mathView, equation, advanceFocus: true);
+            return true;
+        }
         if (_activeTextBox is null)
         {
             return false;
@@ -430,7 +454,7 @@ public partial class GraphingCalculatorView : UserControl
             if (textBox.DataContext is GraphEquationViewModel equation && Graphing is not null)
             {
                 Graphing.SelectedEquation = equation;
-                equation.IsEditing = true;
+                equation.IsEditing = !equation.HasError;
             }
         }
     }
@@ -459,6 +483,13 @@ public partial class GraphingCalculatorView : UserControl
     {
         if (sender is Button { DataContext: GraphEquationViewModel equation })
         {
+            var mathView = this.GetVisualDescendants()
+                .OfType<EditableMathView>()
+                .FirstOrDefault(view => ReferenceEquals(view.DataContext, equation));
+            if (mathView is not null)
+            {
+                mathView.Clear();
+            }
             var editor = this.GetVisualDescendants()
                 .OfType<TextBox>()
                 .FirstOrDefault(textBox =>
@@ -471,13 +502,13 @@ public partial class GraphingCalculatorView : UserControl
             }
             equation.DraftExpression = string.Empty;
             equation.Expression = string.Empty;
-            editor?.Focus();
+            (mathView as Control ?? editor)?.Focus();
         }
     }
 
-    private static void SetEquationCardFocused(TextBox textBox, bool isFocused)
+    private static void SetEquationCardFocused(Control editor, bool isFocused)
     {
-        var card = textBox.GetVisualAncestors()
+        var card = editor.GetVisualAncestors()
             .OfType<Border>()
             .FirstOrDefault(border => border.Classes.Contains("graphEquationCard"));
         card?.Classes.Set("focused", isFocused);
@@ -485,7 +516,7 @@ public partial class GraphingCalculatorView : UserControl
 
     private void FormattedEquation_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (sender is not Control { DataContext: GraphEquationViewModel equation } formattedEquation)
+        if (sender is not EditableMathView formattedEquation)
         {
             return;
         }
@@ -495,11 +526,26 @@ public partial class GraphingCalculatorView : UserControl
             return;
         }
 
-        ActivateLinearEditor(
-            equation,
-            equation.DraftExpression.Length,
-            editor => editor.ContextMenu?.Open(editor));
+        formattedEquation.ContextMenu?.Open(formattedEquation);
         e.Handled = true;
+    }
+
+    private void FormattedEquation_OnLoaded(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not EditableMathView
+            {
+                DataContext: GraphEquationViewModel equation,
+            } mathView)
+        {
+            return;
+        }
+
+        if (string.IsNullOrEmpty(equation.FormattedExpression)
+            && !string.IsNullOrEmpty(equation.DraftExpression))
+        {
+            mathView.LoadLinearText(equation.DraftExpression);
+        }
+        AttachMathContextMenu(mathView);
     }
 
     private void FormattedEquation_OnGotFocus(object? sender, FocusChangedEventArgs e)
@@ -510,15 +556,13 @@ public partial class GraphingCalculatorView : UserControl
         }
 
         _activeMathView = mathView;
+        _activeTextBox = null;
+        SetEquationCardFocused(mathView, true);
         if (Graphing is not null)
         {
             Graphing.SelectedEquation = equation;
         }
-        _activeTextBox = this.GetVisualDescendants()
-            .OfType<TextBox>()
-            .FirstOrDefault(textBox =>
-                textBox.Name == "EquationExpressionTextBox"
-                && ReferenceEquals(textBox.DataContext, equation));
+        equation.IsEditing = true;
     }
 
     private void FormattedEquation_OnLinearEditRequested(
@@ -537,14 +581,20 @@ public partial class GraphingCalculatorView : UserControl
         // edits into the old source string loses grouping; for example, editing
         // the numerator of x/1 into x+11 used to produce x+11/1.
         equation.DraftExpression = mathView.StructuredLinearText;
+        equation.RejectLiteralFunctionCall = mathView.HasLiteralFunctionCall;
         equation.IsEditing = true;
     }
 
-    private void FormattedEquation_OnCommitRequested(object? sender, EventArgs e)
+    private void FormattedEquation_OnCommitRequested(
+        object? sender,
+        MathCommitRequestedEventArgs e)
     {
-        if (sender is EditableMathView { DataContext: GraphEquationViewModel equation })
+        if (sender is EditableMathView
+            {
+                DataContext: GraphEquationViewModel equation,
+            } mathView)
         {
-            CommitFormattedEquation(equation);
+            CommitFormattedEquation(mathView, equation, e.AdvanceFocus);
         }
     }
 
@@ -557,22 +607,57 @@ public partial class GraphingCalculatorView : UserControl
 
         Dispatcher.UIThread.Post(() =>
         {
-            if (!mathView.IsFocused)
+            if (!mathView.IsFocused && mathView.ContextMenu?.IsOpen != true)
             {
-                CommitFormattedEquation(equation);
+                CommitFormattedEquation(mathView, equation, advanceFocus: false);
+                SetEquationCardFocused(mathView, false);
             }
         }, DispatcherPriority.Background);
     }
 
-    private void CommitFormattedEquation(GraphEquationViewModel equation)
+    private void CommitFormattedEquation(
+        EditableMathView mathView,
+        GraphEquationViewModel equation,
+        bool advanceFocus)
     {
         if (Graphing is null)
         {
             return;
         }
 
-        Graphing.CommitEquation(equation);
+        var changed = !string.Equals(
+            equation.Expression,
+            equation.DraftExpression,
+            StringComparison.Ordinal);
+        var placeholderAdded = Graphing.CommitEquation(equation);
+        if (placeholderAdded && Graphing.Equations.LastOrDefault() is { } newEquation)
+        {
+            newEquation.LineWidth = GetSelectedLineWidth();
+        }
         equation.IsEditing = false;
+        if (equation.HasError)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                var textBox = FindEquationTextBox(equation);
+                if (textBox is null)
+                {
+                    return;
+                }
+                _activeMathView = null;
+                _activeTextBox = textBox;
+                textBox.Focus();
+                textBox.CaretIndex = 0;
+            }, DispatcherPriority.Input);
+            return;
+        }
+
+        if (advanceFocus && changed)
+        {
+            Dispatcher.UIThread.Post(
+                () => FocusEquationAfter(equation),
+                DispatcherPriority.Input);
+        }
     }
 
     private void ActivateLinearEditor(
@@ -626,6 +711,8 @@ public partial class GraphingCalculatorView : UserControl
             return false;
         }
 
+        equation.RejectLiteralFunctionCall = ContainsLiteralFunctionCall(
+            equation.DraftExpression);
         var placeholderAdded = Graphing.CommitEquation(equation);
         if (placeholderAdded && Graphing.Equations.LastOrDefault() is { } newEquation)
         {
@@ -634,15 +721,66 @@ public partial class GraphingCalculatorView : UserControl
         return placeholderAdded;
     }
 
+    private static bool ContainsLiteralFunctionCall(string expression)
+    {
+        string[] functionNames =
+        [
+            "sin", "cos", "tan", "cot", "sec", "csc",
+            "asin", "acos", "atan", "acot", "asec", "acsc",
+            "arcsin", "arccos", "arctan", "arccot", "arcsec", "arccsc",
+            "sinh", "cosh", "tanh", "coth", "sech", "csch",
+            "asinh", "acosh", "atanh", "acoth", "asech", "acsch",
+            "arcsinh", "arccosh", "arctanh", "arccoth", "arcsech", "arccsch",
+            "sqrt", "cbrt", "abs", "log", "ln",
+        ];
+        return functionNames.Any(name =>
+            expression.Contains(name + "(", StringComparison.OrdinalIgnoreCase));
+    }
+
     private void FocusLastEquation()
     {
-        var textBox = EquationPanel.GetVisualDescendants().OfType<TextBox>().LastOrDefault();
-        if (textBox is not null)
+        var mathView = EquationPanel.GetVisualDescendants()
+            .OfType<EditableMathView>()
+            .LastOrDefault();
+        if (mathView is not null)
         {
-            _activeTextBox = textBox;
-            textBox.Focus();
+            _activeMathView = mathView;
+            _activeTextBox = null;
+            mathView.Focus();
         }
     }
+
+    private void FocusEquationAfter(GraphEquationViewModel equation)
+    {
+        if (Graphing is null)
+        {
+            return;
+        }
+
+        var index = Graphing.Equations.IndexOf(equation);
+        if (index < 0 || index + 1 >= Graphing.Equations.Count)
+        {
+            return;
+        }
+
+        var next = Graphing.Equations[index + 1];
+        var mathView = EquationPanel.GetVisualDescendants()
+            .OfType<EditableMathView>()
+            .FirstOrDefault(view => ReferenceEquals(view.DataContext, next));
+        if (mathView is not null)
+        {
+            _activeMathView = mathView;
+            _activeTextBox = null;
+            mathView.Focus();
+        }
+    }
+
+    private TextBox? FindEquationTextBox(GraphEquationViewModel equation) =>
+        this.GetVisualDescendants()
+            .OfType<TextBox>()
+            .FirstOrDefault(textBox =>
+                textBox.Name == "EquationExpressionTextBox"
+                && ReferenceEquals(textBox.DataContext, equation));
 
     private void InputButton_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -658,10 +796,13 @@ public partial class GraphingCalculatorView : UserControl
                 {
                     IsEffectivelyVisible: true,
                     DataContext: GraphEquationViewModel formattedEquation,
-                })
+                } activeMathView)
             {
-                CommitFormattedEquation(formattedEquation);
-                _activeMathView.Focus();
+                CommitFormattedEquation(
+                    activeMathView,
+                    formattedEquation,
+                    advanceFocus: false);
+                activeMathView.Focus();
                 return;
             }
             SubmitEquation();
@@ -679,12 +820,20 @@ public partial class GraphingCalculatorView : UserControl
             }
             else
             {
-                mathView.InsertLinearText(ApplyTrigModifiers(token));
+                var modifiedToken = ApplyTrigModifiers(token);
+                if (IsMathTemplateToken(modifiedToken))
+                {
+                    mathView.InsertTemplateText(modifiedToken);
+                }
+                else
+                {
+                    mathView.InsertLinearText(modifiedToken);
+                }
             }
             mathView.Focus();
             return;
         }
-        if (_activeTextBox is null)
+        if (_activeTextBox is null && _activeMathView is null)
         {
             FocusEquationInput();
         }
@@ -721,7 +870,7 @@ public partial class GraphingCalculatorView : UserControl
             return;
         }
 
-        if (_activeTextBox is null)
+        if (_activeTextBox is null && _activeMathView is null)
         {
             FocusEquationInput();
         }
@@ -749,6 +898,15 @@ public partial class GraphingCalculatorView : UserControl
         }
         return function + "(";
     }
+
+    private static bool IsMathTemplateToken(string token) =>
+        token.TrimEnd('(') is
+            "sin" or "cos" or "tan" or "cot" or "sec" or "csc"
+            or "asin" or "acos" or "atan" or "acot" or "asec" or "acsc"
+            or "sinh" or "cosh" or "tanh" or "coth" or "sech" or "csch"
+            or "asinh" or "acosh" or "atanh" or "acoth" or "asech" or "acsch"
+            or "log" or "ln" or "sqrt" or "cbrt" or "abs"
+            or "pi";
 
     private void SecondButton_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -783,6 +941,111 @@ public partial class GraphingCalculatorView : UserControl
                 ? hyperbolic ? $"Hyperbolic arc {longName}" : $"Arc {longName}"
                 : hyperbolic ? $"Hyperbolic {longName}" : char.ToUpperInvariant(longName[0]) + longName[1..];
             AutomationProperties.SetName(button, automationName);
+        }
+    }
+
+    private void AttachMathContextMenu(EditableMathView mathView)
+    {
+        if (mathView.ContextMenu is not null)
+        {
+            return;
+        }
+
+        var menu = new ContextMenu();
+        var strings = Graphing?.Strings;
+        var cutItem = CreateMenuItem(strings?.CutEquationText ?? "Cut", async (_, _) =>
+        {
+            await CopyMathExpression(mathView);
+            mathView.Clear();
+        }, glyph: "\uE8C6");
+        var copyItem = CreateMenuItem(
+            strings?.CopyEquationText ?? "Copy",
+            async (_, _) => await CopyMathExpression(mathView),
+            glyph: "\uE8C8");
+        var pasteItem = CreateMenuItem(strings?.PasteEquationText ?? "Paste", async (_, _) =>
+        {
+            var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+            var pasted = clipboard is null ? null : await clipboard.TryGetTextAsync();
+            var firstLine = pasted?
+                .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault();
+            if (!string.IsNullOrEmpty(firstLine))
+            {
+                mathView.InsertLinearText(firstLine);
+            }
+        }, glyph: "\uE77F");
+        var undoItem = CreateMenuItem(
+            strings?.UndoEquationText ?? "Undo",
+            (_, _) => mathView.Undo(),
+            glyph: "\uE7A7");
+        var selectAllItem = CreateMenuItem(
+            strings?.SelectAllEquationText ?? "Select all",
+            (_, _) => { },
+            glyph: "\uE8B3");
+        var analyzeItem = CreateMenuItem(
+            strings?.AnalyzeFunctionTooltip ?? "Analyze function",
+            (_, _) =>
+            {
+                if (mathView.DataContext is GraphEquationViewModel equation)
+                {
+                    _ = OpenAnalysisAsync(equation);
+                }
+            },
+            glyph: "\uE945");
+        var styleItem = CreateMenuItem(
+            strings?.ChangeEquationStyleTooltip ?? "Change equation style",
+            (_, _) =>
+            {
+                if (mathView.DataContext is GraphEquationViewModel equation)
+                {
+                    ShowLineOptions(mathView, equation);
+                }
+            },
+            glyph: "\uE790");
+        var removeItem = CreateMenuItem(
+            strings?.RemoveEquationTooltip ?? "Remove equation",
+            (_, _) =>
+            {
+                if (mathView.DataContext is GraphEquationViewModel equation)
+                {
+                    Graphing?.RemoveEquationCommand.Execute(equation);
+                }
+            },
+            glyph: "\uECC9");
+
+        menu.Items.Add(cutItem);
+        menu.Items.Add(copyItem);
+        menu.Items.Add(pasteItem);
+        menu.Items.Add(undoItem);
+        menu.Items.Add(selectAllItem);
+        menu.Items.Add(new Separator());
+        menu.Items.Add(analyzeItem);
+        menu.Items.Add(styleItem);
+        menu.Items.Add(removeItem);
+        menu.Opening += (_, _) =>
+        {
+            _activeMathView = mathView;
+            _activeTextBox = null;
+            var equation = mathView.DataContext as GraphEquationViewModel;
+            var hasText = !string.IsNullOrEmpty(equation?.DraftExpression);
+            cutItem.IsEnabled = hasText;
+            copyItem.IsEnabled = hasText;
+            undoItem.IsEnabled = mathView.CanUndo;
+            selectAllItem.IsEnabled = false;
+            analyzeItem.IsEnabled = equation?.CanAnalyze == true;
+            styleItem.IsEnabled = equation is { HasExpression: true, IsValid: true };
+            removeItem.IsEnabled = equation is not null
+                && Graphing?.RemoveEquationCommand.CanExecute(equation) == true;
+        };
+        mathView.ContextMenu = menu;
+    }
+
+    private async Task CopyMathExpression(EditableMathView mathView)
+    {
+        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        if (clipboard is not null)
+        {
+            await clipboard.SetTextAsync(mathView.StructuredLinearText);
         }
     }
 

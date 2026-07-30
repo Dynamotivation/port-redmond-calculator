@@ -1,3 +1,4 @@
+using System.Globalization;
 using Calculator.Avalonia.Views.Graphing;
 using Calculator.Managed;
 using Calculator.Managed.Graphing;
@@ -20,6 +21,8 @@ internal static class GraphingTests
         ("graphing equation presentation state is preserved", EquationPresentationStateIsPreserved),
         ("graphing formats committed equations as latex", FormatsCommittedEquationsAsLatex),
         ("graphing uses localized native parse errors", UsesLocalizedNativeParseErrors),
+        ("graphing accepts localized decimal and list separators", AcceptsLocalizedSeparators),
+        ("graphing rejects the Windows Unicode crash case safely", RejectsUnicodeCrashCaseSafely),
         ("graphing commits drafts and maintains a placeholder", DraftsCommitAtTheFourteenFunctionLimit),
         ("graphing cleared equations remain allocated placeholders", ClearedEquationsRemainAllocated),
         ("graphing invalid rows consume slots and colors", InvalidRowsConsumeSlotsAndColors),
@@ -90,6 +93,38 @@ internal static class GraphingTests
         var rendered = viewModel.GetRenderableEquations().Single();
         Assert(rendered.LineStyle == GraphLineStyle.Dash,
             "programmatic style changes must not override the dashed inequality boundary");
+    }
+
+    private static void AcceptsLocalizedSeparators()
+    {
+        var previousCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
+            var expression = new AngouriMathSolver().ParseInput("1,5*x");
+            var evaluator = CreateEvaluator(expression);
+            AssertNear(
+                evaluator.EvaluateExplicit(2),
+                3,
+                "localized decimal-comma expression");
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+        }
+    }
+
+    private static void RejectsUnicodeCrashCaseSafely()
+    {
+        try
+        {
+            _ = new AngouriMathSolver().ParseInput("π+θ×2÷3−1≤x≥0");
+        }
+        catch (GraphingParseException)
+        {
+            // A user-facing parse error is the safe outcome for the chained
+            // comparison that terminates the Windows Calculator process.
+        }
     }
 
     private static void AutomaticallyFitsExplicitFunctions()

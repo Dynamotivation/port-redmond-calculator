@@ -173,13 +173,42 @@ public sealed class AngouriMathSolver : IMathSolver
             _ => "=",
         }} {right.Latexise()}";
 
-    private static string NormalizeInput(string input) =>
-        input.Trim()
+    private static string NormalizeInput(string input)
+    {
+        var normalized = input.Trim()
             .Replace('−', '-')
             .Replace('×', '*')
             .Replace('÷', '/')
             .Replace("π", "pi", StringComparison.Ordinal)
             .Replace("θ", "theta", StringComparison.Ordinal);
+        var numberFormat = CultureInfo.CurrentCulture.NumberFormat;
+        if (numberFormat.NumberDecimalSeparator == ",")
+        {
+            var characters = normalized.ToCharArray();
+            for (var index = 1; index + 1 < characters.Length; index++)
+            {
+                if (characters[index] == ','
+                    && char.IsDigit(characters[index - 1])
+                    && char.IsDigit(characters[index + 1]))
+                {
+                    characters[index] = '.';
+                }
+            }
+            normalized = new string(characters);
+        }
+
+        var listSeparator = CultureInfo.CurrentCulture.TextInfo.ListSeparator;
+        if (!string.IsNullOrEmpty(listSeparator)
+            && listSeparator != ","
+            && listSeparator != numberFormat.NumberDecimalSeparator)
+        {
+            normalized = normalized.Replace(
+                listSeparator,
+                ",",
+                StringComparison.Ordinal);
+        }
+        return normalized;
+    }
 
     private static bool IsVariable(string value, string expected) =>
         string.Equals(value.Trim(), expected, StringComparison.OrdinalIgnoreCase);

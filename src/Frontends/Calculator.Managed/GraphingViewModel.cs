@@ -223,6 +223,8 @@ public partial class GraphEquationViewModel : ObservableObject
     public bool ShowEditingClear =>
         IsEditing && !string.IsNullOrWhiteSpace(DraftExpression);
 
+    public bool RejectLiteralFunctionCall { get; set; }
+
     [ObservableProperty]
     public partial bool IsEditing { get; set; }
 
@@ -416,6 +418,12 @@ public partial class GraphEquationViewModel : ObservableObject
         if (!HasExpression)
         {
             ErrorMessage = string.Empty;
+            IsValid = false;
+            return;
+        }
+        if (RejectLiteralFunctionCall)
+        {
+            ErrorMessage = _strings.UnexpectedEndOfExpression;
             IsValid = false;
             return;
         }
