@@ -5,7 +5,7 @@
         xmlns:ui="using:FluentAvalonia.UI.Controls">
   <!-- Keypad button materials and their interaction states. -->
     <Style Selector="Button.calcButton">
-    <Setter Property="Margin" Value="1.75" />
+    <Setter Property="Margin" Value="1" />
     <Setter Property="Padding" Value="0" />
     <Setter Property="MinWidth" Value="24" />
     <Setter Property="MinHeight" Value="12" />
@@ -16,7 +16,7 @@
     <Setter Property="CornerRadius" Value="5" />
     <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonBorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="FontSize" Value="22" />
+    <Setter Property="FontSize" Value="20" />
     <Setter Property="FontWeight" Value="Normal" />
     <Setter Property="Template">
       <ControlTemplate>
@@ -43,7 +43,7 @@
     </Style>
     <Style Selector="Button.calcButton.numeric">
     <Setter Property="Background" Value="{DynamicResource NumericButtonBrush}" />
-    <Setter Property="FontSize" Value="26.4" />
+    <Setter Property="FontSize" Value="24" />
     <Setter Property="FontWeight" Value="Light" />
     </Style>
     <Style Selector="Button.calcButton.numeric:pointerover">
@@ -85,7 +85,7 @@
     </Style>
     <Style Selector="Button.calcButton.symbolOperator">
     <Setter Property="FontFamily" Value="{StaticResource CalculatorIconFont}" />
-    <Setter Property="FontSize" Value="16.94" />
+    <Setter Property="FontSize" Value="20" />
     <Setter Property="FontWeight" Value="Normal" />
     </Style>
     <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator">
@@ -113,7 +113,7 @@
     <Setter Property="Background" Value="{DynamicResource AccentButtonBrush}" />
     <Setter Property="Foreground" Value="#101010" />
     <Setter Property="FontFamily" Value="{StaticResource CalculatorIconFont}" />
-    <Setter Property="FontSize" Value="16.94" />
+    <Setter Property="FontSize" Value="20" />
     <Setter Property="FontWeight" Value="Normal" />
     </Style>
     <Style Selector="Button.calcButton.equalsButton:pointerover">

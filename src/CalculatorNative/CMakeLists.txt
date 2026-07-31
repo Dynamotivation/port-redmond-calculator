@@ -14,6 +14,13 @@ target_include_directories(
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+if(MSVC)
+    target_precompile_headers(
+        CalculatorNative
+        PRIVATE ${MICROSOFT_CALCULATOR_ROOT}/src/CalcManager/pch.h
+    )
+endif()
+
 target_compile_definitions(CalculatorNative PRIVATE CALCULATOR_NATIVE_BUILD)
 set_target_properties(
     CalculatorNative

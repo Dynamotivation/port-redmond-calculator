@@ -64,6 +64,10 @@ target_include_directories(
 )
 
 if(MSVC)
+    target_precompile_headers(
+        CalculatorCore
+        PRIVATE ${MSCALC_MANAGER_DIR}/pch.h
+    )
     target_compile_options(CalculatorCore PRIVATE /utf-8 /permissive-)
 else()
     target_compile_options(CalculatorCore PRIVATE -Wall -Wextra -Wpedantic)
