@@ -2,6 +2,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 
 namespace Calculator.Avalonia.Shell;
 
@@ -17,7 +18,14 @@ namespace Calculator.Avalonia.Shell;
 /// </remarks>
 public partial class WindowChrome : UserControl
 {
-    public WindowChrome() => InitializeComponent();
+    public WindowChrome()
+    {
+        InitializeComponent();
+        if (OperatingSystem.IsWindows())
+        {
+            TitleBarApplicationNameText.FontFamily = new FontFamily("Segoe UI Variable");
+        }
+    }
 
     /// <summary>Raised when the user drags an empty area of the title bar.</summary>
     public event EventHandler<PointerPressedEventArgs>? DragRequested;
