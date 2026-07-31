@@ -55,6 +55,17 @@
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="FontSize" Value="24" />
     </Style>
+    <Style Selector="Button.chromeButton.headerIconButton">
+    <Setter Property="Width" Value="32" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.chromeButton.historyButton">
+    <Setter Property="HorizontalAlignment" Value="Right" />
+    <Setter Property="Margin" Value="0,0,8,0" />
+    </Style>
     <Style Selector="Button.chromeButton:pointerover">
     <Setter Property="Background" Value="{DynamicResource ChromeHoverBrush}" />
     </Style>
@@ -71,5 +82,17 @@
     <Setter Property="HorizontalAlignment" Value="Center" />
     <Setter Property="VerticalAlignment" Value="Center" />
     <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
+    </Style>
+    <Style Selector="TextBlock.headerAlwaysOnTopGlyph">
+    <Setter Property="Width" Value="18" />
+    <Setter Property="Height" Value="18" />
+    <Setter Property="FontSize" Value="18" />
+    </Style>
+    <Style Selector="TextBlock.historyGlyph">
+    <Setter Property="FontFamily" Value="{StaticResource CalculatorIconFont}" />
+    <Setter Property="FontSize" Value="16" />
+    <Setter Property="FontWeight" Value="Normal" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 </Styles>

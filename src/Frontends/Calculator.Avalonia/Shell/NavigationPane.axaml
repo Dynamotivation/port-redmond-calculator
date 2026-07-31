@@ -67,7 +67,7 @@
     </Grid>
 
     <Button x:Name="NavigationToggleButton"
-            Classes="chromeButton navigationToggle" Margin="5,9,5,3"
+            Classes="chromeButton navigationToggle" Margin="0"
             TabIndex="1" AutomationProperties.AccessKey="Alt+H"
             AutomationProperties.Name="Switch calculator mode"
             IsVisible="{Binding !IsAlwaysOnTop}"
@@ -78,8 +78,8 @@
              it is visually collapsed because the hamburger glyph is custom. -->
         <AccessText Text="_H" Width="0" Height="0" Opacity="0" IsHitTestVisible="False" />
         <Canvas Classes="hamburgerGlyph" Width="24" Height="24">
-          <Path Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
-                Data="M 3,6 L 21,6 M 3,12 L 21,12 M 3,18 L 21,18" />
+          <Path Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.25"
+                Data="M 5,7 L 19,7 M 5,12 L 19,12 M 5,17 L 19,17" />
         </Canvas>
       </Grid>
     </Button>
