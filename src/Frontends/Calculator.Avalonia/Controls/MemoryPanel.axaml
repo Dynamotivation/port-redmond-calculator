@@ -6,7 +6,16 @@
              IsVisible="{Binding IsStandardOrScientificMode}">
   <!-- MC, MR, M+, M−, MS and the memory flyout. The popup is owned here rather
        than by the window: it belongs to the button that opens it. -->
-  <Grid Margin="3,0" ColumnDefinitions="*,*,*,*,*,0.01*,*">
+  <Grid Margin="3,0">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*" MaxWidth="80" />
+      <ColumnDefinition Width="*" MaxWidth="80" />
+      <ColumnDefinition Width="*" MaxWidth="80" />
+      <ColumnDefinition Width="*" MaxWidth="80" />
+      <ColumnDefinition Width="*" MaxWidth="80" />
+      <ColumnDefinition Width="0.01*" />
+      <ColumnDefinition Width="*" MaxWidth="80" />
+    </Grid.ColumnDefinitions>
     <Button x:Name="MemoryClearButton" Classes="memoryButton" Content="MC" IsEnabled="{Binding Memory.HasEntries}" Command="{Binding Memory.ClearAllCommand}"
             ToolTip.Tip="{Binding Memory.Strings.ClearTooltip}" />
     <Button x:Name="MemoryRecallButton" Grid.Column="1" Classes="memoryButton" Content="MR" IsEnabled="{Binding Memory.HasEntries}" Command="{Binding Memory.RecallCommand}"
