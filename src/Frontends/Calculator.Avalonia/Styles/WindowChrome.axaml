@@ -6,7 +6,7 @@
   <!-- Caption buttons, title-bar controls and the always-on-top glyph. -->
     <Style Selector="Button.titleButton">
     <Setter Property="Width" Value="46" />
-    <Setter Property="Height" Value="42" />
+    <Setter Property="Height" Value="34" />
     <Setter Property="Padding" Value="0" />
     <Setter Property="CornerRadius" Value="0" />
     <Setter Property="Background" Value="Transparent" />
@@ -29,7 +29,7 @@
     <!-- The window's one-pixel frame sits outside the title-bar content
          bounds. Extend caption backplates into that frame so full-bleed
          hover colors do not leave the top edge exposed. -->
-    <Setter Property="Height" Value="43" />
+    <Setter Property="Height" Value="35" />
     <Setter Property="Margin" Value="0,-1,0,0" />
     </Style>
     <Style Selector="Button.titleButton.captionButton.windows10">

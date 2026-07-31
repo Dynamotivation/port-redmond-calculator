@@ -14,19 +14,40 @@
         MinWidth="320" MinHeight="500"
         CanResize="True"
         WindowStartupLocation="CenterScreen"
-        WindowDecorations="None"
+        WindowDecorations="Full"
         Icon="avares://Redmond%20Calculator/Assets/RedmondCalculatorIcon.png"
         Background="Transparent"
         TransparencyLevelHint="Transparent"
         TransparencyBackgroundFallback="#202027"
         Title="{Binding ApplicationName}">
 
+  <Window.Resources>
+    <!-- Match the wider Windows 11 caption-button footprint used by the
+         reference calculator when Avalonia renders the native caption area. -->
+    <x:Double x:Key="CaptionButtonWidth">48</x:Double>
+  </Window.Resources>
+
+  <Window.Styles>
+    <!-- The native Windows frame already supplies the application identity.
+         Keep Avalonia's caption buttons, but remove its duplicate title text
+         when the client area is extended into the decoration area. -->
+    <Style Selector="WindowDrawnDecorations /template/ Panel#PART_TitleTextPanel > TextBlock">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="WindowDrawnDecorations /template/ Button#PART_FullScreenButton">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="WindowDrawnDecorations /template/ StackPanel#PART_OverlayPanel > Button">
+      <Setter Property="Width" Value="48" />
+    </Style>
+  </Window.Styles>
+
   <Grid>
     <Border x:Name="WindowSurface"
             Classes="windowSurface"
             Classes.noBackdrop="{Binding !Settings.UseMicaEffect}"
             Classes.inactive="{Binding !IsActive, RelativeSource={RelativeSource AncestorType=Window}}"
-            Classes.nativeFrame="{Binding UsesNativeWindowGeometry}"
+            Classes.nativeFrame="{Binding UsesNativeWindowFrameGeometry}"
             Classes.squareCorners="{Binding UsesSquareWindowCorners}"
             ClipToBounds="True"
             BorderBrush="{DynamicResource CalculatorBorderBrush}">
@@ -154,8 +175,8 @@
     </Grid>
     </Border>
 
-    <!-- Custom chrome removes the native frame, so retain native resizing
-         through the shared edge and corner hit targets. -->
+    <!-- Only the custom-frame platforms need Avalonia resize hit targets.
+         Windows keeps its native frame and caption/resizing behavior. -->
     <shared:WindowResizeHandles IsVisible="{Binding UsesCustomResizeHandles}" />
   </Grid>
 </Window>

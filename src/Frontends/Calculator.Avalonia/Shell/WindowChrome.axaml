@@ -3,19 +3,21 @@
              xmlns:managed="using:Calculator.Managed"
              x:Class="Calculator.Avalonia.Shell.WindowChrome"
              x:DataType="managed:CalculatorViewModel">
-  <!-- Source-faithful replacement for CalculatorApp.TitleBar. Window
-       operations are raised as events rather than performed here: this control
-       owns the presentation of the title bar, not the window's lifetime. -->
-  <Grid Height="42" ColumnDefinitions="Auto,*,Auto,Auto,Auto" Background="Transparent"
+  <!-- Source-faithful title-bar content. On Windows this is hosted in the
+       extended client area while the native caption buttons remain visible. -->
+  <Grid Height="34" ColumnDefinitions="Auto,*,Auto,Auto,Auto" Background="Transparent"
+        WindowDecorationProperties.ElementRole="TitleBar"
         PointerPressed="TitleBar_OnPointerPressed">
-    <StackPanel Orientation="Horizontal" IsVisible="{Binding UsesWindowsWindowControls}">
+    <StackPanel Orientation="Horizontal" IsVisible="{Binding ShowsWindowTitleBarContent}">
       <Button Classes="titleButton" IsVisible="{Binding ShowsWindowsAlwaysOnTopExit}"
+              WindowDecorationProperties.ElementRole="User"
               AutomationProperties.Name="{Binding AlwaysOnTopAutomationName}"
               ToolTip.Tip="{Binding AlwaysOnTopTooltip}"
               Click="AlwaysOnTop_OnClick">
         <TextBlock Classes="alwaysOnTopGlyph" Text="{Binding AlwaysOnTopGlyph}" />
       </Button>
       <Button Classes="titleButton" IsVisible="{Binding ShowsSettingsBackInTitleBar}"
+              WindowDecorationProperties.ElementRole="User"
               AutomationProperties.Name="{Binding BackAutomationName}"
               ToolTip.Tip="{Binding SettingsBackTooltip}"
               Command="{Binding CloseSettingsCommand}">
@@ -25,17 +27,19 @@
       </Button>
       <Grid Width="22"
             Height="22"
-            Margin="18,10,12,10">
-        <Image Width="18"
-               Height="18"
+            Margin="14,10,12,10">
+        <Image Width="16"
+               Height="16"
                Stretch="Uniform"
                IsHitTestVisible="False"
                Source="avares://Redmond%20Calculator/Assets/RedmondCalculatorIcon.png" />
       </Grid>
       <TextBlock Margin="0,0,12,0"
                  VerticalAlignment="Center"
-                 FontSize="13.2"
+                 FontSize="12"
+                 FontWeight="Normal"
                  TextTrimming="CharacterEllipsis"
+                 x:Name="TitleBarApplicationNameText"
                  Text="{Binding TitleBarApplicationName}" />
     </StackPanel>
     <Button Grid.Column="0" Margin="72,0,0,0" Classes="titleButton"
@@ -47,7 +51,7 @@
     </Button>
     <Button Grid.Column="2" Classes="titleButton captionButton"
             Classes.windows10="{Binding Settings.IsWindows10WindowControlStyleSelected}"
-            IsVisible="{Binding UsesWindowsWindowControls}"
+            IsVisible="{Binding UsesCustomWindowControls}"
             AutomationProperties.Name="Minimize" Click="Minimize_OnClick">
       <Grid Width="12.9" Height="12.9">
         <Border Width="10" Height="1"
@@ -61,7 +65,7 @@
     </Button>
     <Button Grid.Column="3" Classes="titleButton captionButton"
             Classes.windows10="{Binding Settings.IsWindows10WindowControlStyleSelected}"
-            IsVisible="{Binding ShowsWindowsMaximizeButton}"
+            IsVisible="{Binding ShowsCustomWindowsMaximizeButton}"
             AutomationProperties.Name="Maximize" Click="Maximize_OnClick">
       <Grid Width="12.9" Height="12.9">
         <Path Width="12" Height="12" Stretch="Uniform"
@@ -78,7 +82,7 @@
     </Button>
     <Button Grid.Column="4" Classes="titleButton captionButton close"
             Classes.windows10="{Binding Settings.IsWindows10WindowControlStyleSelected}"
-            IsVisible="{Binding UsesWindowsWindowControls}"
+            IsVisible="{Binding UsesCustomWindowControls}"
             AutomationProperties.Name="Close" Click="Close_OnClick">
       <Grid Width="12.9" Height="12.9">
         <Path Width="12" Height="12" Stretch="Uniform"

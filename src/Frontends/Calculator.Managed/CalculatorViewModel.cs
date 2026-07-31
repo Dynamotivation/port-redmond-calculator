@@ -112,15 +112,20 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
 
     public bool UsesNativeWindowGeometry => Settings.SelectedWindowCornerStyle == WindowCornerStyle.MacOS;
+    public bool UsesNativeWindowDecorations => OperatingSystem.IsWindows();
+    public bool UsesNativeWindowFrameGeometry => UsesNativeWindowDecorations || UsesNativeWindowGeometry;
     public bool UsesSquareWindowCorners => Settings.SelectedWindowCornerStyle == WindowCornerStyle.Windows10;
     public bool UsesWindowsWindowControls => Settings.SelectedWindowControlStyle != WindowControlStyle.MacOS;
     public bool UsesMacOSWindowControls => Settings.SelectedWindowControlStyle == WindowControlStyle.MacOS;
-    public bool ShowsSettingsBackInTitleBar => IsSettingsOpen && UsesWindowsWindowControls;
+    public bool ShowsWindowTitleBarContent => UsesNativeWindowDecorations || UsesWindowsWindowControls;
+    public bool UsesCustomWindowControls => !UsesNativeWindowDecorations && UsesWindowsWindowControls;
+    public bool ShowsSettingsBackInTitleBar => IsSettingsOpen && ShowsWindowTitleBarContent;
     public bool ShowsWindowsAlwaysOnTopExit => IsAlwaysOnTop && UsesWindowsWindowControls;
     public bool ShowsMacOSAlwaysOnTopExit => IsAlwaysOnTop && UsesMacOSWindowControls;
     public bool ShowsWindowsMaximizeButton => !IsAlwaysOnTop && UsesWindowsWindowControls;
+    public bool ShowsCustomWindowsMaximizeButton => !IsAlwaysOnTop && UsesCustomWindowControls;
     public double WindowCornerRadius => Settings.SelectedWindowCornerStyle == WindowCornerStyle.Windows11 ? 8 : 0;
-    public bool UsesCustomResizeHandles => !UsesNativeWindowGeometry;
+    public bool UsesCustomResizeHandles => !UsesNativeWindowDecorations && !UsesNativeWindowGeometry;
 
     public bool IsStandardMode => CurrentViewMode == CalculatorViewMode.Standard;
     public bool CanEnterAlwaysOnTop => IsStandardMode && !IsAlwaysOnTop;
@@ -199,14 +204,18 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             // The window chrome predicates below are derived from settings, so
             // they have to be re-raised when a preference changes.
             OnPropertyChanged(nameof(UsesNativeWindowGeometry));
+            OnPropertyChanged(nameof(UsesNativeWindowFrameGeometry));
             OnPropertyChanged(nameof(UsesSquareWindowCorners));
             OnPropertyChanged(nameof(UsesWindowsWindowControls));
             OnPropertyChanged(nameof(UsesMacOSWindowControls));
+            OnPropertyChanged(nameof(ShowsWindowTitleBarContent));
+            OnPropertyChanged(nameof(UsesCustomWindowControls));
             OnPropertyChanged(nameof(UsesCustomResizeHandles));
             OnPropertyChanged(nameof(ShowsSettingsBackInTitleBar));
             OnPropertyChanged(nameof(ShowsWindowsAlwaysOnTopExit));
             OnPropertyChanged(nameof(ShowsMacOSAlwaysOnTopExit));
             OnPropertyChanged(nameof(ShowsWindowsMaximizeButton));
+            OnPropertyChanged(nameof(ShowsCustomWindowsMaximizeButton));
             OnPropertyChanged(nameof(WindowCornerRadius));
         };
         TitleBarApplicationName = appResources.GetString("AppName");
