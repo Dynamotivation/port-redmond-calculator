@@ -34,6 +34,32 @@ See [PortableBuild.md](docs/PortableBuild.md) for frontend and packaging
 details, and [UpstreamCompatibility.md](docs/UpstreamCompatibility.md) for the
 strict submodule compatibility contract.
 
+## Windows build with MSVC
+
+The native Windows build uses the Visual Studio 2022 generator and MSVC, not
+the compiler selected by the MSYS2 environment. The checked-in project remains
+CMake-based for the native layer, but CMake is explicitly configured to emit a
+Visual Studio solution for x64.
+
+On the configured development machine, the local convenience helpers are:
+
+```powershell
+.\scripts\build-windows-msvc.ps1
+.\scripts\run-windows-msvc.ps1 -NoBuild
+```
+
+These helpers are intentionally machine-local and are excluded through
+`.git/info/exclude`. They use the .NET SDK version pinned by `global.json`. For
+a clean checkout, run the same steps from a Visual Studio Developer PowerShell
+or use the pinned Visual Studio environment script:
+
+```text
+cmake -S . -B build/windows-msvc -G "Visual Studio 17 2022" -A x64
+cmake --build build/windows-msvc --config Release --target CalculatorNative --parallel
+dotnet build src/Frontends/Calculator.Avalonia/Calculator.Avalonia.csproj --configuration Release
+dotnet run --project src/Frontends/Calculator.Avalonia/Calculator.Avalonia.csproj --configuration Release --no-build
+```
+
 ## Upstream ownership boundary
 
 - Never modify files below `upstream/windows-calculator`.
