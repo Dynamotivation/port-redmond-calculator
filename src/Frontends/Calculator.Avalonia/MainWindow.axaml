@@ -60,13 +60,13 @@
         </BrushTransition>
       </Transitions>
     </Border.Transitions>
-    <Grid RowDefinitions="Auto,48,22*,72*,0,32*,337*">
+    <Grid RowDefinitions="Auto,48,22*,72*,0,32*,347*">
       <shell:WindowChrome Grid.Row="0" x:Name="TitleBarChrome" />
 
       <!-- Calculator and Settings are separate page surfaces beneath the
            shared title bar. Keep the inactive page out of layout and hit
            testing instead of covering it with a transparent overlay. -->
-      <Grid Grid.Row="1" Grid.RowSpan="6" RowDefinitions="48,22*,72*,0,32*,337*"
+      <Grid Grid.Row="1" Grid.RowSpan="6" RowDefinitions="48,22*,72*,0,32*,347*"
             IsVisible="{Binding !IsSettingsOpen}">
       <Grid x:Name="CalculatorResponsiveLayout" Grid.RowSpan="6" ColumnDefinitions="*,0">
       <local:NavigationCulledGrid x:Name="CalculatorPageContent" Grid.RowSpan="6"
@@ -78,7 +78,7 @@
         <RowDefinition Height="72*" MinHeight="20" />
         <RowDefinition Height="0" />
         <RowDefinition Height="32*" MinHeight="0" />
-        <RowDefinition Height="337*" MinHeight="0" />
+        <RowDefinition Height="347*" MinHeight="0" />
       </local:NavigationCulledGrid.RowDefinitions>
       <!-- Hamburger/category/history row from MainPage + Calculator. -->
       <Grid Grid.Row="0" ColumnDefinitions="48,Auto,62,*,56">
