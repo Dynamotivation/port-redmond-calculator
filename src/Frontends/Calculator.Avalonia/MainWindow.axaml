@@ -81,7 +81,7 @@
         <RowDefinition Height="308*" MinHeight="0" />
       </local:NavigationCulledGrid.RowDefinitions>
       <!-- Hamburger/category/history row from MainPage + Calculator. -->
-      <Grid Grid.Row="0" ColumnDefinitions="68,Auto,62,*,56">
+      <Grid Grid.Row="0" ColumnDefinitions="48,Auto,62,*,56">
         <TextBlock Grid.Column="1" Classes="pageHeading" VerticalAlignment="Center" Text="{Binding ModeDisplayName}" />
         <Border x:Name="GraphingModeSwitch" Grid.Column="3" Grid.ColumnSpan="2"
                 Classes="graphModeSwitch"
