@@ -93,7 +93,7 @@
                     IsHitTestVisible="False" />
           </Grid>
         </Border>
-        <Button Grid.Column="2" Classes="chromeButton" Margin="10,3,0,3"
+        <Button Grid.Column="2" Classes="chromeButton headerIconButton alwaysOnTopButton" Margin="10,0,0,0"
                 AutomationProperties.Name="{Binding AlwaysOnTopAutomationName}"
                 IsVisible="{Binding CanEnterAlwaysOnTop}"
                 ToolTip.Placement="Bottom"
@@ -101,16 +101,13 @@
           <ToolTip.Tip>
             <TextBlock Text="{Binding AlwaysOnTopTooltip}" />
           </ToolTip.Tip>
-          <TextBlock Classes="alwaysOnTopGlyph" Text="{Binding AlwaysOnTopGlyph}" />
+          <TextBlock Classes="alwaysOnTopGlyph headerAlwaysOnTopGlyph" Text="{Binding AlwaysOnTopGlyph}" />
         </Button>
-        <Button x:Name="HistoryButton" Grid.Column="4" Classes="chromeButton"
+        <Button x:Name="HistoryButton" Grid.Column="4" Classes="chromeButton headerIconButton historyButton"
                 AutomationProperties.Name="{Binding History.Strings.AutomationName}"
                 IsVisible="{Binding IsHistoryButtonVisible}"
                 Command="{Binding History.ToggleCommand}" ToolTip.Tip="{Binding History.Strings.ToggleTooltip}">
-          <Canvas Width="28" Height="28">
-            <Path Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
-                  Data="M 6,9 A 9,9 0 1 1 5,16 M 3,6 L 3,12 L 9,12 M 14,8 L 14,14 L 18,16" />
-          </Canvas>
+          <TextBlock Classes="historyGlyph" Text="&#xE81C;" />
         </Button>
       </Grid>
 
