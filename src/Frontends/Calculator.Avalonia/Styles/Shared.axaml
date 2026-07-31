@@ -8,8 +8,9 @@
     <Setter Property="Margin" Value="4" />
     </Style>
     <Style Selector="TextBlock.pageHeading">
-    <Setter Property="FontSize" Value="25.2" />
-    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Margin" Value="0,-3,0,0" />
     <!-- TODO: Resolve non-default font baseline differences at runtime from
          the selected typeface's metrics; never offset the default font here. -->
     </Style>

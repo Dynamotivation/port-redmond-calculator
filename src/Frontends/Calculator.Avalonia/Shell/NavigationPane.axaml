@@ -79,7 +79,7 @@
         <AccessText Text="_H" Width="0" Height="0" Opacity="0" IsHitTestVisible="False" />
         <Canvas Classes="hamburgerGlyph" Width="24" Height="24">
           <Path Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.25"
-                Data="M 5,7 L 19,7 M 5,12 L 19,12 M 5,17 L 19,17" />
+                Data="M 4.5,7 L 19.5,7 M 4.5,12 L 19.5,12 M 4.5,17 L 19.5,17" />
         </Canvas>
       </Grid>
     </Button>
