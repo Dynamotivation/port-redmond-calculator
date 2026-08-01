@@ -26,7 +26,7 @@
             ToolTip.Tip="{Binding Memory.Strings.SubtractTooltip}" />
     <Button x:Name="MemoryStoreButton" Grid.Column="4" Classes="memoryButton" Content="MS" Command="{Binding Memory.StoreCommand}"
             ToolTip.Tip="{Binding Memory.Strings.StoreTooltip}" />
-    <Button x:Name="MemoryFlyoutButton" Grid.Column="6" Classes="memoryButton" Content="M⌄" IsEnabled="{Binding Memory.HasEntries}"
+    <Button x:Name="MemoryFlyoutButton" Grid.Column="6" Classes="memoryButton memoryFlyoutButton" Content="&#xE61D;" IsEnabled="{Binding Memory.HasEntries}"
             ToolTip.Tip="{Binding Memory.Strings.PopupTooltip}" Click="MemoryFlyout_OnClick" />
     <Popup x:Name="MemoryPopup" Grid.Column="6"
            PlacementTarget="{Binding #MemoryFlyoutButton}"
