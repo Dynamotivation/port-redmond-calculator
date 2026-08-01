@@ -19,24 +19,24 @@
              backdrop needs a small opacity adjustment for the same milkiness. -->
         <SolidColorBrush x:Key="NumericButtonBrush" Color="#FFFFFF" Opacity="0.14" />
         <LinearGradientBrush x:Key="CalculatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
-          <GradientStop Color="#18FFFFFF" Offset="0" />
-          <GradientStop Color="#12FFFFFF" Offset="1" />
+          <GradientStop Color="#0CFFFFFF" Offset="0" />
+          <GradientStop Color="#08FFFFFF" Offset="1" />
         </LinearGradientBrush>
-        <SolidColorBrush x:Key="CalculatorButtonPressedBorderBrush" Color="#12FFFFFF" />
-        <BoxShadows x:Key="CalculatorButtonShadow">0 1 2 0 #50000000</BoxShadows>
-        <BoxShadows x:Key="CalculatorButtonPressedShadow">0 0 1 0 #30000000</BoxShadows>
+        <SolidColorBrush x:Key="CalculatorButtonPressedBorderBrush" Color="#06000000" />
+        <BoxShadows x:Key="CalculatorButtonShadow">0 0 0 0 #00000000</BoxShadows>
+        <BoxShadows x:Key="CalculatorButtonPressedShadow">0 0 0 0 #00000000</BoxShadows>
         <SolidColorBrush x:Key="NumericButtonHoverBrush" Color="#FFFFFF" Opacity="0.1002" />
         <SolidColorBrush x:Key="NumericButtonPressedBrush" Color="#FFFFFF" Opacity="0.0509" />
         <SolidColorBrush x:Key="OperatorButtonBrush" Color="#FFFFFF" Opacity="0.1002" />
         <SolidColorBrush x:Key="OperatorButtonHoverBrush" Color="#FFFFFF" Opacity="0.1406" />
         <SolidColorBrush x:Key="OperatorButtonPressedBrush" Color="#FFFFFF" Opacity="0.1002" />
         <LinearGradientBrush x:Key="OperatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
-          <GradientStop Color="#0CFFFFFF" Offset="0" />
-          <GradientStop Color="#09FFFFFF" Offset="1" />
+          <GradientStop Color="#0EFFFFFF" Offset="0" />
+          <GradientStop Color="#0BFFFFFF" Offset="1" />
         </LinearGradientBrush>
         <SolidColorBrush x:Key="OperatorButtonPressedBorderBrush" Color="#09FFFFFF" />
-        <BoxShadows x:Key="OperatorButtonShadow">0 1 2 0 #28000000</BoxShadows>
-        <BoxShadows x:Key="OperatorButtonPressedShadow">0 0 1 0 #18000000</BoxShadows>
+        <BoxShadows x:Key="OperatorButtonShadow">0 0 0 0 #00000000</BoxShadows>
+        <BoxShadows x:Key="OperatorButtonPressedShadow">0 0 0 0 #00000000</BoxShadows>
         <SolidColorBrush x:Key="ChromeHoverBrush" Color="#34343B" />
         <Color x:Key="ChromeForegroundColor">#F5F5F5</Color>
         <SolidColorBrush x:Key="ChromeForegroundBrush" Color="{StaticResource ChromeForegroundColor}" />
