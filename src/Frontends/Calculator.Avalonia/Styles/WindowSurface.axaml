@@ -15,6 +15,16 @@
     <Style Selector="Border.windowSurface.inactive">
     <Setter Property="Background" Value="{DynamicResource SolidSurfaceBrush}" />
     </Style>
+    <!-- DWM owns both the native material and its active/inactive response. -->
+    <Style Selector="Border.windowSurface.nativeMica">
+    <Setter Property="Background" Value="{DynamicResource WindowsMicaSurfaceBrush}" />
+    </Style>
+    <Style Selector="Border.windowSurface.nativeMica.inactive">
+    <Setter Property="Background" Value="{DynamicResource WindowsMicaSurfaceBrush}" />
+    </Style>
+    <Style Selector="Border.windowSurface.nativeMica.noBackdrop">
+    <Setter Property="Background" Value="{DynamicResource SolidSurfaceBrush}" />
+    </Style>
     <Style Selector="Border.windowSurface.nativeFrame">
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="CornerRadius" Value="0" />

@@ -17,7 +17,7 @@
         WindowDecorations="Full"
         Icon="avares://Redmond%20Calculator/Assets/RedmondCalculatorIcon.png"
         Background="Transparent"
-        TransparencyLevelHint="Transparent"
+        TransparencyLevelHint="Mica"
         TransparencyBackgroundFallback="#202027"
         Title="{Binding ApplicationName}">
 
@@ -47,6 +47,7 @@
             Classes="windowSurface"
             Classes.noBackdrop="{Binding !Settings.UseMicaEffect}"
             Classes.inactive="{Binding !IsActive, RelativeSource={RelativeSource AncestorType=Window}}"
+            Classes.nativeMica="{Binding UsesNativeWindowDecorations}"
             Classes.nativeFrame="{Binding UsesNativeWindowFrameGeometry}"
             Classes.squareCorners="{Binding UsesSquareWindowCorners}"
             ClipToBounds="True"
