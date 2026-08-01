@@ -19,7 +19,8 @@
       <ControlTemplate>
         <Grid>
           <Border Background="{TemplateBinding Background}" CornerRadius="4">
-            <ContentPresenter HorizontalContentAlignment="Center"
+            <ContentPresenter Padding="{TemplateBinding Padding}"
+                              HorizontalContentAlignment="Center"
                               VerticalContentAlignment="Center"
                               Content="{TemplateBinding Content}" />
           </Border>
@@ -29,6 +30,12 @@
         </Grid>
       </ControlTemplate>
     </Setter>
+    </Style>
+    <!-- Native OperatorPanelButtonStyle supplies an eight-pixel horizontal
+         content inset and a left-aligned hitbox. -->
+    <Style Selector="StackPanel.scientificOperatorPanel Button.memoryButton">
+    <Setter Property="Padding" Value="8,0" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
     </Style>
     <Style Selector="Button.memoryButton.selected /template/ Border#MemoryButtonSelectionIndicator">
     <Setter Property="Background" Value="{DynamicResource AccentButtonBrush}" />
