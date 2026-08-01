@@ -7,7 +7,14 @@
   <Grid x:Name="ScientificNumpadPanel" Margin="3,0,3,3"
       RowDefinitions="Auto,*,*,*,*,*,*,*" ColumnDefinitions="*,*,*,*,*"
       Classes.scientificError="{Binding IsError}">
-  <StackPanel Grid.ColumnSpan="5" Classes="scientificOperatorPanel" Orientation="Horizontal">
+  <!-- Native OperatorPanelListView reserves six pixels for its divider row;
+       the operator buttons then occupy the remaining row height. -->
+  <Grid Grid.ColumnSpan="5" Classes="scientificOperatorPanelHost"
+        RowDefinitions="6,*">
+    <Border Height="1" Margin="-3,4,-3,1"
+            HorizontalAlignment="Stretch" VerticalAlignment="Top"
+            Background="{DynamicResource DividerBrush}" IsHitTestVisible="False" />
+    <StackPanel Grid.Row="1" Classes="scientificOperatorPanel" Orientation="Horizontal">
     <Button x:Name="ScientificTrigButton" Classes="memoryButton scientificErrorDisabled">
       <Button.Content>
         <StackPanel Orientation="Horizontal">
@@ -91,7 +98,8 @@
         </Flyout>
       </Button.Flyout>
     </Button>
-  </StackPanel>
+    </StackPanel>
+  </Grid>
 
   <Button x:Name="ScientificShiftButton" Grid.Row="1" Classes="calcButton operator symbolOperator scientificErrorDisabled" Content="&#xF897;"
           Command="{Binding Scientific.ToggleInverseCommand}" />
