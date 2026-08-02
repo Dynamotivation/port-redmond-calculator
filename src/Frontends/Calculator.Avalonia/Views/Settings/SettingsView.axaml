@@ -152,9 +152,10 @@
           </shared:AnimatedSettingsExpander>
         </Border>
 
-        <StackPanel IsVisible="{Binding Settings.SupportsPlatformAppearanceSettings}">
+        <StackPanel>
           <Border Classes="settingsCard" Background="{DynamicResource SettingsExpanderBrush}"
-                  CornerRadius="6" Padding="24,18">
+                  CornerRadius="6" Padding="24,18"
+                  IsVisible="{Binding Settings.SupportsBackdropSettings}">
             <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
               <TextBlock FontSize="14" FontWeight="Normal" Text="{Binding Settings.Strings.MicaEffectName}" />
               <TextBlock Grid.Row="1" Margin="0,2,16,0" FontSize="12"
@@ -166,7 +167,8 @@
           </Border>
 
           <Border Classes="settingsCard" Margin="0,4,0,0" Background="Transparent"
-                  CornerRadius="6" Padding="0" ClipToBounds="True">
+                  CornerRadius="6" Padding="0" ClipToBounds="True"
+                  IsVisible="{Binding Settings.SupportsWindowStyleSettings}">
             <shared:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
                       HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                       Background="Transparent">
@@ -204,7 +206,8 @@
           </Border>
 
           <Border Classes="settingsCard" Margin="0,4,0,0" Background="Transparent"
-                  CornerRadius="6" Padding="0" ClipToBounds="True">
+                  CornerRadius="6" Padding="0" ClipToBounds="True"
+                  IsVisible="{Binding Settings.SupportsWindowStyleSettings}">
             <shared:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
                       HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                       Background="Transparent">

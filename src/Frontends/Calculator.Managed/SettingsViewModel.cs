@@ -17,22 +17,23 @@ namespace Calculator.Managed;
 /// to the window presentation service, so no native window API is reachable
 /// from the settings page.
 ///
-/// The predicates the window chrome binds to (which control set to draw,
-/// whether the frame is native) stay on the shell view model reading from here,
-/// because they describe the window rather than the settings page.
+/// The predicates the window chrome binds to combine these settings with
+/// capabilities injected into the shell view model by the platform frontend.
 /// </remarks>
 public sealed partial class SettingsViewModel : ObservableObject
 {
     public SettingsViewModel(
         AppThemePreference initialTheme,
         PlatformAppearancePreferences initialAppearance,
-        bool supportsPlatformAppearanceSettings,
+        bool supportsBackdropSettings,
+        bool supportsWindowStyleSettings,
         IEnumerable<string> availableFontFamilies,
         string? initialFontFamily,
         SettingsStrings strings)
     {
         Strings = strings;
-        SupportsPlatformAppearanceSettings = supportsPlatformAppearanceSettings;
+        SupportsBackdropSettings = supportsBackdropSettings;
+        SupportsWindowStyleSettings = supportsWindowStyleSettings;
         SelectedThemePreference = initialTheme;
 
         // Inter is the shipped default and sorts first; the rest follow in
@@ -59,7 +60,9 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public SettingsStrings Strings { get; }
 
-    public bool SupportsPlatformAppearanceSettings { get; }
+    public bool SupportsBackdropSettings { get; }
+
+    public bool SupportsWindowStyleSettings { get; }
 
     public event Action<AppThemePreference>? ThemePreferenceChanged;
 
