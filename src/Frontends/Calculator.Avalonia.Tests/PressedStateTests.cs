@@ -130,7 +130,7 @@ internal static class PressedStateTests
 
     private static void ConverterDigitShowsPressedFeedback() => Run((window, viewModel) =>
     {
-        var item = viewModel.ConverterNavigationItems.First(candidate => candidate.IsEnabled);
+        var item = viewModel.ConverterNavigationItems.First(candidate => candidate.Mode == CalculatorViewMode.Volume);
         viewModel.SelectNavigationItemCommand.Execute(item);
         Pump();
 

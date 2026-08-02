@@ -9,6 +9,9 @@ namespace Calculator.Avalonia;
 
 internal static class AppSettingsStore
 {
+    private static string DefaultFontFamily =>
+        OperatingSystem.IsWindows() ? "Segoe UI Variable" : "Inter";
+
     private static readonly string SettingsDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "RedmondCalculator");
@@ -20,7 +23,7 @@ internal static class AppSettingsStore
         {
             if (!File.Exists(SettingsPath))
             {
-                return new AppSettings();
+                return new AppSettings(FontFamily: DefaultFontFamily);
             }
 
             var persisted = JsonSerializer.Deserialize<PersistedSettings>(File.ReadAllText(SettingsPath));
@@ -43,10 +46,10 @@ internal static class AppSettingsStore
                     StringComparer.Ordinal)
                 ?? new Dictionary<string, CurrencyProviderPreference>(StringComparer.Ordinal);
             return persisted is null
-                ? new AppSettings()
+                ? new AppSettings(FontFamily: DefaultFontFamily)
                 : new AppSettings(
                     persisted.ThemePreference ?? AppThemePreference.Dark,
-                    persisted.FontFamily ?? "Inter",
+                    persisted.FontFamily ?? DefaultFontFamily,
                     persisted.UseMicaEffect ?? true,
                     cornerStyle,
                     controlStyle,
@@ -54,15 +57,15 @@ internal static class AppSettingsStore
         }
         catch (IOException)
         {
-            return new AppSettings();
+            return new AppSettings(FontFamily: DefaultFontFamily);
         }
         catch (JsonException)
         {
-            return new AppSettings();
+            return new AppSettings(FontFamily: DefaultFontFamily);
         }
         catch (UnauthorizedAccessException)
         {
-            return new AppSettings();
+            return new AppSettings(FontFamily: DefaultFontFamily);
         }
     }
 

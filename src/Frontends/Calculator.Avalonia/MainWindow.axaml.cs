@@ -297,7 +297,7 @@ public partial class MainWindow : Window
         var displayControlsRow = CalculatorPageContent.RowDefinitions[3];
         displayControlsRow.Height = new GridLength(programmer ? 96 : scientific ? 32 : 0, programmer || scientific ? GridUnitType.Star : GridUnitType.Pixel);
         displayControlsRow.MinHeight = programmer ? 96 : scientific ? 32 : 0;
-        CalculatorPageContent.RowDefinitions[5].Height = new GridLength(programmer ? 268 : scientific ? 276 : 308, GridUnitType.Star);
+        CalculatorPageContent.RowDefinitions[5].Height = new GridLength(programmer ? 268 : scientific ? 276 : 315, GridUnitType.Star);
     }
 
 

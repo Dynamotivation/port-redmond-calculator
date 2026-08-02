@@ -28,6 +28,37 @@ ctest --test-dir build/portable --output-on-failure
 dotnet run --project src/PortableResourceTests/Calculator.ResourceLoader.Tests.csproj
 ```
 
+## Windows/MSVC build
+
+Use Visual Studio 2022's MSVC toolchain for Windows. The native project still
+uses CMake as its build description, but the generator must be the Visual
+Studio generator so MSYS2's GCC or Clang environment cannot select the native
+compiler accidentally.
+
+The local checkout includes convenience helpers bound to the installed Visual
+Studio Community 2022 environment:
+
+```powershell
+.\scripts\build-windows-msvc.ps1
+.\scripts\run-windows-msvc.ps1 -NoBuild
+```
+
+They are machine-local and excluded through `.git/info/exclude`, and use the
+SDK version pinned by `global.json`. The equivalent manual commands, when run
+from a Visual Studio Developer PowerShell, are:
+
+```powershell
+cmake -S . -B build/windows-msvc -G "Visual Studio 17 2022" -A x64
+cmake --build build/windows-msvc --config Release --target CalculatorNative --parallel
+dotnet build src/Frontends/Calculator.Avalonia/Calculator.Avalonia.csproj --configuration Release
+dotnet run --project src/Frontends/Calculator.Avalonia/Calculator.Avalonia.csproj --configuration Release --no-build
+```
+
+The Visual Studio environment must be initialized before the CMake commands;
+the local helper scripts do this through the installed `VsDevCmd.bat` path and
+also put the resulting `calculator_engine.dll` on `PATH` before launching the
+managed frontend.
+
 The shared-library output is named `calculator_engine.dll` on Windows,
 `libcalculator_engine.dylib` on macOS, and `libcalculator_engine.so` on Linux.
 

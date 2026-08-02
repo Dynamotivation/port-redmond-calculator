@@ -12,7 +12,7 @@
                Opacity="0.64" FontSize="14" Text="{Binding ExpressionDisplay}" />
     <Grid x:Name="ResultHost" Grid.Row="1" MinHeight="72">
       <TextBlock x:Name="PrimaryResultText" Margin="6,0"
-                 HorizontalAlignment="Right" VerticalAlignment="Center"
+                 HorizontalAlignment="Right" VerticalAlignment="Top"
                  TextAlignment="Right" TextTrimming="CharacterEllipsis"
                  FontSize="46" FontWeight="SemiBold" Text="{Binding PrimaryDisplay}" />
     </Grid>

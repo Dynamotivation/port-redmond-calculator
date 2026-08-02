@@ -15,6 +15,7 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <NativeCalculatorLibrary Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(MSBuildProjectDirectory)/../../../build/windows-msvc/src/CalculatorNative/$(Configuration)/calculator_engine.dll</NativeCalculatorLibrary>
     <NativeCalculatorLibrary Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(MSBuildProjectDirectory)/../../../build/portable/src/CalculatorNative/libcalculator_engine.dylib</NativeCalculatorLibrary>
   </PropertyGroup>
 
@@ -76,7 +77,11 @@
              Link="Licenses/%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest"
              CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="$(NativeCalculatorLibrary)" Condition="'$(NativeCalculatorLibrary)' != '' and Exists('$(NativeCalculatorLibrary)')" Link="libcalculator_engine.dylib" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(NativeCalculatorLibrary)" Condition="'$(NativeCalculatorLibrary)' != '' and Exists('$(NativeCalculatorLibrary)')">
+      <Link Condition="$([MSBuild]::IsOSPlatform('Windows'))">calculator_engine.dll</Link>
+      <Link Condition="$([MSBuild]::IsOSPlatform('OSX'))">libcalculator_engine.dylib</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <Target Name="RequireNativeCalculatorLibrary" BeforeTargets="Build" Condition="'$(NativeCalculatorLibrary)' != '' and !Exists('$(NativeCalculatorLibrary)')">

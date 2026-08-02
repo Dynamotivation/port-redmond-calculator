@@ -5,7 +5,7 @@
         xmlns:ui="using:FluentAvalonia.UI.Controls">
   <!-- Keypad button materials and their interaction states. -->
     <Style Selector="Button.calcButton">
-    <Setter Property="Margin" Value="1.75" />
+    <Setter Property="Margin" Value="1" />
     <Setter Property="Padding" Value="0" />
     <Setter Property="MinWidth" Value="24" />
     <Setter Property="MinHeight" Value="12" />
@@ -16,7 +16,7 @@
     <Setter Property="CornerRadius" Value="5" />
     <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonBorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="FontSize" Value="22" />
+    <Setter Property="FontSize" Value="16" />
     <Setter Property="FontWeight" Value="Normal" />
     <Setter Property="Template">
       <ControlTemplate>
@@ -43,8 +43,8 @@
     </Style>
     <Style Selector="Button.calcButton.numeric">
     <Setter Property="Background" Value="{DynamicResource NumericButtonBrush}" />
-    <Setter Property="FontSize" Value="26.4" />
-    <Setter Property="FontWeight" Value="Light" />
+    <Setter Property="FontSize" Value="20" />
+    <Setter Property="FontWeight" Value="Normal" />
     </Style>
     <Style Selector="Button.calcButton.numeric:pointerover">
     <Setter Property="Background" Value="{DynamicResource NumericButtonHoverBrush}" />
@@ -85,36 +85,15 @@
     </Style>
     <Style Selector="Button.calcButton.symbolOperator">
     <Setter Property="FontFamily" Value="{StaticResource CalculatorIconFont}" />
-    <Setter Property="FontSize" Value="16.94" />
+    <Setter Property="FontSize" Value="14" />
     <Setter Property="FontWeight" Value="Normal" />
-    </Style>
-    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator">
-    <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaqueBrush}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonBorderBrush}" />
-    </Style>
-    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator:pointerover">
-    <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaqueHoverBrush}" />
-    </Style>
-    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator:pressed">
-    <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaquePressedBrush}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonPressedBorderBrush}" />
-    </Style>
-    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator.keyboardPressed">
-    <Setter Property="Background" Value="{DynamicResource OperatorButtonOpaquePressedBrush}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource CalculatorButtonPressedBorderBrush}" />
-    </Style>
-    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator /template/ Border#CalcButtonSurface">
-    <Setter Property="BoxShadow" Value="{DynamicResource CalculatorButtonShadow}" />
-    </Style>
-    <Style Selector="Border.windowSurface.noBackdrop Button.calcButton.operator:pressed /template/ Border#CalcButtonSurface">
-    <Setter Property="BoxShadow" Value="{DynamicResource CalculatorButtonPressedShadow}" />
     </Style>
     <Style Selector="Button.calcButton.equalsButton">
     <Setter Property="Background" Value="{DynamicResource AccentButtonBrush}" />
     <Setter Property="Foreground" Value="#101010" />
     <Setter Property="FontFamily" Value="{StaticResource CalculatorIconFont}" />
-    <Setter Property="FontSize" Value="16.94" />
-    <Setter Property="FontWeight" Value="Normal" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="Button.calcButton.equalsButton:pointerover">
     <Setter Property="Background" Value="{DynamicResource AccentButtonHoverBrush}" />
