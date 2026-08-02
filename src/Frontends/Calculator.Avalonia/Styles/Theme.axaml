@@ -9,34 +9,34 @@
     <ResourceDictionary.ThemeDictionaries>
       <ResourceDictionary x:Key="Dark">
         <SolidColorBrush x:Key="CalculatorBackgroundBrush" Color="#18383D40" />
+        <SolidColorBrush x:Key="WindowsMicaSurfaceBrush" Color="#202020" Opacity="0.22" />
         <SolidColorBrush x:Key="SolidSurfaceBrush" Color="#202027" />
         <SolidColorBrush x:Key="HistorySmokeBrush" Color="#6B000000" />
         <SolidColorBrush x:Key="HistorySolidSurfaceBrush" Color="#202020" />
         <SolidColorBrush x:Key="CardBrush" Color="#303139" />
         <SolidColorBrush x:Key="SettingsExpanderBrush" Color="#80303139" />
-        <SolidColorBrush x:Key="NumericButtonBrush" Color="#3C3C3C" />
+        <!-- UWP-style white overlays over native Mica. Avalonia's host
+             backdrop needs a small opacity adjustment for the same milkiness. -->
+        <SolidColorBrush x:Key="NumericButtonBrush" Color="#FFFFFF" Opacity="0.14" />
         <LinearGradientBrush x:Key="CalculatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
-          <GradientStop Color="#18FFFFFF" Offset="0" />
-          <GradientStop Color="#12FFFFFF" Offset="1" />
-        </LinearGradientBrush>
-        <SolidColorBrush x:Key="CalculatorButtonPressedBorderBrush" Color="#12FFFFFF" />
-        <BoxShadows x:Key="CalculatorButtonShadow">0 1 2 0 #50000000</BoxShadows>
-        <BoxShadows x:Key="CalculatorButtonPressedShadow">0 0 1 0 #30000000</BoxShadows>
-        <SolidColorBrush x:Key="NumericButtonHoverBrush" Color="#323232" />
-        <SolidColorBrush x:Key="NumericButtonPressedBrush" Color="#292827" />
-        <SolidColorBrush x:Key="OperatorButtonBrush" Color="#80323232" />
-        <SolidColorBrush x:Key="OperatorButtonHoverBrush" Color="#803C3C3C" />
-        <SolidColorBrush x:Key="OperatorButtonPressedBrush" Color="#80323232" />
-        <SolidColorBrush x:Key="OperatorButtonOpaqueBrush" Color="#323232" />
-        <SolidColorBrush x:Key="OperatorButtonOpaqueHoverBrush" Color="#3C3C3C" />
-        <SolidColorBrush x:Key="OperatorButtonOpaquePressedBrush" Color="#323232" />
-        <LinearGradientBrush x:Key="OperatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
           <GradientStop Color="#0CFFFFFF" Offset="0" />
-          <GradientStop Color="#09FFFFFF" Offset="1" />
+          <GradientStop Color="#08FFFFFF" Offset="1" />
+        </LinearGradientBrush>
+        <SolidColorBrush x:Key="CalculatorButtonPressedBorderBrush" Color="#06000000" />
+        <BoxShadows x:Key="CalculatorButtonShadow">0 0 0 0 #00000000</BoxShadows>
+        <BoxShadows x:Key="CalculatorButtonPressedShadow">0 0 0 0 #00000000</BoxShadows>
+        <SolidColorBrush x:Key="NumericButtonHoverBrush" Color="#FFFFFF" Opacity="0.1002" />
+        <SolidColorBrush x:Key="NumericButtonPressedBrush" Color="#FFFFFF" Opacity="0.0509" />
+        <SolidColorBrush x:Key="OperatorButtonBrush" Color="#FFFFFF" Opacity="0.1002" />
+        <SolidColorBrush x:Key="OperatorButtonHoverBrush" Color="#FFFFFF" Opacity="0.1406" />
+        <SolidColorBrush x:Key="OperatorButtonPressedBrush" Color="#FFFFFF" Opacity="0.1002" />
+        <LinearGradientBrush x:Key="OperatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+          <GradientStop Color="#0EFFFFFF" Offset="0" />
+          <GradientStop Color="#0BFFFFFF" Offset="1" />
         </LinearGradientBrush>
         <SolidColorBrush x:Key="OperatorButtonPressedBorderBrush" Color="#09FFFFFF" />
-        <BoxShadows x:Key="OperatorButtonShadow">0 1 2 0 #28000000</BoxShadows>
-        <BoxShadows x:Key="OperatorButtonPressedShadow">0 0 1 0 #18000000</BoxShadows>
+        <BoxShadows x:Key="OperatorButtonShadow">0 0 0 0 #00000000</BoxShadows>
+        <BoxShadows x:Key="OperatorButtonPressedShadow">0 0 0 0 #00000000</BoxShadows>
         <SolidColorBrush x:Key="ChromeHoverBrush" Color="#34343B" />
         <Color x:Key="ChromeForegroundColor">#F5F5F5</Color>
         <SolidColorBrush x:Key="ChromeForegroundBrush" Color="{StaticResource ChromeForegroundColor}" />
@@ -46,7 +46,7 @@
         <SolidColorBrush x:Key="SettingsExpanderHeaderHoverBrush" Color="#80383941" />
         <BoxShadows x:Key="SettingsCardBezelShadow">inset 0 0 1 0 #20505158, 0 0 1 0 #20505158</BoxShadows>
         <SolidColorBrush x:Key="NavigationSelectedBrush" Color="#09FFFFFF" />
-        <SolidColorBrush x:Key="NavigationPaneBrush" Color="#80202027" />
+        <SolidColorBrush x:Key="NavigationPaneBrush" Color="#FFFFFF" Opacity="0.1002" />
         <SolidColorBrush x:Key="NavigationInteractionBrush" Color="#09FFFFFF" />
         <SolidColorBrush x:Key="DividerBrush" Color="#35FFFFFF" />
         <SolidColorBrush x:Key="AccentButtonBrush" Color="#4CC2FF" />
@@ -66,12 +66,13 @@
       </ResourceDictionary>
       <ResourceDictionary x:Key="Light">
         <SolidColorBrush x:Key="CalculatorBackgroundBrush" Color="#18F3F3F3" />
+        <SolidColorBrush x:Key="WindowsMicaSurfaceBrush" Color="#F3F3F3" Opacity="0.16" />
         <SolidColorBrush x:Key="SolidSurfaceBrush" Color="#F3F3F3" />
         <SolidColorBrush x:Key="HistorySmokeBrush" Color="#4D000000" />
         <SolidColorBrush x:Key="HistorySolidSurfaceBrush" Color="#F3F3F3" />
         <SolidColorBrush x:Key="CardBrush" Color="#FBFBFB" />
         <SolidColorBrush x:Key="SettingsExpanderBrush" Color="#80FBFBFB" />
-        <SolidColorBrush x:Key="NumericButtonBrush" Color="#FCFCFC" />
+        <SolidColorBrush x:Key="NumericButtonBrush" Color="#FFFFFF" />
         <LinearGradientBrush x:Key="CalculatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
           <GradientStop Color="#E5E5E5" Offset="0" />
           <GradientStop Color="#E5E5E5" Offset="0.94" />
@@ -84,14 +85,11 @@
         </LinearGradientBrush>
         <BoxShadows x:Key="CalculatorButtonShadow">0 0 0 0 #00000000</BoxShadows>
         <BoxShadows x:Key="CalculatorButtonPressedShadow">0 0 0 0 #00000000</BoxShadows>
-        <SolidColorBrush x:Key="NumericButtonHoverBrush" Color="#FFFFFF" />
-        <SolidColorBrush x:Key="NumericButtonPressedBrush" Color="#F4F4F4" />
-        <SolidColorBrush x:Key="OperatorButtonBrush" Color="#80FFFFFF" />
-        <SolidColorBrush x:Key="OperatorButtonHoverBrush" Color="#80F9F9F9" />
-        <SolidColorBrush x:Key="OperatorButtonPressedBrush" Color="#80E1E1E1" />
-        <SolidColorBrush x:Key="OperatorButtonOpaqueBrush" Color="#F9F9F9" />
-        <SolidColorBrush x:Key="OperatorButtonOpaqueHoverBrush" Color="#F6F6F6" />
-        <SolidColorBrush x:Key="OperatorButtonOpaquePressedBrush" Color="#EAEAEA" />
+        <SolidColorBrush x:Key="NumericButtonHoverBrush" Color="#FFFFFF" Opacity="0.75" />
+        <SolidColorBrush x:Key="NumericButtonPressedBrush" Color="#FFFFFF" Opacity="0.5" />
+        <SolidColorBrush x:Key="OperatorButtonBrush" Color="#FFFFFF" Opacity="0.5" />
+        <SolidColorBrush x:Key="OperatorButtonHoverBrush" Color="#FFFFFF" Opacity="0.25" />
+        <SolidColorBrush x:Key="OperatorButtonPressedBrush" Color="#FFFFFF" Opacity="0.125" />
         <LinearGradientBrush x:Key="OperatorButtonBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
           <GradientStop Color="#80E5E5E5" Offset="0" />
           <GradientStop Color="#80E5E5E5" Offset="0.94" />
@@ -113,7 +111,7 @@
         <SolidColorBrush x:Key="SettingsExpanderHeaderHoverBrush" Color="#80F6F6F6" />
         <BoxShadows x:Key="SettingsCardBezelShadow">inset 0 0 1 0 #30CCCCCC, 0 0 1 0 #30CCCCCC</BoxShadows>
         <SolidColorBrush x:Key="NavigationSelectedBrush" Color="#09000000" />
-        <SolidColorBrush x:Key="NavigationPaneBrush" Color="#80F9F9F9" />
+        <SolidColorBrush x:Key="NavigationPaneBrush" Color="#FFFFFF" Opacity="0.5" />
         <SolidColorBrush x:Key="NavigationInteractionBrush" Color="#09000000" />
         <SolidColorBrush x:Key="DividerBrush" Color="#18000000" />
         <SolidColorBrush x:Key="AccentButtonBrush" Color="#0067C0" />

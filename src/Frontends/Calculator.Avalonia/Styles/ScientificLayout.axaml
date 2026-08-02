@@ -16,7 +16,7 @@
     <Style Selector="Grid.scientificSmall Button.calcButton.symbolOperator">
     <Setter Property="FontSize" Value="14" />
     </Style>
-    <Style Selector="Grid.scientificSmall StackPanel.scientificOperatorPanel">
+    <Style Selector="Grid.scientificSmall Grid.scientificOperatorPanelHost">
     <Setter Property="Height" Value="44" />
     </Style>
     <Style Selector="Grid.scientificSmall TextBlock.operatorPanelText">
@@ -37,7 +37,7 @@
     <Style Selector="Grid.scientificMedium Button.calcButton.symbolOperator">
     <Setter Property="FontSize" Value="20" />
     </Style>
-    <Style Selector="Grid.scientificMedium StackPanel.scientificOperatorPanel">
+    <Style Selector="Grid.scientificMedium Grid.scientificOperatorPanelHost">
     <Setter Property="Height" Value="70" />
     </Style>
     <Style Selector="Grid.scientificMedium TextBlock.operatorPanelText">
@@ -58,7 +58,7 @@
     <Style Selector="Grid.scientificLarge Button.calcButton.symbolOperator">
     <Setter Property="FontSize" Value="34" />
     </Style>
-    <Style Selector="Grid.scientificLarge StackPanel.scientificOperatorPanel">
+    <Style Selector="Grid.scientificLarge Grid.scientificOperatorPanelHost">
     <Setter Property="Height" Value="70" />
     </Style>
     <Style Selector="Grid.scientificLarge TextBlock.operatorPanelText">

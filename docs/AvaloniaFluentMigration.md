@@ -251,6 +251,14 @@ Avalonia transparency hints can request transparency, but a true host backdrop
 requires a platform adapter. Keep the managed preference independent from the
 native implementation and provide an opaque fallback.
 
+On Windows, request native Mica before the first frame and let DWM render its
+active/inactive response. If the host material needs calibration against WinUI,
+use one subtle, focus-stable root tint so the background and every translucent
+control share the same composition adjustment. Swapping the root to an opaque
+inactive brush creates a visible flash and temporarily hides the native material.
+Non-Windows simulated material may retain its own tint and inactive fallback
+because there is no DWM backdrop beneath it.
+
 Model corner style and title-control style as separate preferences. The host
 may need different implementations for the same requested controls under
 different outer-window geometry. Do not rewrite one preference when the other

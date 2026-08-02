@@ -8,20 +8,19 @@
        overlays page content and keeps the title bar unobstructed.
 
        The translating pane remains directly inside the overlay grid. When
-       closed, it sits at Margin="-320,0,320,0", which puts its one-pixel right
+       closed, it sits at Margin="-256,0,256,0", which puts its one-pixel right
        border exactly on the window's left edge. The toggle is deliberately a
        sibling of that grid so disabling the closed overlay cannot disable the
        button that opens it. -->
   <Grid RowDefinitions="48,*">
-    <Grid Grid.RowSpan="2" ColumnDefinitions="320,*"
+    <Grid Grid.RowSpan="2" ColumnDefinitions="256,*"
           Classes="navigationOverlay" Classes.open="{Binding IsNavigationPaneOpen}">
       <Button Grid.ColumnSpan="2" Classes="navigationScrim" Padding="0" Background="Transparent" BorderThickness="0"
               HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
               Command="{Binding CloseNavigationPaneCommand}" />
       <Border Grid.Column="0" Classes="navigationPane" Background="{DynamicResource NavigationPaneBrush}"
-              BorderBrush="{DynamicResource CalculatorBorderBrush}" BorderThickness="0,0,1,0"
-              CornerRadius="0,8,8,0" ClipToBounds="True"
-              BoxShadow="8 0 18 0 #50000000">
+              BorderThickness="0"
+              CornerRadius="0,8,8,0" ClipToBounds="True">
         <Border.Transitions>
           <Transitions>
             <ThicknessTransition Property="Margin" Duration="0:0:0.22">
@@ -31,18 +30,19 @@
             </ThicknessTransition>
           </Transitions>
         </Border.Transitions>
-        <Grid RowDefinitions="54,*,60">
+        <Grid RowDefinitions="54,*,55">
           <Grid Grid.Row="0" ColumnDefinitions="56,*">
           </Grid>
 
-          <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <StackPanel Margin="0,4,0,6">
-              <TextBlock Margin="16,11,8,5" FontSize="19" FontWeight="Medium" Opacity="0.62"
+          <ScrollViewer Grid.Row="1" Classes="navigationScrollViewer"
+                        HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,4,0,-1">
+              <TextBlock Margin="16,-2,8,12" FontSize="13" FontWeight="SemiBold" Opacity="0.62"
                          Text="{Binding CalculatorGroupName}" />
               <ItemsControl ItemsSource="{Binding CalculatorNavigationItems}"
                             ItemTemplate="{StaticResource NavigationItemTemplate}" />
 
-              <TextBlock Margin="16,18,8,5" FontSize="19" FontWeight="Medium" Opacity="0.62"
+              <TextBlock Margin="16,8,8,12" FontSize="13" FontWeight="SemiBold" Opacity="0.62"
                          Text="{Binding Converter.GroupName}" />
               <ItemsControl ItemsSource="{Binding ConverterNavigationItems}"
                             ItemTemplate="{StaticResource NavigationItemTemplate}" />
@@ -51,13 +51,14 @@
 
           <Border Grid.Row="2" Height="1" Margin="0" VerticalAlignment="Top"
                   Background="{DynamicResource DividerBrush}" />
-          <Button Grid.Row="2" Classes="navigationItem" Margin="4,16,8,4"
+          <Button Grid.Row="2" Classes="navigationItem" Margin="4,0,8,5"
+                  VerticalAlignment="Bottom"
                   TabIndex="3"
                   AutomationProperties.Name="{Binding SettingsName}"
                   Command="{Binding OpenSettingsCommand}">
             <Grid ColumnDefinitions="4,38,*">
               <TextBlock Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center"
-                         FontFamily="{StaticResource CalculatorIconFont}" FontSize="18" Text="&#xE713;" />
+                         FontFamily="{StaticResource CalculatorIconFont}" FontSize="16" Text="&#xE713;" />
               <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="8,0,0,0"
                          FontSize="14" Text="{Binding SettingsName}" />
             </Grid>
@@ -67,7 +68,7 @@
     </Grid>
 
     <Button x:Name="NavigationToggleButton"
-            Classes="chromeButton navigationToggle" Margin="5,9,5,3"
+            Classes="chromeButton navigationToggle" Margin="0"
             TabIndex="1" AutomationProperties.AccessKey="Alt+H"
             AutomationProperties.Name="Switch calculator mode"
             IsVisible="{Binding !IsAlwaysOnTop}"
@@ -78,8 +79,12 @@
              it is visually collapsed because the hamburger glyph is custom. -->
         <AccessText Text="_H" Width="0" Height="0" Opacity="0" IsHitTestVisible="False" />
         <Canvas Classes="hamburgerGlyph" Width="24" Height="24">
-          <Path Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
-                Data="M 3,6 L 21,6 M 3,12 L 21,12 M 3,18 L 21,18" />
+          <Border Canvas.Left="5" Canvas.Top="7" Width="14" Height="1" CornerRadius="0.5"
+                  Background="{DynamicResource ChromeForegroundBrush}" Opacity="0.91" />
+          <Border Canvas.Left="5" Canvas.Top="12" Width="14" Height="1" CornerRadius="0.5"
+                  Background="{DynamicResource ChromeForegroundBrush}" Opacity="0.91" />
+          <Border Canvas.Left="5" Canvas.Top="17" Width="14" Height="1" CornerRadius="0.5"
+                  Background="{DynamicResource ChromeForegroundBrush}" Opacity="0.91" />
         </Canvas>
       </Grid>
     </Button>

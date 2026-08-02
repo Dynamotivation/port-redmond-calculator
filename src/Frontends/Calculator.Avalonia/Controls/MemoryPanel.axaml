@@ -6,7 +6,16 @@
              IsVisible="{Binding IsStandardOrScientificMode}">
   <!-- MC, MR, M+, M−, MS and the memory flyout. The popup is owned here rather
        than by the window: it belongs to the button that opens it. -->
-  <Grid Margin="3,0" ColumnDefinitions="*,*,*,*,*,*">
+  <Grid Margin="3,0">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*" MaxWidth="80" />
+      <ColumnDefinition Width="*" MaxWidth="80" />
+      <ColumnDefinition Width="*" MaxWidth="80" />
+      <ColumnDefinition Width="*" MaxWidth="80" />
+      <ColumnDefinition Width="*" MaxWidth="80" />
+      <ColumnDefinition Width="0.01*" />
+      <ColumnDefinition Width="*" MaxWidth="80" />
+    </Grid.ColumnDefinitions>
     <Button x:Name="MemoryClearButton" Classes="memoryButton" Content="MC" IsEnabled="{Binding Memory.HasEntries}" Command="{Binding Memory.ClearAllCommand}"
             ToolTip.Tip="{Binding Memory.Strings.ClearTooltip}" />
     <Button x:Name="MemoryRecallButton" Grid.Column="1" Classes="memoryButton" Content="MR" IsEnabled="{Binding Memory.HasEntries}" Command="{Binding Memory.RecallCommand}"
@@ -17,9 +26,9 @@
             ToolTip.Tip="{Binding Memory.Strings.SubtractTooltip}" />
     <Button x:Name="MemoryStoreButton" Grid.Column="4" Classes="memoryButton" Content="MS" Command="{Binding Memory.StoreCommand}"
             ToolTip.Tip="{Binding Memory.Strings.StoreTooltip}" />
-    <Button x:Name="MemoryFlyoutButton" Grid.Column="5" Classes="memoryButton" Content="M⌄" IsEnabled="{Binding Memory.HasEntries}"
+    <Button x:Name="MemoryFlyoutButton" Grid.Column="6" Classes="memoryButton memoryFlyoutButton" Content="&#xE61D;" IsEnabled="{Binding Memory.HasEntries}"
             ToolTip.Tip="{Binding Memory.Strings.PopupTooltip}" Click="MemoryFlyout_OnClick" />
-    <Popup x:Name="MemoryPopup" Grid.Column="5"
+    <Popup x:Name="MemoryPopup" Grid.Column="6"
            PlacementTarget="{Binding #MemoryFlyoutButton}"
            Placement="Bottom" IsLightDismissEnabled="True">
       <Border CornerRadius="8"

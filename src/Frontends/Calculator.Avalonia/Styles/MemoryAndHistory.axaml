@@ -7,18 +7,20 @@
     <Style Selector="Button.memoryButton">
     <Setter Property="MinWidth" Value="0" />
     <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Margin" Value="1" />
     <Setter Property="Padding" Value="0" />
     <Setter Property="HorizontalAlignment" Value="Stretch" />
     <Setter Property="VerticalAlignment" Value="Stretch" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
-    <Setter Property="FontSize" Value="14" />
-    <Setter Property="FontWeight" Value="Light" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="FontWeight" Value="Normal" />
     <Setter Property="Template">
       <ControlTemplate>
         <Grid>
           <Border Background="{TemplateBinding Background}" CornerRadius="4">
-            <ContentPresenter HorizontalContentAlignment="Center"
+            <ContentPresenter Padding="{TemplateBinding Padding}"
+                              HorizontalContentAlignment="Center"
                               VerticalContentAlignment="Center"
                               Content="{TemplateBinding Content}" />
           </Border>
@@ -28,6 +30,18 @@
         </Grid>
       </ControlTemplate>
     </Setter>
+    </Style>
+    <!-- Native OperatorPanelButtonStyle supplies an eight-pixel horizontal
+         content inset and a left-aligned hitbox. -->
+    <Style Selector="StackPanel.scientificOperatorPanel Button.memoryButton">
+    <Setter Property="Padding" Value="8,0" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+    <!-- Match Calculator.xaml's dedicated E61D memory-flyout glyph instead
+         of composing M and a platform-font chevron. -->
+    <Style Selector="Button.memoryButton.memoryFlyoutButton">
+    <Setter Property="FontFamily" Value="{StaticResource CalculatorIconFont}" />
+    <Setter Property="FontSize" Value="16" />
     </Style>
     <Style Selector="Button.memoryButton.selected /template/ Border#MemoryButtonSelectionIndicator">
     <Setter Property="Background" Value="{DynamicResource AccentButtonBrush}" />
