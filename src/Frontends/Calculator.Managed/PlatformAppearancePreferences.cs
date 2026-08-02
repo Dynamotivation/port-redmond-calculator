@@ -21,3 +21,13 @@ public sealed record PlatformAppearancePreferences(
     bool UseMicaEffect = true,
     WindowCornerStyle WindowCornerStyle = WindowCornerStyle.Windows11,
     WindowControlStyle WindowControlStyle = WindowControlStyle.Windows11);
+
+/// <summary>
+/// Describes window-host features supplied by the platform frontend.
+/// Calculator.Managed consumes these capabilities without detecting an OS.
+/// </summary>
+public sealed record WindowPlatformCapabilities(
+    bool SupportsBackdropSettings = false,
+    bool SupportsWindowStyleSettings = false,
+    bool UsesNativeWindowDecorations = false,
+    bool SupportsMacOSWindowFeatures = false);

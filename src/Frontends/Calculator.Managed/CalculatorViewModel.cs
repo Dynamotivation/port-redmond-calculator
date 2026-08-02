@@ -115,12 +115,18 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public string MacOSWindowControlsName { get; } = "macOS";
 
 
-    public bool UsesNativeWindowGeometry => Settings.SelectedWindowCornerStyle == WindowCornerStyle.MacOS;
-    public bool UsesNativeWindowDecorations => OperatingSystem.IsWindows();
+    private readonly WindowPlatformCapabilities _windowPlatformCapabilities;
+
+    public bool UsesNativeWindowGeometry =>
+        _windowPlatformCapabilities.SupportsMacOSWindowFeatures
+        && Settings.SelectedWindowCornerStyle == WindowCornerStyle.MacOS;
+    public bool UsesNativeWindowDecorations => _windowPlatformCapabilities.UsesNativeWindowDecorations;
     public bool UsesNativeWindowFrameGeometry => UsesNativeWindowDecorations || UsesNativeWindowGeometry;
     public bool UsesSquareWindowCorners => Settings.SelectedWindowCornerStyle == WindowCornerStyle.Windows10;
-    public bool UsesWindowsWindowControls => Settings.SelectedWindowControlStyle != WindowControlStyle.MacOS;
-    public bool UsesMacOSWindowControls => Settings.SelectedWindowControlStyle == WindowControlStyle.MacOS;
+    public bool UsesMacOSWindowControls =>
+        _windowPlatformCapabilities.SupportsMacOSWindowFeatures
+        && Settings.SelectedWindowControlStyle == WindowControlStyle.MacOS;
+    public bool UsesWindowsWindowControls => !UsesMacOSWindowControls;
     public bool ShowsWindowTitleBarContent => UsesNativeWindowDecorations || UsesWindowsWindowControls;
     public bool UsesCustomWindowControls => !UsesNativeWindowDecorations && UsesWindowsWindowControls;
     public bool ShowsSettingsBackInTitleBar => IsSettingsOpen && ShowsWindowTitleBarContent;
@@ -171,7 +177,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     public CalculatorViewModel(
         AppThemePreference initialThemePreference = AppThemePreference.Dark,
         PlatformAppearancePreferences? initialPlatformAppearance = null,
-        bool supportsPlatformAppearanceSettings = false,
+        WindowPlatformCapabilities? windowPlatformCapabilities = null,
         CultureInfo? numberCulture = null,
         IEnumerable<string>? availableFontFamilies = null,
         string? initialFontFamily = null,
@@ -179,6 +185,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         Func<string, string, string>? shortcutTextRewriter = null)
     {
         var platformAppearance = initialPlatformAppearance ?? new PlatformAppearancePreferences();
+        _windowPlatformCapabilities = windowPlatformCapabilities ?? new WindowPlatformCapabilities();
         var numberFormat = CalculatorNumberFormat.FromCulture(numberCulture);
         DecimalSeparator = numberFormat.DecimalSeparator;
         var appResources = ResourceLoader.GetForViewIndependentUse();
@@ -191,7 +198,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         Settings = new SettingsViewModel(
             initialThemePreference,
             platformAppearance,
-            supportsPlatformAppearanceSettings,
+            _windowPlatformCapabilities.SupportsBackdropSettings,
+            _windowPlatformCapabilities.SupportsWindowStyleSettings,
             availableFontFamilies ?? [],
             initialFontFamily,
             new SettingsStrings(

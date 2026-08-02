@@ -83,7 +83,7 @@ public partial class MainWindow : Window
         _viewModel = new CalculatorViewModel(
             settings.ThemePreference,
             appearance,
-            OperatingSystem.IsMacOS(),
+            DetectWindowPlatformCapabilities(),
             availableFontFamilies: GetInstalledFontFamilyNames(),
             initialFontFamily: settings.FontFamily,
             initialCurrencyProviderPreferences: settings.CurrencyProviderPreferences
@@ -151,6 +151,13 @@ public partial class MainWindow : Window
                 : OperatingSystem.IsLinux()
                     ? ShortcutPlatform.Linux
                     : ShortcutPlatform.Unknown;
+
+    private static WindowPlatformCapabilities DetectWindowPlatformCapabilities() =>
+        new(
+            SupportsBackdropSettings: OperatingSystem.IsWindows() || OperatingSystem.IsMacOS(),
+            SupportsWindowStyleSettings: OperatingSystem.IsMacOS(),
+            UsesNativeWindowDecorations: OperatingSystem.IsWindows(),
+            SupportsMacOSWindowFeatures: OperatingSystem.IsMacOS());
 
     private void UpdateResponsiveCalculatorLayout(double width, double height)
     {

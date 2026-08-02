@@ -109,7 +109,10 @@ using (var converter = new NativeUnitConverter(
 
 using (var viewModel = new CalculatorViewModel(
     initialPlatformAppearance: new PlatformAppearancePreferences(),
-    supportsPlatformAppearanceSettings: true,
+    windowPlatformCapabilities: new WindowPlatformCapabilities(
+        SupportsBackdropSettings: true,
+        SupportsWindowStyleSettings: true,
+        SupportsMacOSWindowFeatures: true),
     numberCulture: CultureInfo.GetCultureInfo("de-DE"),
     availableFontFamilies: ["Aptos", "Inter"],
     initialFontFamily: "Missing Font"))
@@ -240,7 +243,8 @@ using (var viewModel = new CalculatorViewModel(
     viewModel.Settings.PlatformAppearanceChanged += value => changedAppearance = value;
     viewModel.Settings.UseMicaEffect = false;
     viewModel.Settings.SelectWindowControlStyleCommand.Execute(nameof(WindowControlStyle.MacOS));
-    Require(viewModel.Settings.SupportsPlatformAppearanceSettings
+    Require(viewModel.Settings.SupportsBackdropSettings
+        && viewModel.Settings.SupportsWindowStyleSettings
         && changedAppearance == new PlatformAppearancePreferences(
             false,
             WindowCornerStyle.Windows11,
@@ -273,6 +277,20 @@ using (var viewModel = new CalculatorViewModel(
         "Windows 11 title-bar controls could not be selected independently.");
     viewModel.CloseSettingsCommand.Execute(null);
     Require(!viewModel.IsSettingsOpen, "Settings back command did not restore calculator content.");
+}
+
+using (var viewModel = new CalculatorViewModel(
+    windowPlatformCapabilities: new WindowPlatformCapabilities(
+        SupportsBackdropSettings: true,
+        UsesNativeWindowDecorations: true)))
+{
+    Require(viewModel.Settings.SupportsBackdropSettings
+        && !viewModel.Settings.SupportsWindowStyleSettings
+        && viewModel.UsesNativeWindowDecorations
+        && viewModel.UsesNativeWindowFrameGeometry
+        && !viewModel.UsesCustomWindowControls
+        && !viewModel.UsesCustomResizeHandles,
+        "Windows native-decoration capabilities did not suppress duplicate custom chrome.");
 }
 
 Console.WriteLine("ResourceLoader and managed native-unit-converter compatibility tests passed.");
