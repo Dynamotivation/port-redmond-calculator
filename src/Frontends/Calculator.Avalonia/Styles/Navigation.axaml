@@ -44,7 +44,7 @@
     </Setter>
     </Style>
     <Style Selector="Border.navigationPane">
-    <Setter Property="Margin" Value="-320,0,320,0" />
+    <Setter Property="Margin" Value="-256,0,256,0" />
     </Style>
     <Style Selector="Grid.navigationOverlay.open Border.navigationPane">
     <Setter Property="Margin" Value="0" />
@@ -62,11 +62,34 @@
     </Setter>
     </Style>
     <Style Selector="local|NavigationCulledGrid.calculatorPageContent.paneOpen">
-    <Setter Property="CulledWidth" Value="320" />
+    <Setter Property="CulledWidth" Value="256" />
+    </Style>
+    <Style Selector="ScrollViewer.navigationScrollViewer /template/ ScrollBar:vertical /template/ Thumb">
+    <Setter Property="Background" Value="{DynamicResource ScrollBarThumbBackground}" />
+    <Setter Property="RenderTransform" Value="scaleX(0.375) translateX(4px)" />
+    </Style>
+    <Style Selector="ScrollViewer.navigationScrollViewer /template/ ScrollBar:vertical[IsExpanded=true] /template/ Thumb">
+    <Setter Property="RenderTransform" Value="scaleX(0.375) translateX(4px)" />
+    </Style>
+    <Style Selector="ScrollViewer.navigationScrollViewer /template/ ScrollBar:vertical[IsExpanded=true]:pointerover /template/ Thumb">
+    <Setter Property="RenderTransform" Value="scaleX(0.875)" />
+    </Style>
+    <Style Selector="ScrollViewer.navigationScrollViewer /template/ ScrollBar:vertical[IsExpanded=true] /template/ RepeatButton">
+    <Setter Property="Opacity" Value="0" />
+    </Style>
+    <Style Selector="ScrollViewer.navigationScrollViewer /template/ ScrollBar:vertical[IsExpanded=true]:pointerover /template/ RepeatButton">
+    <Setter Property="Opacity" Value="1" />
+    </Style>
+    <Style Selector="ScrollViewer.navigationScrollViewer /template/ ScrollBar:vertical[IsExpanded=true] /template/ Grid#Root">
+    <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ScrollViewer.navigationScrollViewer /template/ ScrollBar:vertical[IsExpanded=true] /template/ Rectangle#TrackRect">
+    <Setter Property="Fill" Value="Transparent" />
+    <Setter Property="Stroke" Value="Transparent" />
     </Style>
     <Style Selector="Button.navigationItem">
-    <Setter Property="Height" Value="40" />
-    <Setter Property="Margin" Value="4,2,8,2" />
+    <Setter Property="Height" Value="35" />
+    <Setter Property="Margin" Value="4,0,-4,5" />
     <Setter Property="Padding" Value="0" />
     <Setter Property="HorizontalAlignment" Value="Stretch" />
     <Setter Property="HorizontalContentAlignment" Value="Stretch" />

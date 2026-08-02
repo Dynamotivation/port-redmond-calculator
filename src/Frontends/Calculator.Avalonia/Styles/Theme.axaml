@@ -46,7 +46,7 @@
         <SolidColorBrush x:Key="SettingsExpanderHeaderHoverBrush" Color="#80383941" />
         <BoxShadows x:Key="SettingsCardBezelShadow">inset 0 0 1 0 #20505158, 0 0 1 0 #20505158</BoxShadows>
         <SolidColorBrush x:Key="NavigationSelectedBrush" Color="#09FFFFFF" />
-        <SolidColorBrush x:Key="NavigationPaneBrush" Color="#80202027" />
+        <SolidColorBrush x:Key="NavigationPaneBrush" Color="#FFFFFF" Opacity="0.1002" />
         <SolidColorBrush x:Key="NavigationInteractionBrush" Color="#09FFFFFF" />
         <SolidColorBrush x:Key="DividerBrush" Color="#35FFFFFF" />
         <SolidColorBrush x:Key="AccentButtonBrush" Color="#4CC2FF" />
@@ -111,7 +111,7 @@
         <SolidColorBrush x:Key="SettingsExpanderHeaderHoverBrush" Color="#80F6F6F6" />
         <BoxShadows x:Key="SettingsCardBezelShadow">inset 0 0 1 0 #30CCCCCC, 0 0 1 0 #30CCCCCC</BoxShadows>
         <SolidColorBrush x:Key="NavigationSelectedBrush" Color="#09000000" />
-        <SolidColorBrush x:Key="NavigationPaneBrush" Color="#80F9F9F9" />
+        <SolidColorBrush x:Key="NavigationPaneBrush" Color="#FFFFFF" Opacity="0.5" />
         <SolidColorBrush x:Key="NavigationInteractionBrush" Color="#09000000" />
         <SolidColorBrush x:Key="DividerBrush" Color="#18000000" />
         <SolidColorBrush x:Key="AccentButtonBrush" Color="#0067C0" />
