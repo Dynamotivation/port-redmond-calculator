@@ -83,7 +83,8 @@
       </local:NavigationCulledGrid.RowDefinitions>
       <!-- Hamburger/category/history row from MainPage + Calculator. -->
       <Grid Grid.Row="0" ColumnDefinitions="48,Auto,62,*,56">
-        <TextBlock Grid.Column="1" Classes="pageHeading" VerticalAlignment="Center" Text="{Binding ModeDisplayName}" />
+        <local:InkCenteredTextBlock Grid.Column="1" Classes="pageHeading"
+                                    VerticalAlignment="Center" Text="{Binding ModeDisplayName}" />
         <Border x:Name="GraphingModeSwitch" Grid.Column="3" Grid.ColumnSpan="2"
                 Classes="graphModeSwitch"
                 Width="64" Height="30" Margin="0,0,12,2"
