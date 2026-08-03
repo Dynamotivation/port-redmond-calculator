@@ -22,6 +22,7 @@ internal static class ShellInteractionTests
         ("Alt+H toggles navigation pane", AltHTogglesNavigationPane),
         ("date navigation shortcuts select date calculation", DateNavigationShortcutsSelectDateCalculation),
         ("macOS graph shortcut uses unified binding and text", MacGraphShortcutUsesUnifiedBindingAndText),
+        ("page heading centers measured glyph ink", PageHeadingCentersMeasuredGlyphInk),
         ("about identifies this project's license and notices", AboutIdentifiesProjectLicenseAndNotices),
         ("opening shell surfaces transfers focus", OpeningShellSurfacesTransfersFocus),
     ];
@@ -173,6 +174,26 @@ internal static class ShellInteractionTests
             window.Close();
             Dispatcher.UIThread.RunJobs();
         }
+    }
+
+    private static void PageHeadingCentersMeasuredGlyphInk()
+    {
+        const double lineBoxHeight = 24;
+        const double inkExtent = 18;
+        const double bottomOverhang = -1;
+
+        var offset = InkCenteredTextBlock.CalculateVerticalInkOffset(
+            lineBoxHeight,
+            inkExtent,
+            bottomOverhang);
+
+        // Ink top = line height + bottom overhang - extent. After applying the
+        // offset, its midpoint must coincide with the line-box midpoint.
+        var inkTop = lineBoxHeight + bottomOverhang - inkExtent;
+        var adjustedInkCenter = inkTop + inkExtent / 2 + offset;
+        Assert(
+            Math.Abs(adjustedInkCenter - lineBoxHeight / 2) < 0.0001,
+            "page-heading glyph ink should be centered independently of font metrics");
     }
 
     private static void AboutIdentifiesProjectLicenseAndNotices() => Run((window, viewModel) =>

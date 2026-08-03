@@ -48,8 +48,8 @@
       <SolidColorBrush x:Key="ExpanderChevronForegroundDisabled" Color="Transparent" />
     </Grid.Resources>
     <Grid Grid.Row="0" IsVisible="{Binding UsesWindowsWindowControls}">
-      <TextBlock Classes="pageHeading" Margin="24,0,0,0" VerticalAlignment="Center"
-                 Text="{Binding SettingsName}" />
+      <local:InkCenteredTextBlock Classes="pageHeading" Margin="24,0,0,0"
+                                  VerticalAlignment="Center" Text="{Binding SettingsName}" />
     </Grid>
     <Grid Grid.Row="0" ColumnDefinitions="56,*" IsVisible="{Binding UsesMacOSWindowControls}">
       <Button Classes="chromeButton" Margin="5,3" FontSize="18"
@@ -59,8 +59,8 @@
         <Path Width="18" Height="18" Stretch="Uniform" Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.25"
               Data="M 12.5,5.5 L 6,12 L 12.5,18.5 M 6,12 L 20,12" />
       </Button>
-      <TextBlock Grid.Column="1" Classes="pageHeading" VerticalAlignment="Center"
-                 Text="{Binding SettingsName}" />
+      <local:InkCenteredTextBlock Grid.Column="1" Classes="pageHeading"
+                                  VerticalAlignment="Center" Text="{Binding SettingsName}" />
     </Grid>
 
     <ScrollViewer Grid.Row="1" Padding="24,0,24,16"
