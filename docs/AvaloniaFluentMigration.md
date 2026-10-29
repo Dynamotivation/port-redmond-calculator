@@ -177,6 +177,20 @@ character gesture. Platform-editing conventions such as Command+C/V should be
 adapted narrowly instead of globally remapping Command to Control and stealing
 host shortcuts.
 
+On macOS the catalog's explicit `macOS` bindings use Command: copy and paste
+(calculator and navigation scopes), graph zoom in/out, graph reset (Command+0),
+and the graph view button (Command+Home). The Insert-based copy/paste
+alternates are disabled there. Settings → Keyboard → *Shortcut modifier key*
+lets the user switch those bindings to Control. The preference is persisted as
+`ShortcutModifier` in `settings.json` and defaults to Command. It applies
+immediately: the window re-registers the catalog from
+`CalculatorShortcutCatalog.WithMacPrimaryModifier` and refreshes the graph
+tooltips. Only Command in the explicit `macOS` bindings is replaced. Bindings
+that macOS inherits from `default`, the disabled Insert alternates, and every
+Windows and Linux gesture stay unchanged. The card is shown only when the
+shortcut platform is macOS. Windows has no equivalent setting, because there
+shortcuts always use Control.
+
 Keyboard activation does not set Avalonia's `:pressed` pointer pseudo-class.
 Add a short-lived semantic class to the same named button surface used by the
 pointer pressed state, and clear it on key-up and window deactivation. Capture

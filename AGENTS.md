@@ -19,7 +19,10 @@ modified copy of Microsoft source.
 - `src/Frontends/Calculator.Managed`: framework-neutral managed application
   state and native bindings.
 - `src/Calculator.ResourceLoader` and `src/Calculator.Shortcuts`: portable UWP
-  resource and keyboard compatibility.
+  resource and keyboard compatibility. On macOS, catalog bindings that use
+  Command can be switched to Control through a persisted user setting
+  (Settings → Keyboard); see "Keyboard accelerators" in
+  `docs/AvaloniaFluentMigration.md`.
 - `src/Frontends/Calculator.Avalonia`: cross-platform shell and views.
 - `redmond-commons`: separately versioned reusable Avalonia controls and
   windowing.

@@ -49,6 +49,77 @@ public sealed class ShortcutCatalog
         ArgumentNullException.ThrowIfNull(service);
         return Definitions.Select(definition => service.Register(definition)).ToArray();
     }
+
+    /// <summary>
+    /// Returns a catalog whose macOS-specific bindings use <paramref name="modifier"/>
+    /// where the definition says Command.
+    /// </summary>
+    /// <remarks>
+    /// Only the explicit <c>macOS</c> bindings are rewritten, so Windows, Linux,
+    /// and every gesture macOS inherits from <c>default</c> are unchanged. Bindings
+    /// disabled on macOS (the Insert alternates) stay disabled.
+    /// </remarks>
+    public ShortcutCatalog WithMacPrimaryModifier(ShortcutModifiers modifier)
+    {
+        if (modifier is not (ShortcutModifiers.Command or ShortcutModifiers.Control))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(modifier), modifier, "The macOS primary modifier must be Command or Control.");
+        }
+
+        if (modifier == ShortcutModifiers.Command)
+        {
+            return this;
+        }
+
+        var bindings = Bindings
+            .Select(binding => binding.Platform == ShortcutPlatform.MacOS
+                ? binding with { Gesture = Replace(binding.Gesture) }
+                : binding)
+            .ToArray();
+        var definitions = Definitions.Select(RewriteDefinition).ToArray();
+        return new ShortcutCatalog(Array.AsReadOnly(bindings), Array.AsReadOnly(definitions));
+
+        ShortcutDefinition RewriteDefinition(ShortcutDefinition definition)
+        {
+            var hasPrimary = definition.PlatformGestures.ContainsKey(ShortcutPlatform.MacOS);
+            var hasAlternates = definition.PlatformAlternateGestures.ContainsKey(ShortcutPlatform.MacOS);
+            if (!hasPrimary && !hasAlternates)
+            {
+                return definition;
+            }
+
+            var platformGestures = definition.PlatformGestures.ToDictionary(pair => pair.Key, pair => pair.Value);
+            if (hasPrimary)
+            {
+                platformGestures[ShortcutPlatform.MacOS] = Replace(platformGestures[ShortcutPlatform.MacOS]);
+            }
+
+            var platformAlternates = definition.PlatformAlternateGestures.ToDictionary(
+                pair => pair.Key,
+                pair => pair.Key == ShortcutPlatform.MacOS
+                    ? (IReadOnlyList<ShortcutGesture>)pair.Value.Select(Replace).ToArray()
+                    : pair.Value);
+
+            return new ShortcutDefinition(
+                definition.Id,
+                definition.DefaultGesture,
+                platformGestures,
+                definition.Scope,
+                definition.Priority,
+                definition.AllowRepeat,
+                definition.IsEnabled,
+                definition.InputHandling,
+                definition.AlternateGestures,
+                platformAlternates,
+                definition.DisabledPlatforms);
+        }
+
+        ShortcutGesture Replace(ShortcutGesture gesture) =>
+            (gesture.Modifiers & ShortcutModifiers.Command) == 0
+                ? gesture
+                : new ShortcutGesture(gesture.Key, (gesture.Modifiers & ~ShortcutModifiers.Command) | modifier);
+    }
 }
 
 public static class ShortcutCatalogLoader
@@ -344,6 +415,9 @@ public static class CalculatorShortcutCatalog
     public static IReadOnlyList<ShortcutDefinition> CreateDefinitions() => BuiltIn.Value.Definitions;
 
     public static ShortcutCatalog LoadRemap(Stream remap) => ShortcutCatalogLoader.LoadBuiltIn(remap);
+
+    public static ShortcutCatalog WithMacPrimaryModifier(ShortcutModifiers modifier) =>
+        BuiltIn.Value.WithMacPrimaryModifier(modifier);
 
     public static IReadOnlyList<IDisposable> RegisterAll(IShortcutService service) => BuiltIn.Value.RegisterAll(service);
 }

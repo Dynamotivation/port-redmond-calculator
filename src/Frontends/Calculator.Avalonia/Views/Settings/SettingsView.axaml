@@ -245,6 +245,49 @@
           </Border>
         </StackPanel>
 
+        <!-- macOS only: the catalog binds Command there, and this lets the
+             user switch those bindings to Control. Windows and Linux always
+             use Control, so the group is hidden. -->
+        <StackPanel IsVisible="{Binding Settings.SupportsShortcutModifierSettings}">
+          <TextBlock Classes="sectionHeading" Margin="0,26,0,4"
+                     Text="{Binding Settings.Strings.KeyboardGroupName}" />
+          <Border Classes="settingsCard" Background="Transparent"
+                  CornerRadius="6" Padding="0" ClipToBounds="True">
+            <shared:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
+                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                      Background="Transparent">
+              <Expander.Header>
+                <Grid Height="72">
+                  <Grid Classes="settingsExpanderHeader" VerticalAlignment="Center"
+                        ColumnDefinitions="36,*,32" RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.RowSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center"
+                               FontSize="18" Text="⌘" />
+                    <TextBlock Grid.Column="1" Margin="16,0,0,0" FontSize="14" FontWeight="Normal"
+                               Text="{Binding Settings.Strings.ShortcutModifierName}" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Margin="16,2,0,0" FontSize="12"
+                               Text="{Binding Settings.Strings.ShortcutModifierDescription}" />
+                    <Path Grid.Column="2" Grid.RowSpan="2" Classes="settingsExpanderChevron"
+                          Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
+                          Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
+                          Data="M 1,1 L 6,6 L 11,1" />
+                  </Grid>
+                  <Border Height="1" VerticalAlignment="Bottom" ZIndex="3"
+                          Background="{DynamicResource SettingsCardBorderBrush}"
+                          IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" />
+                </Grid>
+              </Expander.Header>
+              <StackPanel Margin="68,14,16,14" Spacing="7">
+                <RadioButton GroupName="ShortcutModifier" Content="{Binding Settings.Strings.CommandShortcutModifierName}"
+                             IsChecked="{Binding Settings.IsCommandShortcutModifierSelected, Mode=OneWay}"
+                             Command="{Binding Settings.SelectShortcutModifierCommand}" CommandParameter="Command" />
+                <RadioButton GroupName="ShortcutModifier" Content="{Binding Settings.Strings.ControlShortcutModifierName}"
+                             IsChecked="{Binding Settings.IsControlShortcutModifierSelected, Mode=OneWay}"
+                             Command="{Binding Settings.SelectShortcutModifierCommand}" CommandParameter="Control" />
+              </StackPanel>
+            </shared:AnimatedSettingsExpander>
+          </Border>
+        </StackPanel>
+
         <TextBlock Classes="sectionHeading" Margin="0,26,0,4" Text="Online services" />
         <Border Classes="settingsCard" Background="Transparent"
                 CornerRadius="6" Padding="0" ClipToBounds="True">
