@@ -23,6 +23,9 @@ var tests = new (string Name, Action Run)[]
     ("JSON platform remap and inheritance", JsonPlatformRemapAndInheritance),
     ("JSON platform disable", JsonPlatformDisable),
     ("JSON remap validation", JsonRemapValidation),
+    ("macOS Control modifier preference", MacControlModifierPreference),
+    ("macOS modifier preference leaves other platforms unchanged", MacModifierPreferenceLeavesOtherPlatforms),
+    ("macOS modifier preference validation", MacModifierPreferenceValidation),
 };
 
 foreach (var test in tests)
@@ -441,6 +444,133 @@ static void JsonRemapValidation()
 }
 
 static MemoryStream JsonStream(string json) => new(Encoding.UTF8.GetBytes(json));
+
+static void MacControlModifierPreference()
+{
+    var catalog = CalculatorShortcutCatalog.WithMacPrimaryModifier(ShortcutModifiers.Control);
+    var mac = ShortcutServices.Create(ShortcutPlatform.MacOS);
+    var registrations = catalog.RegisterAll(mac);
+    try
+    {
+        var calculatorScope = new HashSet<string>(StringComparer.Ordinal) { "calculator" };
+        var navigationScope = new HashSet<string>(StringComparer.Ordinal) { "navigation" };
+        var graphingScope = new HashSet<string>(StringComparer.Ordinal) { "graphing" };
+        Require(
+            mac.IsMatch("copyButton", new ShortcutInput(Named("C", ShortcutModifiers.Control)), calculatorScope)
+            && mac.IsMatch("pasteButton", new ShortcutInput(Named("V", ShortcutModifiers.Control)), calculatorScope)
+            && mac.IsMatch("navigation.copy", new ShortcutInput(Named("C", ShortcutModifiers.Control)), navigationScope)
+            && mac.IsMatch("navigation.paste", new ShortcutInput(Named("V", ShortcutModifiers.Control)), navigationScope),
+            "Copy and paste did not switch to Control on macOS.");
+        Require(
+            !mac.IsMatch("copyButton", new ShortcutInput(Named("C", ShortcutModifiers.Command)), calculatorScope),
+            "Command+C still matched after selecting the Control modifier.");
+        Require(
+            mac.IsMatch("graph.zoom.in", new ShortcutInput(Named("+", ShortcutModifiers.Control)), graphingScope)
+            && mac.IsMatch("graph.zoom.out", new ShortcutInput(Named("-", ShortcutModifiers.Control)), graphingScope)
+            && mac.IsMatch("graph.view.reset", new ShortcutInput(Named("0", ShortcutModifiers.Control)), graphingScope)
+            && mac.IsMatch("graphViewButton", new ShortcutInput(Named("HOME", ShortcutModifiers.Control)), graphingScope),
+            "The graph shortcuts did not switch to Control on macOS.");
+        Require(
+            mac.GetGestureDisplayText("graph.view.reset") == "⌃0",
+            "The graph reset display text did not follow the Control modifier.");
+        Require(
+            mac.TryGetDefinition("copyButtonAlternate", out var copyAlternate)
+            && copyAlternate!.ResolveGestures(ShortcutPlatform.MacOS).Count == 0,
+            "The Insert-based alternates must stay disabled on macOS.");
+        Require(
+            catalog.Bindings.All(binding =>
+                binding.Platform != ShortcutPlatform.MacOS
+                || (binding.Gesture.Modifiers & ShortcutModifiers.Command) == 0),
+            "A macOS catalog binding still names Command.");
+        Require(
+            mac.GetConflicts().Count == CountMacConflicts(CalculatorShortcutCatalog.WithMacPrimaryModifier(ShortcutModifiers.Command)),
+            "Switching to Control introduced a macOS shortcut conflict.");
+        // Control is a deliberate user choice on macOS, so the only new
+        // findings may be the validator's non-idiomatic-modifier warnings.
+        var commandIssues = ValidateMacConventions(CalculatorShortcutCatalog.WithMacPrimaryModifier(ShortcutModifiers.Command));
+        var newIssues = mac.ValidateConventions().Except(commandIssues).ToArray();
+        Require(
+            newIssues.Length > 0
+            && newIssues.All(issue =>
+                issue.Kind == ShortcutConventionIssueKind.NonIdiomaticModifier
+                && issue.Severity == ShortcutConventionSeverity.Warning),
+            "Switching to Control introduced a macOS convention issue other than the expected modifier warning.");
+    }
+    finally
+    {
+        foreach (var registration in registrations)
+        {
+            registration.Dispose();
+        }
+    }
+
+    static int CountMacConflicts(ShortcutCatalog catalog)
+    {
+        var service = ShortcutServices.Create(ShortcutPlatform.MacOS);
+        catalog.RegisterAll(service);
+        return service.GetConflicts().Count;
+    }
+
+    static IReadOnlyList<ShortcutConventionIssue> ValidateMacConventions(ShortcutCatalog catalog)
+    {
+        var service = ShortcutServices.Create(ShortcutPlatform.MacOS);
+        catalog.RegisterAll(service);
+        return service.ValidateConventions();
+    }
+}
+
+static void MacModifierPreferenceLeavesOtherPlatforms()
+{
+    var builtIn = CalculatorShortcutCatalog.CreateDefinitions();
+    var control = CalculatorShortcutCatalog.WithMacPrimaryModifier(ShortcutModifiers.Control).Definitions;
+    Require(builtIn.Count == control.Count, "The modifier preference changed the number of shortcuts.");
+    for (var index = 0; index < builtIn.Count; index++)
+    {
+        Require(builtIn[index].Id == control[index].Id, "The modifier preference reordered the catalog.");
+        foreach (var platform in new[] { ShortcutPlatform.Windows, ShortcutPlatform.Linux, ShortcutPlatform.Unknown })
+        {
+            Require(
+                builtIn[index].ResolveGestures(platform).SequenceEqual(control[index].ResolveGestures(platform)),
+                $"The modifier preference changed '{builtIn[index].Id}' on {platform}.");
+        }
+
+        Require(
+            builtIn[index].Scope == control[index].Scope
+            && builtIn[index].InputHandling == control[index].InputHandling
+            && builtIn[index].DisabledPlatforms.SetEquals(control[index].DisabledPlatforms),
+            $"The modifier preference dropped metadata from '{builtIn[index].Id}'.");
+    }
+
+    var remapped = builtIn
+        .Where((definition, index) =>
+            !definition.ResolveGestures(ShortcutPlatform.MacOS).SequenceEqual(control[index].ResolveGestures(ShortcutPlatform.MacOS)))
+        .Select(definition => definition.Id)
+        .Order(StringComparer.Ordinal)
+        .ToArray();
+    Require(
+        remapped.SequenceEqual(
+            ["copyButton", "graph.view.reset", "graph.zoom.in", "graph.zoom.out", "graphViewButton",
+             "navigation.copy", "navigation.paste", "pasteButton"],
+            StringComparer.Ordinal),
+        "The Control preference remapped an unexpected set of macOS shortcuts: " + string.Join(", ", remapped));
+}
+
+static void MacModifierPreferenceValidation()
+{
+    var catalog = ShortcutCatalogLoader.LoadBuiltIn();
+    Require(
+        ReferenceEquals(catalog.WithMacPrimaryModifier(ShortcutModifiers.Command), catalog),
+        "The Command preference should keep the catalog as defined.");
+    RequireThrows<ArgumentOutOfRangeException>(
+        () => catalog.WithMacPrimaryModifier(ShortcutModifiers.Alt),
+        "A modifier other than Command or Control was accepted.");
+    RequireThrows<ArgumentOutOfRangeException>(
+        () => catalog.WithMacPrimaryModifier(ShortcutModifiers.Control | ShortcutModifiers.Shift),
+        "A combined modifier was accepted as the macOS primary modifier.");
+}
+
+static ShortcutGesture Named(string key, ShortcutModifiers modifiers) =>
+    new(ShortcutKey.Named(key), modifiers);
 
 static void RequireThrows<TException>(Action action, string message)
     where TException : Exception

@@ -13,6 +13,9 @@ AppBuilder.Configure<Calculator.Avalonia.App>()
 ResourceLoader.Configure(new ResourceLoaderConfiguration(
     Path.Combine(AppContext.BaseDirectory, "Resources")));
 
+// Keep every preference a test changes out of the user's real settings file.
+Calculator.Avalonia.AppSettingsStore.SettingsPath = Path.Combine(AppContext.BaseDirectory, "test-settings", "settings.json");
+
 var tests = RouterTests.All
     .Concat(CurrencyTests.All)
     .Concat(GraphingTests.All)
@@ -20,6 +23,7 @@ var tests = RouterTests.All
     .Concat(DateCalculatorTests.All)
     .Concat(PressedStateTests.All)
     .Concat(ShellInteractionTests.All)
+    .Concat(ShortcutModifierSettingTests.All)
     .ToArray();
 
 foreach (var (name, run) in tests)

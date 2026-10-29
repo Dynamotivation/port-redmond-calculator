@@ -9,7 +9,7 @@ namespace Calculator.Managed;
 
 /// <summary>
 /// Appearance preferences: theme, font, backdrop, window corners and window
-/// controls.
+/// controls, plus the macOS keyboard shortcut modifier.
 /// </summary>
 /// <remarks>
 /// This holds preference state and nothing else. Applying a preference is
@@ -29,11 +29,15 @@ public sealed partial class SettingsViewModel : ObservableObject
         bool supportsWindowStyleSettings,
         IEnumerable<string> availableFontFamilies,
         string? initialFontFamily,
-        SettingsStrings strings)
+        SettingsStrings strings,
+        bool supportsShortcutModifierSettings = false,
+        MacShortcutModifierPreference initialShortcutModifier = MacShortcutModifierPreference.Command)
     {
         Strings = strings;
         SupportsBackdropSettings = supportsBackdropSettings;
         SupportsWindowStyleSettings = supportsWindowStyleSettings;
+        SupportsShortcutModifierSettings = supportsShortcutModifierSettings;
+        SelectedShortcutModifier = initialShortcutModifier;
         SelectedThemePreference = initialTheme;
 
         // Inter is the shipped default and sorts first; the rest follow in
@@ -64,11 +68,16 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public bool SupportsWindowStyleSettings { get; }
 
+    /// <summary>True only where shortcuts default to Command (macOS).</summary>
+    public bool SupportsShortcutModifierSettings { get; }
+
     public event Action<AppThemePreference>? ThemePreferenceChanged;
 
     public event Action<string>? FontPreferenceChanged;
 
     public event Action<PlatformAppearancePreferences>? PlatformAppearanceChanged;
+
+    public event Action<MacShortcutModifierPreference>? ShortcutModifierPreferenceChanged;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsLightThemeSelected))]
@@ -107,6 +116,15 @@ public sealed partial class SettingsViewModel : ObservableObject
     public bool IsWindows11WindowControlStyleSelected => SelectedWindowControlStyle == WindowControlStyle.Windows11;
     public bool IsMacOSWindowControlStyleSelected => SelectedWindowControlStyle == WindowControlStyle.MacOS;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsCommandShortcutModifierSelected))]
+    [NotifyPropertyChangedFor(nameof(IsControlShortcutModifierSelected))]
+    public partial MacShortcutModifierPreference SelectedShortcutModifier { get; private set; } =
+        MacShortcutModifierPreference.Command;
+
+    public bool IsCommandShortcutModifierSelected => SelectedShortcutModifier == MacShortcutModifierPreference.Command;
+    public bool IsControlShortcutModifierSelected => SelectedShortcutModifier == MacShortcutModifierPreference.Control;
+
     [RelayCommand]
     private void SelectTheme(string preference) =>
         SelectedThemePreference = Enum.Parse<AppThemePreference>(preference, ignoreCase: false);
@@ -118,6 +136,10 @@ public sealed partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void SelectWindowControlStyle(string style) =>
         SelectedWindowControlStyle = Enum.Parse<WindowControlStyle>(style, ignoreCase: false);
+
+    [RelayCommand]
+    private void SelectShortcutModifier(string modifier) =>
+        SelectedShortcutModifier = Enum.Parse<MacShortcutModifierPreference>(modifier, ignoreCase: false);
 
     public PlatformAppearancePreferences ToPlatformAppearance() =>
         new(UseMicaEffect, SelectedWindowCornerStyle, SelectedWindowControlStyle);
@@ -132,6 +154,9 @@ public sealed partial class SettingsViewModel : ObservableObject
             FontPreferenceChanged?.Invoke(value);
         }
     }
+
+    partial void OnSelectedShortcutModifierChanged(MacShortcutModifierPreference value) =>
+        ShortcutModifierPreferenceChanged?.Invoke(value);
 
     partial void OnUseMicaEffectChanged(bool value) => NotifyPlatformAppearanceChanged();
 
@@ -161,6 +186,11 @@ public sealed record SettingsStrings(
     public string AppFontDescription { get; } = "Choose the font used for text and numbers";
     public string MicaEffectName { get; } = "Translucent background";
     public string MicaEffectDescription { get; } = "Blur the desktop behind the calculator window";
+    public string KeyboardGroupName { get; } = "Keyboard";
+    public string ShortcutModifierName { get; } = "Shortcut modifier key";
+    public string ShortcutModifierDescription { get; } = "Choose the key used for copy, paste and graph zoom shortcuts";
+    public string CommandShortcutModifierName { get; } = "Command (⌘)";
+    public string ControlShortcutModifierName { get; } = "Control (⌃)";
     public string AboutVersionText { get; } = "Redmond Calculator 0.1.0";
     public string ProjectLicenseName { get; } = "MIT License";
     public string ThirdPartyNoticesName { get; } = "Third-party notices";

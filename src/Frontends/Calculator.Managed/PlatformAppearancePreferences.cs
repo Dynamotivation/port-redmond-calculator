@@ -30,4 +30,5 @@ public sealed record WindowPlatformCapabilities(
     bool SupportsBackdropSettings = false,
     bool SupportsWindowStyleSettings = false,
     bool UsesNativeWindowDecorations = false,
-    bool SupportsMacOSWindowFeatures = false);
+    bool SupportsMacOSWindowFeatures = false,
+    bool SupportsShortcutModifierSettings = false);
