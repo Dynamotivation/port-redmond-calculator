@@ -16,8 +16,7 @@ public sealed record ShortcutCatalogBinding(
     ShortcutGesture Gesture,
     string Scope,
     ShortcutCatalogSource Source,
-    string Description,
-    ShortcutPlatform? Platform = null);
+    string Description);
 
 public sealed class ShortcutCatalogException : Exception
 {
@@ -48,77 +47,6 @@ public sealed class ShortcutCatalog
     {
         ArgumentNullException.ThrowIfNull(service);
         return Definitions.Select(definition => service.Register(definition)).ToArray();
-    }
-
-    /// <summary>
-    /// Returns a catalog whose macOS-specific bindings use <paramref name="modifier"/>
-    /// where the definition says Command.
-    /// </summary>
-    /// <remarks>
-    /// Only the explicit <c>macOS</c> bindings are rewritten, so Windows, Linux,
-    /// and every gesture macOS inherits from <c>default</c> are unchanged. Bindings
-    /// disabled on macOS (the Insert alternates) stay disabled.
-    /// </remarks>
-    public ShortcutCatalog WithMacPrimaryModifier(ShortcutModifiers modifier)
-    {
-        if (modifier is not (ShortcutModifiers.Command or ShortcutModifiers.Control))
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(modifier), modifier, "The macOS primary modifier must be Command or Control.");
-        }
-
-        if (modifier == ShortcutModifiers.Command)
-        {
-            return this;
-        }
-
-        var bindings = Bindings
-            .Select(binding => binding.Platform == ShortcutPlatform.MacOS
-                ? binding with { Gesture = Replace(binding.Gesture) }
-                : binding)
-            .ToArray();
-        var definitions = Definitions.Select(RewriteDefinition).ToArray();
-        return new ShortcutCatalog(Array.AsReadOnly(bindings), Array.AsReadOnly(definitions));
-
-        ShortcutDefinition RewriteDefinition(ShortcutDefinition definition)
-        {
-            var hasPrimary = definition.PlatformGestures.ContainsKey(ShortcutPlatform.MacOS);
-            var hasAlternates = definition.PlatformAlternateGestures.ContainsKey(ShortcutPlatform.MacOS);
-            if (!hasPrimary && !hasAlternates)
-            {
-                return definition;
-            }
-
-            var platformGestures = definition.PlatformGestures.ToDictionary(pair => pair.Key, pair => pair.Value);
-            if (hasPrimary)
-            {
-                platformGestures[ShortcutPlatform.MacOS] = Replace(platformGestures[ShortcutPlatform.MacOS]);
-            }
-
-            var platformAlternates = definition.PlatformAlternateGestures.ToDictionary(
-                pair => pair.Key,
-                pair => pair.Key == ShortcutPlatform.MacOS
-                    ? (IReadOnlyList<ShortcutGesture>)pair.Value.Select(Replace).ToArray()
-                    : pair.Value);
-
-            return new ShortcutDefinition(
-                definition.Id,
-                definition.DefaultGesture,
-                platformGestures,
-                definition.Scope,
-                definition.Priority,
-                definition.AllowRepeat,
-                definition.IsEnabled,
-                definition.InputHandling,
-                definition.AlternateGestures,
-                platformAlternates,
-                definition.DisabledPlatforms);
-        }
-
-        ShortcutGesture Replace(ShortcutGesture gesture) =>
-            (gesture.Modifiers & ShortcutModifiers.Command) == 0
-                ? gesture
-                : new ShortcutGesture(gesture.Key, (gesture.Modifiers & ~ShortcutModifiers.Command) | modifier);
     }
 }
 
@@ -266,59 +194,26 @@ public static class ShortcutCatalogLoader
             return;
         }
 
-        var platformPrimary = new Dictionary<ShortcutPlatform, ShortcutGesture>();
-        var platformAlternates = new Dictionary<ShortcutPlatform, IReadOnlyList<ShortcutGesture>>();
-        var disabledPlatforms = new HashSet<ShortcutPlatform>();
-        AddCatalogBindings(defaultGestures, null);
-
-        foreach (var pair in entry.Bindings.Where(pair => !pair.Key.Equals("default", StringComparison.OrdinalIgnoreCase)))
+        // Every platform shares the "default" gestures; Primary resolves to
+        // Ctrl or Command in Redmond.Shortcuts. Per-platform tables would let a
+        // platform drift to its own keys, so they are rejected.
+        foreach (var platform in entry.Bindings.Keys.Where(key => !key.Equals("default", StringComparison.OrdinalIgnoreCase)))
         {
-            if (!Enum.TryParse<ShortcutPlatform>(pair.Key, true, out var platform) || platform == ShortcutPlatform.Unknown)
-            {
-                diagnostics.Add($"Shortcut '{id}' has unknown platform '{pair.Key}'.");
-                continue;
-            }
+            diagnostics.Add(
+                $"Shortcut '{id}' has '{platform}' bindings; define one platform-neutral 'default' binding, using Primary for Ctrl/Command.");
+        }
 
-            if (pair.Value.Count == 0)
-            {
-                disabledPlatforms.Add(platform);
-                continue;
-            }
-
-            var gestures = ParseGestures(id, pair.Key, pair.Value, diagnostics);
-            if (gestures.Count == 0)
-            {
-                continue;
-            }
-
-            platformPrimary[platform] = gestures[0];
-            platformAlternates[platform] = gestures.Skip(1).ToArray();
-            AddCatalogBindings(gestures, platform);
+        foreach (var gesture in defaultGestures)
+        {
+            catalogBindings.Add(new ShortcutCatalogBinding(id, gesture, entry.Scope, source, entry.Description ?? id));
         }
 
         definitions.Add(new ShortcutDefinition(
             id,
             defaultGestures[0],
-            platformPrimary,
             entry.Scope,
             inputHandling: inputHandling,
-            alternateGestures: defaultGestures.Skip(1).ToArray(),
-            platformAlternateGestures: platformAlternates,
-            disabledPlatforms: disabledPlatforms));
-
-        void AddCatalogBindings(IEnumerable<ShortcutGesture> gestures, ShortcutPlatform? platform)
-        {
-            foreach (var gesture in gestures)
-            {
-                catalogBindings.Add(new ShortcutCatalogBinding(
-                    id,
-                    gesture,
-                    entry.Scope!,
-                    source,
-                    entry.Description ?? id,
-                    platform));
-            }
-        }
+            alternateGestures: defaultGestures.Skip(1).ToArray()));
     }
 
     private static List<ShortcutGesture> ParseGestures(
@@ -415,9 +310,6 @@ public static class CalculatorShortcutCatalog
     public static IReadOnlyList<ShortcutDefinition> CreateDefinitions() => BuiltIn.Value.Definitions;
 
     public static ShortcutCatalog LoadRemap(Stream remap) => ShortcutCatalogLoader.LoadBuiltIn(remap);
-
-    public static ShortcutCatalog WithMacPrimaryModifier(ShortcutModifiers modifier) =>
-        BuiltIn.Value.WithMacPrimaryModifier(modifier);
 
     public static IReadOnlyList<IDisposable> RegisterAll(IShortcutService service) => BuiltIn.Value.RegisterAll(service);
 }

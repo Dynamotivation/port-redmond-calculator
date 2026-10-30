@@ -3,6 +3,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Windows.ApplicationModel.Resources;
+using Redmond.Shortcuts;
 
 namespace Calculator.Managed;
 
@@ -184,7 +185,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         string? initialFontFamily = null,
         IReadOnlyDictionary<string, CurrencyProviderPreference>? initialCurrencyProviderPreferences = null,
         Func<string, string, string>? shortcutTextRewriter = null,
-        MacShortcutModifierPreference initialShortcutModifier = MacShortcutModifierPreference.Command)
+        MacPrimaryModifier initialShortcutModifier = MacPrimaryModifier.Command)
     {
         var platformAppearance = initialPlatformAppearance ?? new PlatformAppearancePreferences();
         _windowPlatformCapabilities = windowPlatformCapabilities ?? new WindowPlatformCapabilities();

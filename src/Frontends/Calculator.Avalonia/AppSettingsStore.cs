@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Calculator.Managed;
+using Redmond.Shortcuts;
 
 namespace Calculator.Avalonia;
 
@@ -61,7 +62,7 @@ internal static class AppSettingsStore
                     persisted.ShortcutModifier is { } shortcutModifier
                         && Enum.IsDefined(shortcutModifier)
                         ? shortcutModifier
-                        : MacShortcutModifierPreference.Command);
+                        : MacPrimaryModifier.Command);
         }
         catch (IOException)
         {
@@ -109,7 +110,7 @@ internal static class AppSettingsStore
         bool? UseNativeWindowFrame,
         Dictionary<string, CurrencyProviderPreference>? CurrencyProviderPreferences,
         Dictionary<string, bool>? CurrencyProviders,
-        MacShortcutModifierPreference? ShortcutModifier);
+        MacPrimaryModifier? ShortcutModifier);
 
 }
 
@@ -120,7 +121,7 @@ internal sealed record AppSettings(
     WindowCornerStyle WindowCornerStyle = WindowCornerStyle.Windows11,
     WindowControlStyle WindowControlStyle = WindowControlStyle.Windows11,
     IReadOnlyDictionary<string, CurrencyProviderPreference>? CurrencyProviderPreferences = null,
-    MacShortcutModifierPreference ShortcutModifier = MacShortcutModifierPreference.Command)
+    MacPrimaryModifier ShortcutModifier = MacPrimaryModifier.Command)
 {
     public PlatformAppearancePreferences ToPlatformAppearance() => new(
         UseMicaEffect,
