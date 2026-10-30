@@ -23,7 +23,7 @@ public partial class MainWindow : Window
 {
     private readonly CalculatorViewModel _viewModel;
     private readonly ShortcutService _shortcutService;
-    private IReadOnlyList<IDisposable> _shortcutRegistrations;
+    private readonly IReadOnlyList<IDisposable> _shortcutRegistrations;
     private readonly Dictionary<Key, string> _pressedShortcutIds = [];
     private readonly Dictionary<Key, string> _pressedTraceDirections = [];
     private IReadOnlyList<IShortcutPressedTarget> _shortcutPressedTargets = [];
@@ -78,15 +78,17 @@ public partial class MainWindow : Window
         var appearance = settings.ToPlatformAppearance();
         _settings = settings;
         var shortcutPlatform = shortcutPlatformOverride ?? DetectShortcutPlatform();
-        _shortcutService = new ShortcutService(shortcutPlatform);
-        _shortcutRegistrations = RegisterShortcuts(settings.ShortcutModifier);
+        _shortcutService = new ShortcutService(
+            shortcutPlatform,
+            new ShortcutServiceOptions { MacPrimaryModifier = settings.ShortcutModifier });
+        _shortcutRegistrations = CalculatorShortcutCatalog.RegisterAll(_shortcutService);
         _viewModel = new CalculatorViewModel(
             settings.ThemePreference,
             appearance,
             DetectWindowPlatformCapabilities() with
             {
-                // The modifier choice only exists where the catalog binds
-                // Command, so key it to the shortcut platform in use.
+                // Primary only differs from Ctrl on macOS, so key the
+                // modifier choice to the shortcut platform in use.
                 SupportsShortcutModifierSettings = shortcutPlatform == ShortcutPlatform.MacOS,
             },
             availableFontFamilies: GetInstalledFontFamilyNames(),
@@ -150,13 +152,6 @@ public partial class MainWindow : Window
             _viewModel.Dispose();
         };
     }
-
-    private IReadOnlyList<IDisposable> RegisterShortcuts(MacShortcutModifierPreference modifier) =>
-        CalculatorShortcutCatalog
-            .WithMacPrimaryModifier(modifier == MacShortcutModifierPreference.Control
-                ? ShortcutModifiers.Control
-                : ShortcutModifiers.Command)
-            .RegisterAll(_shortcutService);
 
     private static ShortcutPlatform DetectShortcutPlatform() =>
         OperatingSystem.IsWindows()
@@ -832,13 +827,9 @@ public partial class MainWindow : Window
         _presentation.ApplyAppearance(preferences);
     }
 
-    private void OnShortcutModifierPreferenceChanged(MacShortcutModifierPreference modifier)
+    private void OnShortcutModifierPreferenceChanged(MacPrimaryModifier modifier)
     {
-        foreach (var registration in _shortcutRegistrations)
-        {
-            registration.Dispose();
-        }
-        _shortcutRegistrations = RegisterShortcuts(modifier);
+        _shortcutService.MacPrimaryModifier = modifier;
         _viewModel.RefreshShortcutText();
         _settings = _settings with { ShortcutModifier = modifier };
         AppSettingsStore.Save(_settings);

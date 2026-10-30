@@ -51,7 +51,7 @@ internal static class ShortcutModifierSettingTests
 
     private static void MacControlSettingRebindsGraphShortcuts() => RunGraphing(
         ShortcutPlatform.MacOS,
-        new AppSettings(UseMicaEffect: false, ShortcutModifier: MacShortcutModifierPreference.Control),
+        new AppSettings(UseMicaEffect: false, ShortcutModifier: MacPrimaryModifier.Control),
         (window, viewModel, plot) =>
         {
             Assert(viewModel.Settings.IsControlShortcutModifierSelected,
@@ -95,7 +95,7 @@ internal static class ShortcutModifierSettingTests
                     Assert(viewModel.Graphing.Strings.ResetViewTooltip.EndsWith("(⌃0)", StringComparison.Ordinal)
                         && viewModel.Graphing.Strings.ZoomOutTooltip.Contains("⌃-", StringComparison.Ordinal),
                         "graph tooltips should follow the modifier without a restart");
-                    Assert(AppSettingsStore.Load().ShortcutModifier == MacShortcutModifierPreference.Control,
+                    Assert(AppSettingsStore.Load().ShortcutModifier == MacPrimaryModifier.Control,
                         "the selected modifier should be persisted");
 
                     window.KeyPressQwerty(PhysicalKey.Digit0, RawInputModifiers.Meta);
@@ -110,7 +110,7 @@ internal static class ShortcutModifierSettingTests
                     Pump();
                     Assert(viewModel.Graphing.Strings.ResetViewTooltip.EndsWith("(⌘0)", StringComparison.Ordinal),
                         "switching back should restore the Command tooltip");
-                    Assert(AppSettingsStore.Load().ShortcutModifier == MacShortcutModifierPreference.Command,
+                    Assert(AppSettingsStore.Load().ShortcutModifier == MacPrimaryModifier.Command,
                         "switching back should persist Command");
                 });
         }
@@ -127,7 +127,7 @@ internal static class ShortcutModifierSettingTests
             RunGraphing(
                 platform,
                 // A Control value carried over from a Mac must not affect other platforms.
-                new AppSettings(UseMicaEffect: false, ShortcutModifier: MacShortcutModifierPreference.Control),
+                new AppSettings(UseMicaEffect: false, ShortcutModifier: MacPrimaryModifier.Control),
                 (window, viewModel, plot) =>
                 {
                     Assert(!viewModel.Settings.SupportsShortcutModifierSettings,
@@ -159,11 +159,11 @@ internal static class ShortcutModifierSettingTests
         DeleteStoredSettings();
         try
         {
-            AppSettingsStore.Save(new AppSettings(ShortcutModifier: MacShortcutModifierPreference.Control));
-            Assert(AppSettingsStore.Load().ShortcutModifier == MacShortcutModifierPreference.Control,
+            AppSettingsStore.Save(new AppSettings(ShortcutModifier: MacPrimaryModifier.Control));
+            Assert(AppSettingsStore.Load().ShortcutModifier == MacPrimaryModifier.Control,
                 "a saved Control modifier should load back");
-            AppSettingsStore.Save(new AppSettings(ShortcutModifier: MacShortcutModifierPreference.Command));
-            Assert(AppSettingsStore.Load().ShortcutModifier == MacShortcutModifierPreference.Command,
+            AppSettingsStore.Save(new AppSettings(ShortcutModifier: MacPrimaryModifier.Command));
+            Assert(AppSettingsStore.Load().ShortcutModifier == MacPrimaryModifier.Command,
                 "a saved Command modifier should load back");
         }
         finally
@@ -177,18 +177,18 @@ internal static class ShortcutModifierSettingTests
         DeleteStoredSettings();
         try
         {
-            Assert(AppSettingsStore.Load().ShortcutModifier == MacShortcutModifierPreference.Command,
+            Assert(AppSettingsStore.Load().ShortcutModifier == MacPrimaryModifier.Command,
                 "a missing settings file should default to Command");
 
             // A file written before this setting existed.
             WriteStoredSettings("""{"ThemePreference":0,"FontFamily":"Inter","UseMicaEffect":true}""");
             var legacy = AppSettingsStore.Load();
-            Assert(legacy.ShortcutModifier == MacShortcutModifierPreference.Command
+            Assert(legacy.ShortcutModifier == MacPrimaryModifier.Command
                 && legacy.ThemePreference == AppThemePreference.Light,
                 "an older settings file should load with the Command default");
 
             WriteStoredSettings("""{"ShortcutModifier":7}""");
-            Assert(AppSettingsStore.Load().ShortcutModifier == MacShortcutModifierPreference.Command,
+            Assert(AppSettingsStore.Load().ShortcutModifier == MacPrimaryModifier.Command,
                 "an unknown stored modifier should fall back to Command");
         }
         finally

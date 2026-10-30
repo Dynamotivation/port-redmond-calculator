@@ -13,5 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../../Calculator.ResourceLoader/Calculator.ResourceLoader.csproj" />
+    <ProjectReference Include="../../../redmond-commons/Redmond.Shortcuts/Redmond.Shortcuts.csproj" />
   </ItemGroup>
 </Project>

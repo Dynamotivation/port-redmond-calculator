@@ -1383,18 +1383,7 @@
               "value": "C"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "C"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -1413,11 +1402,10 @@
               "value": "INSERT"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
-        ],
-        "macOS": []
+        ]
       }
     },
     {
@@ -1433,18 +1421,7 @@
               "value": "V"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "V"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -1466,8 +1443,7 @@
               "Shift"
             ]
           }
-        ],
-        "macOS": []
+        ]
       }
     },
     {
@@ -2215,18 +2191,7 @@
               "value": "HOME"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "HOME"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -2242,21 +2207,10 @@
           {
             "key": {
               "kind": "Named",
-              "value": "+"
+              "value": "\u002B"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "+"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -2275,18 +2229,7 @@
               "value": "-"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "-"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -2305,18 +2248,7 @@
               "value": "0"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "0"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -2506,18 +2438,7 @@
               "value": "C"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "C"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -2536,11 +2457,10 @@
               "value": "INSERT"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
-        ],
-        "macOS": []
+        ]
       }
     },
     {
@@ -2556,18 +2476,7 @@
               "value": "V"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "V"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -2589,8 +2498,7 @@
               "Shift"
             ]
           }
-        ],
-        "macOS": []
+        ]
       }
     },
     {

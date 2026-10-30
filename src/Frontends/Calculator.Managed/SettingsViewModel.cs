@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Redmond.Shortcuts;
 
 namespace Calculator.Managed;
 
@@ -31,7 +32,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         string? initialFontFamily,
         SettingsStrings strings,
         bool supportsShortcutModifierSettings = false,
-        MacShortcutModifierPreference initialShortcutModifier = MacShortcutModifierPreference.Command)
+        MacPrimaryModifier initialShortcutModifier = MacPrimaryModifier.Command)
     {
         Strings = strings;
         SupportsBackdropSettings = supportsBackdropSettings;
@@ -77,7 +78,7 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public event Action<PlatformAppearancePreferences>? PlatformAppearanceChanged;
 
-    public event Action<MacShortcutModifierPreference>? ShortcutModifierPreferenceChanged;
+    public event Action<MacPrimaryModifier>? ShortcutModifierPreferenceChanged;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsLightThemeSelected))]
@@ -119,11 +120,11 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsCommandShortcutModifierSelected))]
     [NotifyPropertyChangedFor(nameof(IsControlShortcutModifierSelected))]
-    public partial MacShortcutModifierPreference SelectedShortcutModifier { get; private set; } =
-        MacShortcutModifierPreference.Command;
+    public partial MacPrimaryModifier SelectedShortcutModifier { get; private set; } =
+        MacPrimaryModifier.Command;
 
-    public bool IsCommandShortcutModifierSelected => SelectedShortcutModifier == MacShortcutModifierPreference.Command;
-    public bool IsControlShortcutModifierSelected => SelectedShortcutModifier == MacShortcutModifierPreference.Control;
+    public bool IsCommandShortcutModifierSelected => SelectedShortcutModifier == MacPrimaryModifier.Command;
+    public bool IsControlShortcutModifierSelected => SelectedShortcutModifier == MacPrimaryModifier.Control;
 
     [RelayCommand]
     private void SelectTheme(string preference) =>
@@ -139,7 +140,7 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     [RelayCommand]
     private void SelectShortcutModifier(string modifier) =>
-        SelectedShortcutModifier = Enum.Parse<MacShortcutModifierPreference>(modifier, ignoreCase: false);
+        SelectedShortcutModifier = Enum.Parse<MacPrimaryModifier>(modifier, ignoreCase: false);
 
     public PlatformAppearancePreferences ToPlatformAppearance() =>
         new(UseMicaEffect, SelectedWindowCornerStyle, SelectedWindowControlStyle);
@@ -155,7 +156,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
-    partial void OnSelectedShortcutModifierChanged(MacShortcutModifierPreference value) =>
+    partial void OnSelectedShortcutModifierChanged(MacPrimaryModifier value) =>
         ShortcutModifierPreferenceChanged?.Invoke(value);
 
     partial void OnUseMicaEffectChanged(bool value) => NotifyPlatformAppearanceChanged();
@@ -188,7 +189,7 @@ public sealed record SettingsStrings(
     public string MicaEffectDescription { get; } = "Blur the desktop behind the calculator window";
     public string KeyboardGroupName { get; } = "Keyboard";
     public string ShortcutModifierName { get; } = "Shortcut modifier key";
-    public string ShortcutModifierDescription { get; } = "Choose the key used for copy, paste and graph zoom shortcuts";
+    public string ShortcutModifierDescription { get; } = "Choose the key used for shortcuts such as copy, paste and graph zoom";
     public string CommandShortcutModifierName { get; } = "Command (⌘)";
     public string ControlShortcutModifierName { get; } = "Control (⌃)";
     public string AboutVersionText { get; } = "Redmond Calculator 0.1.0";
