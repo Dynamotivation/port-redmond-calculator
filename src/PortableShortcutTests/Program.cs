@@ -27,6 +27,7 @@ var tests = new (string Name, Action Run)[]
     ("macOS modifier preference leaves other platforms unchanged", MacModifierPreferenceLeavesOtherPlatforms),
     ("macOS modifier preference validation", MacModifierPreferenceValidation),
     ("no platform-specific gestures", NoPlatformSpecificGestures),
+    ("no macOS collisions", NoMacOSCollisions),
     ("localized labels", LocalizedLabels),
 };
 
@@ -252,8 +253,8 @@ static void BuiltInMacBindingsAndText()
             mac.GetGestureDisplayText("graph.zoom.in") == "⌘+",
             "The graph zoom-in display text did not use Command on macOS.");
         Require(
-            mac.GetGestureDisplayText("HistoryButton") == "⌃H",
-            "A calculator-specific physical Control binding was not displayed accurately on macOS.");
+            mac.GetGestureDisplayText("HistoryButton") == "⇧⌘H",
+            "History did not use Primary+Shift+H on macOS.");
         Require(
             mac.TryGetDefinition("copyButtonAlternate", out var copyAlternate)
             && copyAlternate!.ResolveGestures(ShortcutPlatform.MacOS).Count == 0,
@@ -556,12 +557,15 @@ static void MacModifierPreferenceLeavesOtherPlatforms()
         .Select(definition => definition.Id)
         .Order(StringComparer.Ordinal)
         .ToArray();
-    Require(
-        remapped.SequenceEqual(
-            ["copyButton", "graph.view.reset", "graph.zoom.in", "graph.zoom.out", "graphViewButton",
-             "navigation.copy", "navigation.paste", "pasteButton"],
-            StringComparer.Ordinal),
-        "The Control preference changed an unexpected set of macOS shortcuts: " + string.Join(", ", remapped));
+    var primary = definitions
+        .Where(definition => new[] { definition.Gesture }.Concat(definition.AlternateGestures).Any(gesture =>
+            gesture.Modifiers.HasFlag(ShortcutModifiers.Primary)
+            && ShortcutPrimaryModifier.IsKeyAvailable(gesture.Key, ShortcutPlatform.MacOS)))
+        .Select(definition => definition.Id)
+        .Order(StringComparer.Ordinal)
+        .ToArray();
+    Require(primary.Length > 0 && remapped.SequenceEqual(primary, StringComparer.Ordinal),
+        "The Control preference must change exactly the Primary shortcuts on macOS: " + string.Join(", ", remapped));
 }
 
 static void MacModifierPreferenceValidation()
@@ -578,8 +582,8 @@ static void NoPlatformSpecificGestures()
 {
     Require(
         CalculatorShortcutCatalog.Bindings.All(binding =>
-            (binding.Gesture.Modifiers & ShortcutModifiers.Command) == 0),
-        "The catalog names Command; use Primary so each platform resolves it.");
+            (binding.Gesture.Modifiers & (ShortcutModifiers.Command | ShortcutModifiers.Control)) == 0),
+        "The catalog names Ctrl or Command; use Primary so each platform resolves it.");
 
     // With Control selected, macOS uses exactly the Windows gestures, less the
     // keys a Mac keyboard does not have.
@@ -590,6 +594,38 @@ static void NoPlatformSpecificGestures()
         Require(
             definition.ResolveGestures(ShortcutPlatform.MacOS, MacPrimaryModifier.Control).SequenceEqual(windows),
             $"'{definition.Id}' has a macOS gesture that Windows does not.");
+    }
+}
+
+static void NoMacOSCollisions()
+{
+    foreach (var modifier in new[] { MacPrimaryModifier.Command, MacPrimaryModifier.Control })
+    {
+        var mac = Service(ShortcutPlatform.MacOS, modifier);
+        CalculatorShortcutCatalog.RegisterAll(mac);
+        var collisions = mac.ValidateConventions().Where(issue => issue.IsCollision).ToArray();
+        Require(collisions.Length == 0,
+            $"Shortcuts collide with macOS ({modifier}): " +
+            string.Join("; ", collisions.Select(issue => $"{issue.ShortcutId}: {issue.Message}")));
+    }
+
+    var windows = Service(ShortcutPlatform.Windows);
+    CalculatorShortcutCatalog.RegisterAll(windows);
+    var changed = new Dictionary<string, string>
+    {
+        ["HistoryButton"] = "Ctrl+Shift+H",
+        ["memButton"] = "Ctrl+Shift+M",
+        ["MemMinus"] = "Ctrl+Shift+P",
+        ["powerOfEButton"] = "Ctrl+Shift+N",
+        ["window.alwaysOnTop.enter"] = "Ctrl+Alt+Up",
+        ["window.alwaysOnTop.exit"] = "Ctrl+Alt+Down",
+        ["MemPlus"] = "Ctrl+P",
+        ["ClearMemoryButton"] = "Ctrl+L",
+    };
+    foreach (var (id, expected) in changed)
+    {
+        var actual = windows.GetGestureDisplayText(id);
+        Require(actual == expected, $"'{id}' must be {expected} on every platform, not {actual}.");
     }
 }
 

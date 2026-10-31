@@ -22,7 +22,8 @@ modified copy of Microsoft source.
   resource and keyboard compatibility. Shortcuts are defined once, without
   per-platform bindings, using the `Primary` modifier from `Redmond.Shortcuts`
   (Ctrl, or Command on macOS unless the persisted Settings → Keyboard choice
-  is Control); see "Keyboard accelerators" in
+  is Control). No gesture may collide with a reserved macOS shortcut; change it
+  for every platform instead. See "Keyboard accelerators" in
   `docs/AvaloniaFluentMigration.md`.
 - `src/Frontends/Calculator.Avalonia`: cross-platform shell and views.
 - `redmond-commons`: separately versioned reusable Avalonia controls and
