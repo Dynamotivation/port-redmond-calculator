@@ -173,21 +173,31 @@ follows the active keyboard layout. Use named keys for Enter, Escape, Delete,
 Backspace, and keypad Decimal, with explicit physical-key fallbacks for
 synthetic input and numpads. A shifted symbol such as `+` already contains its
 Shift transformation; do not require Shift a second time when matching a
-character gesture. Platform-editing conventions such as Command+C/V should be
-adapted narrowly instead of globally remapping Command to Control and stealing
-host shortcuts.
+character gesture. Write application commands with `Primary` rather than
+naming Control or Command, and never take a host shortcut (see below).
 
 `CalculatorShortcuts.json` defines each shortcut once, in a single `default`
 binding list that every platform uses; the loader rejects per-platform lists.
-The editing conventions use the platform-neutral `Primary` modifier from
-`Redmond.Shortcuts`: copy and paste (calculator and navigation scopes, including
-the Primary+Insert alternate), graph zoom in/out, graph reset (Primary+0) and
-the graph view button (Primary+Home). `Primary` is Ctrl on Windows and Linux and
-Command on macOS. The UWP accelerators that name `Control` explicitly, such as
-Ctrl+M or Ctrl+H, stay Control on every platform so they never take macOS's
-Command+M, Command+H or Command+Q. A Mac keyboard has no Insert key, so
-`Redmond.Shortcuts` leaves the Insert gestures out on macOS; that is a missing
-key, not a different binding.
+Every Ctrl-based accelerator uses the platform-neutral `Primary` modifier from
+`Redmond.Shortcuts`, which is Ctrl on Windows and Linux and Command on macOS. A
+Mac keyboard has no Insert key, so `Redmond.Shortcuts` leaves the Insert
+gestures out on macOS; that is a missing key, not a different binding.
+
+Gestures that would take a macOS system or app-menu shortcut are changed on
+every platform, so the key is the same everywhere:
+
+| Shortcut | UWP gesture | Gesture now | Reason |
+| --- | --- | --- | --- |
+| History (`HistoryButton`) | Ctrl+H | Primary+Shift+H | ⌘H hides the app |
+| Memory store (`memButton`) | Ctrl+M | Primary+Shift+M | ⌘M minimizes the window |
+| Memory subtract (`MemMinus`) | Ctrl+Q | Primary+Shift+P | ⌘Q quits; pairs with M+ (Primary+P), and ⇧⌘Q logs out |
+| e^x (`powerOfEButton`) | Ctrl+N | Primary+Shift+N | ⌘N is New in every Mac app |
+| Keep on top (`window.alwaysOnTop.enter`) | Alt+Up | Primary+Alt+Up | ⌥↑ is macOS text navigation |
+| Back to full view (`window.alwaysOnTop.exit`) | Alt+Down | Primary+Alt+Down | ⌥↓ is macOS text navigation |
+
+`src/PortableShortcutTests` asserts that no shortcut collides with
+`MacOSReservedShortcuts` for either value of the macOS modifier setting, so a
+new collision fails the build's tests.
 
 Settings → Keyboard → *Shortcut modifier key* chooses what `Primary` means on
 macOS: Command (default) or Control. With Control, every shortcut is exactly
