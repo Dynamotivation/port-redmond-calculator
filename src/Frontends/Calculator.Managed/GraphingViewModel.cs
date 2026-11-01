@@ -476,7 +476,21 @@ public partial class GraphingViewModel : ObservableObject
         AddEquation();
     }
 
-    public GraphingStrings Strings { get; }
+    [ObservableProperty]
+    public partial GraphingStrings Strings { get; private set; }
+
+    /// <summary>
+    /// Replaces the tooltips that name a keyboard gesture after the shortcut
+    /// bindings change. Equations created earlier keep their own strings, which
+    /// carry no gestures.
+    /// </summary>
+    public void UpdateShortcutTooltips(string zoomInTooltip, string zoomOutTooltip, string resetViewTooltip) =>
+        Strings = Strings with
+        {
+            ZoomInTooltip = zoomInTooltip,
+            ZoomOutTooltip = zoomOutTooltip,
+            ResetViewTooltip = resetViewTooltip,
+        };
     public ObservableCollection<GraphEquationViewModel> Equations { get; } = [];
     public ObservableCollection<GraphVariableViewModel> Variables { get; } = [];
     public ObservableCollection<GraphAnalysisDisplayItem> AnalysisItems { get; } = [];

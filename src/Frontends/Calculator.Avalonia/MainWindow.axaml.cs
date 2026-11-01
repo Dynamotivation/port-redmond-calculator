@@ -78,12 +78,19 @@ public partial class MainWindow : Window
         var appearance = settings.ToPlatformAppearance();
         _settings = settings;
         var shortcutPlatform = shortcutPlatformOverride ?? DetectShortcutPlatform();
-        _shortcutService = new ShortcutService(shortcutPlatform);
-        _shortcutRegistrations = ShortcutCatalogLoader.LoadBuiltIn().RegisterAll(_shortcutService);
+        _shortcutService = new ShortcutService(
+            shortcutPlatform,
+            new ShortcutServiceOptions { MacPrimaryModifier = settings.ShortcutModifier });
+        _shortcutRegistrations = CalculatorShortcutCatalog.RegisterAll(_shortcutService);
         _viewModel = new CalculatorViewModel(
             settings.ThemePreference,
             appearance,
-            DetectWindowPlatformCapabilities(),
+            DetectWindowPlatformCapabilities() with
+            {
+                // Primary only differs from Ctrl on macOS, so key the
+                // modifier choice to the shortcut platform in use.
+                SupportsShortcutModifierSettings = shortcutPlatform == ShortcutPlatform.MacOS,
+            },
             availableFontFamilies: GetInstalledFontFamilyNames(),
             initialFontFamily: settings.FontFamily,
             initialCurrencyProviderPreferences: settings.CurrencyProviderPreferences
@@ -92,10 +99,12 @@ public partial class MainWindow : Window
                 _shortcutService.RewriteText(
                     shortcutId,
                     localizedText,
-                    ShortcutTextRewriteMode.ReplaceOrAppend));
+                    ShortcutTextRewriteMode.ReplaceOrAppend),
+            initialShortcutModifier: settings.ShortcutModifier);
         _viewModel.Settings.ThemePreferenceChanged += OnThemePreferenceChanged;
         _viewModel.Settings.FontPreferenceChanged += OnFontPreferenceChanged;
         _viewModel.Settings.PlatformAppearanceChanged += OnAppearancePreferencesChanged;
+        _viewModel.Settings.ShortcutModifierPreferenceChanged += OnShortcutModifierPreferenceChanged;
         _viewModel.Currency.ProviderPreferenceChanged += OnCurrencyProviderPreferenceChanged;
         DataContext = _viewModel;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
@@ -129,6 +138,7 @@ public partial class MainWindow : Window
             _viewModel.Settings.ThemePreferenceChanged -= OnThemePreferenceChanged;
             _viewModel.Settings.FontPreferenceChanged -= OnFontPreferenceChanged;
             _viewModel.Settings.PlatformAppearanceChanged -= OnAppearancePreferencesChanged;
+            _viewModel.Settings.ShortcutModifierPreferenceChanged -= OnShortcutModifierPreferenceChanged;
             _viewModel.Currency.ProviderPreferenceChanged -= OnCurrencyProviderPreferenceChanged;
             _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
             RemoveHandler(KeyDownEvent, OnCalculatorKeyDown);
@@ -815,6 +825,14 @@ public partial class MainWindow : Window
         };
         AppSettingsStore.Save(_settings);
         _presentation.ApplyAppearance(preferences);
+    }
+
+    private void OnShortcutModifierPreferenceChanged(MacPrimaryModifier modifier)
+    {
+        _shortcutService.MacPrimaryModifier = modifier;
+        _viewModel.RefreshShortcutText();
+        _settings = _settings with { ShortcutModifier = modifier };
+        AppSettingsStore.Save(_settings);
     }
 
     private void OnThemePreferenceChanged(AppThemePreference preference)

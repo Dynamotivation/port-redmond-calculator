@@ -158,9 +158,9 @@ internal static class ShellInteractionTests
                 viewModel.Graphing.Strings.ResetViewTooltip.EndsWith("(⌘0)", StringComparison.Ordinal),
                 "the graph tooltip did not use the macOS gesture from the shared formatter");
             Assert(
-                viewModel.Memory.Strings.StoreTooltip.EndsWith("(⌃M)", StringComparison.Ordinal)
-                && viewModel.History.Strings.ToggleTooltip.EndsWith("(⌃H)", StringComparison.Ordinal)
-                && viewModel.EnterAlwaysOnTopTooltip.EndsWith("(⌥↑)", StringComparison.Ordinal),
+                viewModel.Memory.Strings.StoreTooltip.EndsWith("(⇧⌘M)", StringComparison.Ordinal)
+                && viewModel.History.Strings.ToggleTooltip.EndsWith("(⇧⌘H)", StringComparison.Ordinal)
+                && viewModel.EnterAlwaysOnTopTooltip.EndsWith("(⌥⌘↑)", StringComparison.Ordinal),
                 "shortcut-bearing tooltips did not reflect their actual macOS catalog gestures");
 
             window.KeyPressQwerty(PhysicalKey.Digit0, RawInputModifiers.Meta);
