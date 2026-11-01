@@ -16,8 +16,7 @@ public sealed record ShortcutCatalogBinding(
     ShortcutGesture Gesture,
     string Scope,
     ShortcutCatalogSource Source,
-    string Description,
-    ShortcutPlatform? Platform = null);
+    string Description);
 
 public sealed class ShortcutCatalogException : Exception
 {
@@ -195,59 +194,26 @@ public static class ShortcutCatalogLoader
             return;
         }
 
-        var platformPrimary = new Dictionary<ShortcutPlatform, ShortcutGesture>();
-        var platformAlternates = new Dictionary<ShortcutPlatform, IReadOnlyList<ShortcutGesture>>();
-        var disabledPlatforms = new HashSet<ShortcutPlatform>();
-        AddCatalogBindings(defaultGestures, null);
-
-        foreach (var pair in entry.Bindings.Where(pair => !pair.Key.Equals("default", StringComparison.OrdinalIgnoreCase)))
+        // Every platform shares the "default" gestures; Primary resolves to
+        // Ctrl or Command in Redmond.Shortcuts. Per-platform tables would let a
+        // platform drift to its own keys, so they are rejected.
+        foreach (var platform in entry.Bindings.Keys.Where(key => !key.Equals("default", StringComparison.OrdinalIgnoreCase)))
         {
-            if (!Enum.TryParse<ShortcutPlatform>(pair.Key, true, out var platform) || platform == ShortcutPlatform.Unknown)
-            {
-                diagnostics.Add($"Shortcut '{id}' has unknown platform '{pair.Key}'.");
-                continue;
-            }
+            diagnostics.Add(
+                $"Shortcut '{id}' has '{platform}' bindings; define one platform-neutral 'default' binding, using Primary for Ctrl/Command.");
+        }
 
-            if (pair.Value.Count == 0)
-            {
-                disabledPlatforms.Add(platform);
-                continue;
-            }
-
-            var gestures = ParseGestures(id, pair.Key, pair.Value, diagnostics);
-            if (gestures.Count == 0)
-            {
-                continue;
-            }
-
-            platformPrimary[platform] = gestures[0];
-            platformAlternates[platform] = gestures.Skip(1).ToArray();
-            AddCatalogBindings(gestures, platform);
+        foreach (var gesture in defaultGestures)
+        {
+            catalogBindings.Add(new ShortcutCatalogBinding(id, gesture, entry.Scope, source, entry.Description ?? id));
         }
 
         definitions.Add(new ShortcutDefinition(
             id,
             defaultGestures[0],
-            platformPrimary,
             entry.Scope,
             inputHandling: inputHandling,
-            alternateGestures: defaultGestures.Skip(1).ToArray(),
-            platformAlternateGestures: platformAlternates,
-            disabledPlatforms: disabledPlatforms));
-
-        void AddCatalogBindings(IEnumerable<ShortcutGesture> gestures, ShortcutPlatform? platform)
-        {
-            foreach (var gesture in gestures)
-            {
-                catalogBindings.Add(new ShortcutCatalogBinding(
-                    id,
-                    gesture,
-                    entry.Scope!,
-                    source,
-                    entry.Description ?? id,
-                    platform));
-            }
-        }
+            alternateGestures: defaultGestures.Skip(1).ToArray()));
     }
 
     private static List<ShortcutGesture> ParseGestures(

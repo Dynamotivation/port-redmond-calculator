@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Calculator.Managed;
+using Redmond.Shortcuts;
 
 namespace Calculator.Avalonia;
 
@@ -12,10 +13,14 @@ internal static class AppSettingsStore
     private static string DefaultFontFamily =>
         OperatingSystem.IsWindows() ? "Segoe UI Variable" : "Inter";
 
-    private static readonly string SettingsDirectory = Path.Combine(
+    /// <summary>
+    /// The settings file. Tests point this at their own directory so they never
+    /// touch the user's preferences.
+    /// </summary>
+    internal static string SettingsPath { get; set; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "RedmondCalculator");
-    private static readonly string SettingsPath = Path.Combine(SettingsDirectory, "settings.json");
+        "RedmondCalculator",
+        "settings.json");
 
     public static AppSettings Load()
     {
@@ -53,7 +58,11 @@ internal static class AppSettingsStore
                     persisted.UseMicaEffect ?? true,
                     cornerStyle,
                     controlStyle,
-                    currencyPreferences);
+                    currencyPreferences,
+                    persisted.ShortcutModifier is { } shortcutModifier
+                        && Enum.IsDefined(shortcutModifier)
+                        ? shortcutModifier
+                        : MacPrimaryModifier.Command);
         }
         catch (IOException)
         {
@@ -73,7 +82,7 @@ internal static class AppSettingsStore
     {
         try
         {
-            Directory.CreateDirectory(SettingsDirectory);
+            Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
             var temporaryPath = SettingsPath + ".tmp";
             File.WriteAllText(temporaryPath, JsonSerializer.Serialize(settings));
             File.Move(temporaryPath, SettingsPath, overwrite: true);
@@ -100,7 +109,8 @@ internal static class AppSettingsStore
         bool? UsePlatformCornerRadius,
         bool? UseNativeWindowFrame,
         Dictionary<string, CurrencyProviderPreference>? CurrencyProviderPreferences,
-        Dictionary<string, bool>? CurrencyProviders);
+        Dictionary<string, bool>? CurrencyProviders,
+        MacPrimaryModifier? ShortcutModifier);
 
 }
 
@@ -110,7 +120,8 @@ internal sealed record AppSettings(
     bool UseMicaEffect = true,
     WindowCornerStyle WindowCornerStyle = WindowCornerStyle.Windows11,
     WindowControlStyle WindowControlStyle = WindowControlStyle.Windows11,
-    IReadOnlyDictionary<string, CurrencyProviderPreference>? CurrencyProviderPreferences = null)
+    IReadOnlyDictionary<string, CurrencyProviderPreference>? CurrencyProviderPreferences = null,
+    MacPrimaryModifier ShortcutModifier = MacPrimaryModifier.Command)
 {
     public PlatformAppearancePreferences ToPlatformAppearance() => new(
         UseMicaEffect,

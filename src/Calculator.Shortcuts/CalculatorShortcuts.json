@@ -15,7 +15,7 @@
             },
             "modifiers": [
               "Shift",
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -34,7 +34,8 @@
               "value": "H"
             },
             "modifiers": [
-              "Control"
+              "Shift",
+              "Primary"
             ]
           }
         ]
@@ -53,7 +54,8 @@
               "value": "M"
             },
             "modifiers": [
-              "Control"
+              "Shift",
+              "Primary"
             ]
           }
         ]
@@ -140,7 +142,7 @@
               "value": "O"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -829,7 +831,7 @@
               "value": "G"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -865,7 +867,7 @@
               "value": "S"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -918,7 +920,7 @@
               "value": "T"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -971,7 +973,7 @@
               "value": "Y"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -1228,7 +1230,7 @@
               "value": "D"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -1267,7 +1269,7 @@
             },
             "modifiers": [
               "Shift",
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -1306,7 +1308,7 @@
             },
             "modifiers": [
               "Shift",
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -1345,7 +1347,7 @@
             },
             "modifiers": [
               "Shift",
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -1364,7 +1366,8 @@
               "value": "N"
             },
             "modifiers": [
-              "Control"
+              "Shift",
+              "Primary"
             ]
           }
         ]
@@ -1383,18 +1386,7 @@
               "value": "C"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "C"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -1413,11 +1405,10 @@
               "value": "INSERT"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
-        ],
-        "macOS": []
+        ]
       }
     },
     {
@@ -1433,18 +1424,7 @@
               "value": "V"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "V"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -1466,8 +1446,7 @@
               "Shift"
             ]
           }
-        ],
-        "macOS": []
+        ]
       }
     },
     {
@@ -1483,7 +1462,7 @@
               "value": "L"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -1502,7 +1481,7 @@
               "value": "R"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -1521,7 +1500,7 @@
               "value": "P"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -1537,10 +1516,11 @@
           {
             "key": {
               "kind": "Named",
-              "value": "Q"
+              "value": "P"
             },
             "modifiers": [
-              "Control"
+              "Shift",
+              "Primary"
             ]
           }
         ]
@@ -1714,7 +1694,7 @@
               "value": "U"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -1753,7 +1733,7 @@
             },
             "modifiers": [
               "Shift",
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -1789,7 +1769,7 @@
               "value": "I"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -1828,7 +1808,7 @@
             },
             "modifiers": [
               "Shift",
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -1864,7 +1844,7 @@
               "value": "J"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -1903,7 +1883,7 @@
             },
             "modifiers": [
               "Shift",
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -2215,18 +2195,7 @@
               "value": "HOME"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "HOME"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -2242,21 +2211,10 @@
           {
             "key": {
               "kind": "Named",
-              "value": "+"
+              "value": "\u002B"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "+"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -2275,18 +2233,7 @@
               "value": "-"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "-"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -2305,18 +2252,7 @@
               "value": "0"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "0"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -2449,7 +2385,7 @@
               "value": "E"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
         ]
@@ -2468,6 +2404,7 @@
               "value": "UP"
             },
             "modifiers": [
+              "Primary",
               "Alt"
             ]
           }
@@ -2487,6 +2424,7 @@
               "value": "DOWN"
             },
             "modifiers": [
+              "Primary",
               "Alt"
             ]
           }
@@ -2506,18 +2444,7 @@
               "value": "C"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "C"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -2536,11 +2463,10 @@
               "value": "INSERT"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
-        ],
-        "macOS": []
+        ]
       }
     },
     {
@@ -2556,18 +2482,7 @@
               "value": "V"
             },
             "modifiers": [
-              "Control"
-            ]
-          }
-        ],
-        "macOS": [
-          {
-            "key": {
-              "kind": "Named",
-              "value": "V"
-            },
-            "modifiers": [
-              "Command"
+              "Primary"
             ]
           }
         ]
@@ -2589,8 +2504,7 @@
               "Shift"
             ]
           }
-        ],
-        "macOS": []
+        ]
       }
     },
     {
@@ -2782,7 +2696,7 @@
               "value": "B"
             },
             "modifiers": [
-              "Control"
+              "Primary"
             ]
           }
         ]

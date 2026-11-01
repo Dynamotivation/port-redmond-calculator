@@ -3,6 +3,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Windows.ApplicationModel.Resources;
+using Redmond.Shortcuts;
 
 namespace Calculator.Managed;
 
@@ -116,6 +117,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
 
 
     private readonly WindowPlatformCapabilities _windowPlatformCapabilities;
+    private readonly Func<string, string, string> _shortcutText;
 
     public bool UsesNativeWindowGeometry =>
         _windowPlatformCapabilities.SupportsMacOSWindowFeatures
@@ -182,7 +184,8 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
         IEnumerable<string>? availableFontFamilies = null,
         string? initialFontFamily = null,
         IReadOnlyDictionary<string, CurrencyProviderPreference>? initialCurrencyProviderPreferences = null,
-        Func<string, string, string>? shortcutTextRewriter = null)
+        Func<string, string, string>? shortcutTextRewriter = null,
+        MacPrimaryModifier initialShortcutModifier = MacPrimaryModifier.Command)
     {
         var platformAppearance = initialPlatformAppearance ?? new PlatformAppearancePreferences();
         _windowPlatformCapabilities = windowPlatformCapabilities ?? new WindowPlatformCapabilities();
@@ -194,6 +197,7 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
             var localizedText = appResources.GetString(resourceName);
             return shortcutTextRewriter?.Invoke(shortcutId, localizedText) ?? localizedText;
         }
+        _shortcutText = ShortcutText;
 
         Settings = new SettingsViewModel(
             initialThemePreference,
@@ -213,7 +217,9 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
                 appResources.GetString("AboutEULA.Text"),
                 appResources.GetString("AboutControlServicesAgreement.Text"),
                 appResources.GetString("AboutControlPrivacyStatement.Text"),
-                appResources.GetString("FeedbackButton.Content")));
+                appResources.GetString("FeedbackButton.Content")),
+            _windowPlatformCapabilities.SupportsShortcutModifierSettings,
+            initialShortcutModifier);
         Settings.PropertyChanged += (_, _) =>
         {
             // The window chrome predicates below are derived from settings, so
@@ -443,6 +449,20 @@ public partial class CalculatorViewModel : ObservableObject, IDisposable
     {
         ExecuteCalculatorCommand(Enum.Parse<CalculatorCommand>(commandName, ignoreCase: false));
     }
+
+    /// <summary>
+    /// Re-renders the tooltips whose gesture the macOS shortcut modifier
+    /// setting can change, after the host re-registered the shortcut bindings.
+    /// </summary>
+    /// <remarks>
+    /// Only the graph zoom and reset bindings are both remapped by that setting
+    /// and shown in a tooltip; copy and paste have no tooltip.
+    /// </remarks>
+    public void RefreshShortcutText() =>
+        Graphing.UpdateShortcutTooltips(
+            _shortcutText("graph.zoom.in", "zoomInButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+            _shortcutText("graph.zoom.out", "zoomOutButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"),
+            _shortcutText("graph.view.reset", "graphViewButton/[using:Windows.UI.Xaml.Controls]ToolTipService/ToolTip"));
 
     public void ExecuteCalculatorCommand(CalculatorCommand command)
     {
