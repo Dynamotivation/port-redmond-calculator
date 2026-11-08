@@ -14,6 +14,7 @@ class VersionTests(unittest.TestCase):
 
     def test_workflows_and_documentation_do_not_ship(self):
         self.assertFalse(check.requires_release(".github/workflows/release.yml"))
+        self.assertFalse(check.requires_release("ci/website_release.sh"))
         self.assertFalse(check.requires_release("README.md"))
         self.assertFalse(check.requires_release("release-notes/0.1.0.md"))
         self.assertTrue(check.requires_release("src/Frontends/Calculator.Avalonia/App.axaml.cs"))

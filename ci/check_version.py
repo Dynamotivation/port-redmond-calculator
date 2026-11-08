@@ -1,7 +1,7 @@
 """Require a new release version, with release notes, before a change that ships can merge.
 
 Every push to main that carries a version nobody has released builds and publishes it, so
-every pull request that changes more than workflows and documentation must carry that
+every pull request that changes more than workflows, release scripts and documentation must carry that
 version and its notes:
 
 * the version in Directory.Build.props is greater than every published release and not
@@ -9,7 +9,7 @@ version and its notes:
 * release-notes/<version>.md was added by the pull request, and
 * the notes are bullet points, one change per line, written for people who use the app.
 
-Pull requests that only touch .github/** or *.md files release nothing and need neither.
+Pull requests that only touch .github/**, ci/** or *.md files release nothing and need neither.
 """
 
 import os
@@ -38,8 +38,8 @@ def as_tuple(version):
 
 
 def requires_release(path):
-    """Workflows and documentation never ship, everything else does."""
-    return not (path.startswith(".github/") or path.endswith(".md"))
+    """Workflows, release scripts and documentation never ship, everything else does."""
+    return not (path.startswith((".github/", "ci/")) or path.endswith(".md"))
 
 
 def require_new_version(version, base_version, released):
