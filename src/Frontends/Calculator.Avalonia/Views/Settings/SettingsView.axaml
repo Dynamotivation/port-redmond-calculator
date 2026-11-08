@@ -397,6 +397,74 @@
           </shared:AnimatedSettingsExpander>
         </Border>
 
+        <TextBlock Classes="sectionHeading" Margin="0,26,0,4"
+                   Text="{Binding Settings.Strings.OpenSourceComponentsName}" />
+        <TextBlock Margin="0,0,0,10" FontSize="12" Opacity="0.7" TextWrapping="Wrap"
+                   Text="{Binding Settings.Strings.OpenSourceComponentsDescription}" />
+        <ItemsControl x:Name="LicenseGroups" ItemsSource="{Binding Settings.LicenseGroups}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="managed:LicenseGroupViewModel">
+              <Border Classes="settingsCard" Background="Transparent"
+                      CornerRadius="6" Padding="0" Margin="0,0,0,4" ClipToBounds="True">
+                <shared:AnimatedSettingsExpander Classes="settingsExpander" CornerRadius="5" IsExpanded="False"
+                          HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                          Background="Transparent">
+                  <Expander.Header>
+                    <Grid Height="56">
+                      <Grid Classes="settingsExpanderHeader" VerticalAlignment="Center"
+                            ColumnDefinitions="*,Auto,32">
+                        <TextBlock VerticalAlignment="Center" FontSize="14" Margin="16,0,0,0"
+                                   Text="{Binding Name}" />
+                        <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="12" Opacity="0.7"
+                                   Text="{Binding CountText}" />
+                        <Path Grid.Column="2" Classes="settingsExpanderChevron"
+                              Classes.expanded="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}"
+                              Stroke="{DynamicResource ChromeForegroundBrush}" StrokeThickness="1.5"
+                              Data="M 1,1 L 6,6 L 11,1" />
+                      </Grid>
+                      <Border Height="1" VerticalAlignment="Bottom" ZIndex="3"
+                              Background="{DynamicResource SettingsCardBorderBrush}"
+                              IsVisible="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" />
+                    </Grid>
+                  </Expander.Header>
+                  <ItemsControl ItemsSource="{Binding Components}" Margin="16,4,16,8">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="managed:LicenseComponentViewModel">
+                        <Expander Classes="licenseComponent" IsExpanded="{Binding IsExpanded, Mode=TwoWay}"
+                                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                  Background="Transparent">
+                          <Expander.Header>
+                            <Grid ColumnDefinitions="*,Auto" MinHeight="36">
+                              <TextBlock VerticalAlignment="Center" FontSize="14" TextWrapping="Wrap"
+                                         Text="{Binding Header}" />
+                              <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="12" Opacity="0.7"
+                                         Margin="12,0,0,0" Text="{Binding License}" />
+                            </Grid>
+                          </Expander.Header>
+                          <StackPanel Spacing="6" Margin="0,4,0,10">
+                            <SelectableTextBlock FontSize="12" Opacity="0.7" TextWrapping="Wrap"
+                                                 IsVisible="{Binding Copyright, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                 Text="{Binding Copyright}" />
+                            <SelectableTextBlock FontSize="12" Opacity="0.7" TextWrapping="Wrap"
+                                                 IsVisible="{Binding Source, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                 Text="{Binding Source}" />
+                            <ScrollViewer MaxHeight="260" HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Auto">
+                              <SelectableTextBlock FontFamily="Cascadia Mono, Consolas, Menlo, monospace"
+                                                   FontSize="12" TextWrapping="NoWrap"
+                                                   Text="{Binding LicenseText}" />
+                            </ScrollViewer>
+                          </StackPanel>
+                        </Expander>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </shared:AnimatedSettingsExpander>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
         <Button Classes="settingsLink" Margin="0,10,0,0" Content="{Binding Settings.Strings.FeedbackName}" Click="Feedback_OnClick" />
       </StackPanel>
     </ScrollViewer>

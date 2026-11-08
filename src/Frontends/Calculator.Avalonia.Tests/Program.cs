@@ -24,6 +24,7 @@ var tests = RouterTests.All
     .Concat(PressedStateTests.All)
     .Concat(ShellInteractionTests.All)
     .Concat(ShortcutModifierSettingTests.All)
+    .Concat(LicenseBundleTests.All)
     .ToArray();
 
 foreach (var (name, run) in tests)
