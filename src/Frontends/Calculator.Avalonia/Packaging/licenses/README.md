@@ -21,3 +21,9 @@ native-package notices, and .NET notices from the active toolchain.
 sources and fails if any source has changed.
 `GENERATED-REDISTRIBUTION-FILES.txt` lets the publish verifier follow additions
 or removals without maintaining a second hard-coded package list.
+
+The .NET notices are read from the root of the active .NET distribution. Set
+`DOTNET_NOTICES_ROOT` to a distribution that was installed whole (CI installs the
+pinned SDK into its own directory) when the active one may not carry the pinned
+version's notices, for example a runner image whose SDK was updated with
+`--skip-non-versioned-files`.

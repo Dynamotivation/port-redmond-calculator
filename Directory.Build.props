@@ -1,5 +1,7 @@
 <Project>
   <PropertyGroup>
+    <!-- Single product version, shown in Settings > About. -->
+    <Version>0.1.0</Version>
     <MicrosoftCalculatorRoot Condition="'$(MicrosoftCalculatorRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)upstream/windows-calculator'))</MicrosoftCalculatorRoot>
   </PropertyGroup>
 

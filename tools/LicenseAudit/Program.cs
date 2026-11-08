@@ -442,6 +442,26 @@ static List<RedistributedFile> ResolveRedistributedFiles(
 
 static DotnetNotices FindDotnetNotices()
 {
+    // The notices sit at the root of a .NET distribution and are not versioned.
+    // CI installs the pinned SDK next to a runner image's older one with
+    // --skip-non-versioned-files, so the default lookup would read the image's
+    // copy. DOTNET_NOTICES_ROOT points at a distribution that was installed
+    // whole, so the notices belong to the pinned version.
+    var explicitRoot = Environment.GetEnvironmentVariable("DOTNET_NOTICES_ROOT");
+    if (!string.IsNullOrWhiteSpace(explicitRoot))
+    {
+        var explicitLicense = Path.Combine(explicitRoot, "LICENSE.txt");
+        var explicitNotices = Path.Combine(explicitRoot, "ThirdPartyNotices.txt");
+        if (File.Exists(explicitLicense) && File.Exists(explicitNotices))
+        {
+            return new DotnetNotices(explicitLicense, explicitNotices);
+        }
+
+        throw new InvalidOperationException(
+            $"DOTNET_NOTICES_ROOT is set to '{explicitRoot}', which does not " +
+            "contain LICENSE.txt and ThirdPartyNotices.txt.");
+    }
+
     var candidateRoots = new HashSet<string>(
         StringComparer.OrdinalIgnoreCase);
 
@@ -502,14 +522,27 @@ static bool FilesMatch(string expectedPath, string actualPath)
         return false;
     }
 
-    using var expected = File.OpenRead(expectedPath);
-    using var actual = File.OpenRead(actualPath);
-    if (expected.Length != actual.Length)
-    {
-        return false;
-    }
+    // Redistributed notices are text. Git normalizes their line endings
+    // (.gitattributes: text=auto) while the upstream sources ship CRLF or LF
+    // depending on the platform, so compare content independent of that.
+    return SHA256.HashData(NormalizeLineEndings(File.ReadAllBytes(expectedPath)))
+        .SequenceEqual(SHA256.HashData(NormalizeLineEndings(File.ReadAllBytes(actualPath))));
+}
 
-    return SHA256.HashData(expected).SequenceEqual(SHA256.HashData(actual));
+static byte[] NormalizeLineEndings(byte[] content)
+{
+    var normalized = new List<byte>(content.Length);
+    for (var index = 0; index < content.Length; index++)
+    {
+        if (content[index] == (byte)'\r'
+            && index + 1 < content.Length
+            && content[index + 1] == (byte)'\n')
+        {
+            continue;
+        }
+        normalized.Add(content[index]);
+    }
+    return normalized.ToArray();
 }
 
 static bool SpdxMatches(string spdxPath, IReadOnlyList<PackageLicense> packages)

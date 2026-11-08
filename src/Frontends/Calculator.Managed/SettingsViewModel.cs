@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Redmond.Shortcuts;
@@ -64,6 +65,22 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 
     public SettingsStrings Strings { get; }
+
+    private IReadOnlyList<LicenseGroupViewModel>? _licenseGroups;
+
+    /// <summary>
+    /// Every component and its license, grouped for the About page. Read from
+    /// the packaged Licenses directory the first time it is needed.
+    /// </summary>
+    public IReadOnlyList<LicenseGroupViewModel> LicenseGroups => _licenseGroups ??= LoadLicenseGroups();
+
+    private static IReadOnlyList<LicenseGroupViewModel> LoadLicenseGroups()
+    {
+        var directory = LicenseBundle.FindDirectory();
+        return LicenseBundle.LoadGroups(directory, SettingsStrings.AppVersion)
+            .Select(group => new LicenseGroupViewModel(group, directory))
+            .ToArray();
+    }
 
     public bool SupportsBackdropSettings { get; }
 
@@ -192,7 +209,26 @@ public sealed record SettingsStrings(
     public string ShortcutModifierDescription { get; } = "Choose the key used for shortcuts such as copy, paste and graph zoom";
     public string CommandShortcutModifierName { get; } = "Command (⌘)";
     public string ControlShortcutModifierName { get; } = "Control (⌃)";
-    public string AboutVersionText { get; } = "Redmond Calculator 0.1.0";
+
+    /// <summary>The assembly version, without any build metadata suffix.</summary>
+    public static string AppVersion { get; } = ReadAppVersion();
+
+    public string AboutVersionText { get; } = $"Redmond Calculator {AppVersion}";
+    public string OpenSourceComponentsName { get; } = "Open source components";
+    public string OpenSourceComponentsDescription { get; } = "The software this app is built from, and the license each part is used under";
     public string ProjectLicenseName { get; } = "MIT License";
     public string ThirdPartyNoticesName { get; } = "Third-party notices";
+
+    private static string ReadAppVersion()
+    {
+        var version = typeof(SettingsStrings).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            return "0.0.0";
+        }
+
+        var metadata = version.IndexOf('+');
+        return metadata < 0 ? version : version[..metadata];
+    }
 }
