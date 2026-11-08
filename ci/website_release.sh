@@ -58,8 +58,9 @@ export GH_TOKEN="$GH_TOKEN_RELEASE"
     echo "Website already lists $RELEASE_VERSION."
   else
     git commit -am "Release Redmond Calculator $RELEASE_VERSION"
-    git push --force origin "$branch"
+    # git's credential helper (gh) reads GH_TOKEN at push time, so push with the website token.
     with_website_token() { GH_TOKEN="$WEBSITE_RELEASE_DATA_TOKEN" GH_REPO="$WEBSITE_REPO" "$@"; }
+    with_website_token git push --force origin "$branch"
     pr="$(with_website_token gh pr list --head "$branch" --state open --json number --jq '.[0].number // empty')"
     if [[ -z "$pr" ]]; then
       with_website_token gh pr create --base main --head "$branch" \
