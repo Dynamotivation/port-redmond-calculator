@@ -20,8 +20,12 @@ $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.e
 $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 if (-not $vs) { throw 'Visual Studio with the C++ tools was not found.' }
 
-# The Visual Studio generator keeps MSYS2's GCC or Clang from being picked by accident.
-cmake -S $root -B "$root\build\windows-msvc" -G 'Visual Studio 17 2022' -A x64
+# Name the generator of the installed Visual Studio (2022 is 17, 2026 is 18) so MSYS2's GCC or
+# Clang cannot be picked by accident.
+$major = [int]((& $vswhere -latest -products * -property installationVersion).Split('.')[0])
+$generator = @{ 17 = 'Visual Studio 17 2022'; 18 = 'Visual Studio 18 2026' }[$major]
+if (-not $generator) { throw "Visual Studio $major is not a known CMake generator; add it to build_native.ps1." }
+cmake -S $root -B "$root\build\windows-msvc" -G $generator -A x64
 if ($LASTEXITCODE) { throw 'Configuring the native engine failed.' }
 cmake --build "$root\build\windows-msvc" --config Release --target CalculatorNative --parallel
 if ($LASTEXITCODE) { throw 'Building the native engine failed.' }
