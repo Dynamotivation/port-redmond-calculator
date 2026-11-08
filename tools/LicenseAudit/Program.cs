@@ -442,6 +442,26 @@ static List<RedistributedFile> ResolveRedistributedFiles(
 
 static DotnetNotices FindDotnetNotices()
 {
+    // The notices sit at the root of a .NET distribution and are not versioned.
+    // CI installs the pinned SDK next to a runner image's older one with
+    // --skip-non-versioned-files, so the default lookup would read the image's
+    // copy. DOTNET_NOTICES_ROOT points at a distribution that was installed
+    // whole, so the notices belong to the pinned version.
+    var explicitRoot = Environment.GetEnvironmentVariable("DOTNET_NOTICES_ROOT");
+    if (!string.IsNullOrWhiteSpace(explicitRoot))
+    {
+        var explicitLicense = Path.Combine(explicitRoot, "LICENSE.txt");
+        var explicitNotices = Path.Combine(explicitRoot, "ThirdPartyNotices.txt");
+        if (File.Exists(explicitLicense) && File.Exists(explicitNotices))
+        {
+            return new DotnetNotices(explicitLicense, explicitNotices);
+        }
+
+        throw new InvalidOperationException(
+            $"DOTNET_NOTICES_ROOT is set to '{explicitRoot}', which does not " +
+            "contain LICENSE.txt and ThirdPartyNotices.txt.");
+    }
+
     var candidateRoots = new HashSet<string>(
         StringComparer.OrdinalIgnoreCase);
 

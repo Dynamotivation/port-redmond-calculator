@@ -19,6 +19,15 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
+      - name: Install the pinned SDK whole for its license notices
+        # setup-dotnet installs with --skip-non-versioned-files, so the .NET
+        # notices at the distribution root would be the runner image's older
+        # copy. Install the pinned SDK into its own directory instead.
+        run: |
+          version=$(grep -o '"version": *"[^"]*"' global.json | cut -d'"' -f4)
+          curl -fsSL https://dot.net/v1/dotnet-install.sh -o "$RUNNER_TEMP/dotnet-install.sh"
+          bash "$RUNNER_TEMP/dotnet-install.sh" --version "$version" --install-dir "$RUNNER_TEMP/pinned-dotnet"
+          echo "DOTNET_NOTICES_ROOT=$RUNNER_TEMP/pinned-dotnet" >> "$GITHUB_ENV"
       - name: Restore dependency inventories
         run: |
           dotnet restore src/Frontends/Calculator.Avalonia/Calculator.Avalonia.csproj -p:NuGetAudit=false
