@@ -502,14 +502,27 @@ static bool FilesMatch(string expectedPath, string actualPath)
         return false;
     }
 
-    using var expected = File.OpenRead(expectedPath);
-    using var actual = File.OpenRead(actualPath);
-    if (expected.Length != actual.Length)
-    {
-        return false;
-    }
+    // Redistributed notices are text. Git normalizes their line endings
+    // (.gitattributes: text=auto) while the upstream sources ship CRLF or LF
+    // depending on the platform, so compare content independent of that.
+    return SHA256.HashData(NormalizeLineEndings(File.ReadAllBytes(expectedPath)))
+        .SequenceEqual(SHA256.HashData(NormalizeLineEndings(File.ReadAllBytes(actualPath))));
+}
 
-    return SHA256.HashData(expected).SequenceEqual(SHA256.HashData(actual));
+static byte[] NormalizeLineEndings(byte[] content)
+{
+    var normalized = new List<byte>(content.Length);
+    for (var index = 0; index < content.Length; index++)
+    {
+        if (content[index] == (byte)'\r'
+            && index + 1 < content.Length
+            && content[index + 1] == (byte)'\n')
+        {
+            continue;
+        }
+        normalized.Add(content[index]);
+    }
+    return normalized.ToArray();
 }
 
 static bool SpdxMatches(string spdxPath, IReadOnlyList<PackageLicense> packages)
