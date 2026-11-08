@@ -113,5 +113,5 @@ invalidates this snapshot automatically.
 ## No endorsement
 
 Third-party names are used for attribution and compatibility description.
-Nothing in these notices implies sponsorship or endorsement. See
-`TRADEMARKS.md`.
+Nothing in these notices implies sponsorship or endorsement. See the
+Trademarks section of the README.
