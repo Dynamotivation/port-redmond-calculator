@@ -10,6 +10,7 @@ namespace Calculator.Managed;
 
 /// <summary>One third-party (or first-party) component and its license.</summary>
 /// <param name="Version">Empty when the component has no meaningful version.</param>
+/// <param name="License">The license as shown to people, for example "MIT" or "OFL-1.1 and GUST Font License".</param>
 /// <param name="LicenseFiles">Paths relative to the Licenses directory.</param>
 public sealed record LicenseComponent(
     string Name,
@@ -23,26 +24,22 @@ public sealed record LicenseComponentGroup(string Name, IReadOnlyList<LicenseCom
 
 /// <summary>
 /// Reads the license bundle shipped next to the application: the packaged
-/// <c>Licenses</c> directory (see <c>Packaging/licenses/README.md</c>).
+/// <c>Licenses</c> directory, which is the repository's <c>licenses</c> directory
+/// (see the README's License section).
 /// </summary>
 /// <remarks>
-/// Everything shown comes from files we ship. The license text itself is
-/// displayed as plain text and never interpreted, so a malformed or hostile
-/// notice cannot load remote content or run anything.
+/// The list of components is the SPDX inventory <c>sbom.spdx.json</c>, so nothing
+/// is hard-coded here: a component appears when the inventory lists it. Everything
+/// shown comes from files we ship. The license text itself is displayed as plain
+/// text and never interpreted, so a malformed or hostile notice cannot load remote
+/// content or run anything.
 /// </remarks>
 public static class LicenseBundle
 {
     // A notice larger than this is truncated rather than loaded whole.
     private const int MaxTextBytes = 1024 * 1024;
 
-    // SPDX identifiers that have a shared license text in the bundle.
-    private static readonly IReadOnlyDictionary<string, string> SharedLicenseFiles =
-        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["MIT"] = "NuGet/MIT.txt",
-            ["BSD-3-Clause"] = "NuGet/BSD-3-Clause.txt",
-            ["CC0-1.0"] = "NuGet/CC0-1.0.txt",
-        };
+    private const string InventoryFile = "sbom.spdx.json";
 
     /// <summary>
     /// Finds the packaged Licenses directory: next to the executable, or inside
@@ -58,105 +55,27 @@ public static class LicenseBundle
         }.FirstOrDefault(Directory.Exists);
     }
 
-    /// <summary>Components grouped for display. Never throws for a damaged bundle.</summary>
-    public static IReadOnlyList<LicenseComponentGroup> LoadGroups(string? licenseDirectory, string appVersion)
+    /// <summary>
+    /// Components grouped for display, in the order the inventory lists them.
+    /// Empty when the inventory is missing or damaged; never throws for a damaged bundle.
+    /// </summary>
+    public static IReadOnlyList<LicenseComponentGroup> LoadGroups(string? licenseDirectory)
     {
-        var groups = new List<(string Name, List<LicenseComponent> Items)>
+        var groups = new List<(string Name, List<LicenseComponent> Items)>();
+        foreach (var (group, component) in ReadInventory(licenseDirectory))
         {
-            ("Microsoft Calculator", []),
-            ("Redmond", []),
-            ("Avalonia and UI", []),
-            ("Math and text", []),
-            ("Graphics and native binaries", []),
-            ("Runtime", []),
-            ("Fonts", []),
-            ("Other packages", []),
-        };
-        List<LicenseComponent> Group(string name) => groups.First(group => group.Name == name).Items;
+            var entry = groups.FindIndex(candidate => candidate.Name == group);
+            if (entry < 0)
+            {
+                groups.Add((group, []));
+                entry = groups.Count - 1;
+            }
 
-        Group("Microsoft Calculator").Add(new LicenseComponent(
-            "Microsoft Calculator",
-            string.Empty,
-            "MIT",
-            "Copyright (c) Microsoft Corporation. All rights reserved.",
-            "https://github.com/microsoft/calculator",
-            ["Microsoft-Calculator-MIT.txt", "Microsoft-Calculator-NOTICE.txt"]));
-        Group("Redmond").Add(new LicenseComponent(
-            "Redmond Calculator",
-            appVersion,
-            "MIT",
-            "Copyright (c) 2026 Redmond Calculator contributors",
-            "https://github.com/Dynamotivation/port-redmond-calculator",
-            ["Redmond-Calculator-MIT.txt"]));
-        Group("Redmond").Add(new LicenseComponent(
-            "Redmond Commons",
-            string.Empty,
-            "MIT",
-            "Copyright (c) 2026 Redmond Commons contributors",
-            "https://github.com/Dynamotivation/port-redmond-commons",
-            ["Redmond-Commons-MIT.txt", "Redmond-Commons-THIRD-PARTY-NOTICES.md"]));
-        Group("Runtime").Add(new LicenseComponent(
-            ".NET runtime",
-            string.Empty,
-            "MIT",
-            "Copyright (c) .NET Foundation and Contributors",
-            "https://github.com/dotnet/runtime",
-            ["Dotnet-Runtime/LICENSE.txt", "Dotnet-Runtime/ThirdPartyNotices.txt"]));
-        Group("Graphics and native binaries").Add(new LicenseComponent(
-            "ANGLE",
-            string.Empty,
-            "BSD-3-Clause",
-            null,
-            "https://github.com/AvaloniaUI/angle",
-            ["Native-Dependencies/ANGLE-LICENSE.txt"]));
-        Group("Graphics and native binaries").Add(new LicenseComponent(
-            "SkiaSharp native notices",
-            string.Empty,
-            "MIT",
-            null,
-            "https://github.com/mono/SkiaSharp",
-            ["Native-Dependencies/SkiaSharp-THIRD-PARTY-NOTICES.txt"]));
-        Group("Graphics and native binaries").Add(new LicenseComponent(
-            "HarfBuzzSharp native notices",
-            string.Empty,
-            "MIT",
-            null,
-            "https://github.com/mono/SkiaSharp",
-            ["Native-Dependencies/HarfBuzzSharp-THIRD-PARTY-NOTICES.txt"]));
-        Group("Fonts").Add(new LicenseComponent(
-            "Inter",
-            string.Empty,
-            "OFL-1.1",
-            "Copyright (c) 2016 The Inter Project Authors",
-            "https://github.com/rsms/inter",
-            ["Inter/NOTICE.txt", "Inter/OFL-1.1.txt"]));
-        Group("Fonts").Add(new LicenseComponent(
-            "Latin Modern Math",
-            string.Empty,
-            "GUST Font License",
-            null,
-            "https://www.gust.org.pl/projects/e-foundry/lm-math",
-            ["Latin-Modern-Math/GUST-FONT-LICENSE.txt"]));
-        Group("Fonts").Add(new LicenseComponent(
-            "CSharpMath embedded fonts",
-            string.Empty,
-            "OFL-1.1 and GUST Font License",
-            null,
-            "https://github.com/verybadcat/CSharpMath",
-            ["CSharpMath-Embedded-Fonts.txt"]));
-
-        foreach (var package in ReadNuGetPackages(licenseDirectory))
-        {
-            Group(NuGetGroupName(package.Name)).Add(package);
+            groups[entry].Items.Add(component);
         }
 
         return groups
-            .Where(group => group.Items.Count > 0)
-            .Select(group => new LicenseComponentGroup(
-                group.Name,
-                group.Items
-                    .OrderBy(component => component.Name, StringComparer.OrdinalIgnoreCase)
-                    .ToArray()))
+            .Select(group => new LicenseComponentGroup(group.Name, group.Items.ToArray()))
             .ToArray();
     }
 
@@ -168,7 +87,7 @@ public static class LicenseBundle
     {
         if (licenseDirectory is null)
         {
-            return "The license files are not available in this build. See the project's THIRD_PARTY_NOTICES.md on GitHub.";
+            return "The license files are not available in this build. See the License section of the project README on GitHub.";
         }
 
         var root = Path.GetFullPath(licenseDirectory) + Path.DirectorySeparatorChar;
@@ -197,14 +116,14 @@ public static class LicenseBundle
             : $"The license text for {component.Name} ({component.License}) is not available in this build.";
     }
 
-    private static IEnumerable<LicenseComponent> ReadNuGetPackages(string? licenseDirectory)
+    private static IEnumerable<(string Group, LicenseComponent Component)> ReadInventory(string? licenseDirectory)
     {
         if (licenseDirectory is null)
         {
             yield break;
         }
 
-        var path = Path.Combine(licenseDirectory, "NUGET-PACKAGES.spdx.json");
+        var path = Path.Combine(licenseDirectory, InventoryFile);
         JsonDocument? document = null;
         try
         {
@@ -215,8 +134,7 @@ public static class LicenseBundle
         }
         catch (Exception exception) when (exception is IOException or JsonException or UnauthorizedAccessException)
         {
-            // A damaged inventory only hides the package list; the curated
-            // components and their notices stay available.
+            // A damaged inventory only hides the list; the packaged files stay available.
         }
 
         if (document is null)
@@ -226,10 +144,27 @@ public static class LicenseBundle
 
         using (document)
         {
-            if (!document.RootElement.TryGetProperty("packages", out var packages)
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object
+                || !root.TryGetProperty("packages", out var packages)
                 || packages.ValueKind != JsonValueKind.Array)
             {
                 yield break;
+            }
+
+            // Licenses that have no SPDX identifier appear as LicenseRef-<id> with a readable name.
+            var licenseNames = new Dictionary<string, string>(StringComparer.Ordinal);
+            if (root.TryGetProperty("hasExtractedLicensingInfos", out var infos) && infos.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var info in infos.EnumerateArray())
+                {
+                    var id = Text(info, "licenseId");
+                    var name = Text(info, "name");
+                    if (id.Length > 0 && name.Length > 0)
+                    {
+                        licenseNames[id] = name;
+                    }
+                }
             }
 
             foreach (var package in packages.EnumerateArray())
@@ -240,39 +175,53 @@ public static class LicenseBundle
                     continue;
                 }
 
-                var license = Text(package, "licenseConcluded");
+                var license = Text(package, "licenseDeclared");
+                foreach (var (id, readable) in licenseNames)
+                {
+                    license = license.Replace(id, readable, StringComparison.Ordinal);
+                }
+
+                license = license.Replace(" AND ", " and ", StringComparison.Ordinal);
+
                 var source = Text(package, "downloadLocation");
                 var copyright = Text(package, "copyrightText");
-                yield return new LicenseComponent(
+                var files = new List<string>();
+                var group = "Other";
+                if (package.ValueKind == JsonValueKind.Object
+                    && package.TryGetProperty("externalRefs", out var references)
+                    && references.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var reference in references.EnumerateArray())
+                    {
+                        var locator = Text(reference, "referenceLocator");
+                        switch (Text(reference, "referenceType"))
+                        {
+                            case "license-file" when locator.Length > 0:
+                                files.Add(locator);
+                                break;
+                            case "display-group" when locator.Length > 0:
+                                group = locator;
+                                break;
+                        }
+                    }
+                }
+
+                yield return (group, new LicenseComponent(
                     name,
                     Text(package, "versionInfo"),
                     license.Length > 0 ? license : "NOASSERTION",
                     copyright.Length > 0 && copyright != "NOASSERTION" ? copyright : null,
                     source.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ? source : null,
-                    SharedLicenseFiles.TryGetValue(license, out var file) ? [file] : []);
+                    files));
             }
         }
 
         static string Text(JsonElement element, string property) =>
-            element.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String
+            element.ValueKind == JsonValueKind.Object
+            && element.TryGetProperty(property, out var value)
+            && value.ValueKind == JsonValueKind.String
                 ? value.GetString() ?? string.Empty
                 : string.Empty;
-    }
-
-    private static string NuGetGroupName(string packageName)
-    {
-        static bool Starts(string name, params string[] prefixes) =>
-            prefixes.Any(prefix => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
-
-        return packageName switch
-        {
-            _ when Starts(packageName, "SkiaSharp", "HarfBuzzSharp", "Avalonia.Skia", "Avalonia.HarfBuzz",
-                "Avalonia.Angle", "Avalonia.Native") => "Graphics and native binaries",
-            _ when Starts(packageName, "Avalonia", "FluentAvalonia", "MicroCom", "Tmds.DBus") => "Avalonia and UI",
-            _ when Starts(packageName, "AngouriMath", "Antlr4", "CSharpMath", "Sylinko.CSharpMath",
-                "GenericTensor", "HonkSharp", "PeterO") => "Math and text",
-            _ => "Other packages",
-        };
     }
 }
 

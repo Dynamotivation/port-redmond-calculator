@@ -6,7 +6,6 @@ project="$repository_root/src/Frontends/Calculator.Avalonia/Calculator.Avalonia.
 audit_project="$repository_root/tools/LicenseAudit/LicenseAudit.csproj"
 assets="$repository_root/src/Frontends/Calculator.Avalonia/obj/project.assets.json"
 audit_assets="$repository_root/tools/LicenseAudit/obj/project.assets.json"
-license_root="$repository_root/src/Frontends/Calculator.Avalonia/Packaging/licenses"
 
 if [ ! -s "$assets" ] || [ ! -s "$audit_assets" ]; then
     echo "Resolved assets are unavailable. Restore these projects first:" >&2
@@ -17,9 +16,7 @@ fi
 
 dotnet run --project "$audit_project" --no-restore -- \
     --write \
-    --assets "$assets" \
-    --notices "$license_root/NUGET-PACKAGES.md" \
-    --spdx "$license_root/NUGET-PACKAGES.spdx.json" \
-    --license-root "$license_root"
+    --root "$repository_root" \
+    --assets "$assets"
 
-echo "Updated dependency, native-binary, and .NET redistribution notices."
+echo "Updated the license files, the SPDX inventory and the README index."

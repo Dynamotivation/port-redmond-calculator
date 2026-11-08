@@ -1,0 +1,157 @@
+{
+  "$comment": "The single hand-maintained list of components this project ships that are not NuGet packages, plus how NuGet packages are grouped. tools/LicenseAudit turns it, the resolved NuGet graph and the license files below this directory into licenses/sbom.spdx.json and the README index. A file with a 'sync' source is copied from there by 'scripts/update-licensing.sh' and checked by 'scripts/verify-licensing.sh'; a file without one is committed as is.",
+  "groups": [
+    "Microsoft Calculator",
+    "Redmond",
+    "Avalonia and UI",
+    "Math and text",
+    "Graphics and native binaries",
+    "Runtime",
+    "Fonts",
+    "Other packages"
+  ],
+  "nugetGroups": [
+    {
+      "group": "Graphics and native binaries",
+      "prefixes": ["SkiaSharp", "HarfBuzzSharp", "Avalonia.Skia", "Avalonia.HarfBuzz", "Avalonia.Angle", "Avalonia.Native"]
+    },
+    {
+      "group": "Avalonia and UI",
+      "prefixes": ["Avalonia", "FluentAvalonia", "MicroCom", "Tmds.DBus"]
+    },
+    {
+      "group": "Math and text",
+      "prefixes": ["AngouriMath", "Antlr4", "CSharpMath", "Sylinko.CSharpMath", "GenericTensor", "HonkSharp", "PeterO"]
+    }
+  ],
+  "defaultNugetGroup": "Other packages",
+  "licenseRefs": [
+    { "id": "GUST-Font-License", "name": "GUST Font License", "file": "latin-modern-math/GUST-FONT-LICENSE.txt" }
+  ],
+  "components": [
+    {
+      "id": "microsoft-calculator",
+      "name": "Microsoft Calculator",
+      "group": "Microsoft Calculator",
+      "purpose": "LIBRARY",
+      "license": "MIT",
+      "copyright": "Copyright (c) Microsoft Corporation. All rights reserved.",
+      "source": "https://github.com/microsoft/calculator",
+      "files": [
+        { "name": "LICENSE.txt", "sync": { "path": "upstream/windows-calculator/LICENSE" } },
+        { "name": "NOTICE.txt", "sync": { "path": "upstream/windows-calculator/NOTICE.txt" } }
+      ]
+    },
+    {
+      "id": "redmond-calculator",
+      "name": "Redmond Calculator",
+      "group": "Redmond",
+      "purpose": "APPLICATION",
+      "version": "app",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2026 Redmond Calculator contributors",
+      "source": "https://github.com/Dynamotivation/port-redmond-calculator",
+      "files": [
+        { "name": "LICENSE.txt", "sync": { "path": "LICENSE" } }
+      ]
+    },
+    {
+      "id": "redmond-commons",
+      "name": "Redmond Commons",
+      "group": "Redmond",
+      "purpose": "LIBRARY",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2026 Redmond Commons contributors",
+      "source": "https://github.com/Dynamotivation/port-redmond-commons",
+      "files": [
+        { "name": "LICENSE.txt", "sync": { "path": "redmond-commons/LICENSE" } },
+        { "name": "THIRD_PARTY_NOTICES.md", "sync": { "path": "redmond-commons/THIRD_PARTY_NOTICES.md" } }
+      ]
+    },
+    {
+      "id": "dotnet-runtime",
+      "name": ".NET runtime",
+      "group": "Runtime",
+      "purpose": "FRAMEWORK",
+      "license": "MIT",
+      "copyright": "Copyright (c) .NET Foundation and Contributors",
+      "source": "https://github.com/dotnet/runtime",
+      "files": [
+        { "name": "LICENSE.txt", "sync": { "dotnet": "LICENSE.txt" } },
+        { "name": "ThirdPartyNotices.txt", "sync": { "dotnet": "ThirdPartyNotices.txt" } }
+      ]
+    },
+    {
+      "id": "angle",
+      "name": "ANGLE",
+      "group": "Graphics and native binaries",
+      "purpose": "LIBRARY",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/AvaloniaUI/angle",
+      "files": [
+        { "name": "LICENSE.txt", "sync": { "package": "Avalonia.Angle.Windows.Natives", "file": "LICENSE" } }
+      ]
+    },
+    {
+      "id": "skiasharp-native",
+      "name": "SkiaSharp native notices",
+      "group": "Graphics and native binaries",
+      "purpose": "LIBRARY",
+      "license": "MIT",
+      "source": "https://github.com/mono/SkiaSharp",
+      "files": [
+        { "name": "THIRD-PARTY-NOTICES.txt", "sync": { "noticeFamily": "SkiaSharp" } }
+      ]
+    },
+    {
+      "id": "harfbuzzsharp-native",
+      "name": "HarfBuzzSharp native notices",
+      "group": "Graphics and native binaries",
+      "purpose": "LIBRARY",
+      "license": "MIT",
+      "source": "https://github.com/mono/SkiaSharp",
+      "files": [
+        { "name": "THIRD-PARTY-NOTICES.txt", "sync": { "noticeFamily": "HarfBuzzSharp" } }
+      ]
+    },
+    {
+      "id": "inter",
+      "name": "Inter",
+      "group": "Fonts",
+      "purpose": "FILE",
+      "license": "OFL-1.1",
+      "copyright": "Copyright (c) 2016 The Inter Project Authors",
+      "source": "https://github.com/rsms/inter",
+      "files": [
+        { "name": "NOTICE.txt" },
+        { "name": "OFL-1.1.txt" }
+      ]
+    },
+    {
+      "id": "latin-modern-math",
+      "name": "Latin Modern Math",
+      "group": "Fonts",
+      "purpose": "FILE",
+      "version": "1.959",
+      "license": "LicenseRef-GUST-Font-License",
+      "copyright": "Copyright 2012-2014 B. Jackowski, P. Strzelczyk, and P. Pianowski on behalf of TeX users groups",
+      "source": "https://www.gust.org.pl/projects/e-foundry/lm-math",
+      "files": [
+        { "name": "GUST-FONT-LICENSE.txt" },
+        { "name": "MANIFEST-Latin-Modern-Math.txt" },
+        { "name": "README-Latin-Modern-Math.txt" }
+      ]
+    },
+    {
+      "id": "csharpmath-embedded-fonts",
+      "name": "CSharpMath embedded fonts",
+      "group": "Fonts",
+      "purpose": "FILE",
+      "license": "OFL-1.1 AND LicenseRef-GUST-Font-License",
+      "source": "https://github.com/verybadcat/CSharpMath",
+      "files": [
+        { "name": "NOTICE.txt" }
+      ]
+    }
+  ]
+}
