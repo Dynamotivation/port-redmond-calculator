@@ -98,9 +98,22 @@ Redmond Calculator's original code is available under the
 submodules, bundled fonts, native runtime components, and package dependencies
 retain their respective licenses. See
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the ownership boundaries
-and redistribution notices. See [TRADEMARKS.md](TRADEMARKS.md) for the
-independent-project and trademark disclaimer.
+and redistribution notices.
 
 Packaged builds contain a complete `Licenses` directory, including a generated
 NuGet inventory and SPDX 2.3 document. Run `scripts/verify-licensing.sh` before
 releasing.
+
+## Trademarks
+
+Redmond Calculator is an independent open-source project. It is not affiliated
+with, sponsored by, or endorsed by Microsoft Corporation.
+
+Microsoft, Windows, and other product names and logos are trademarks of their
+respective owners. Their appearance in source references, compatibility
+documentation, or third-party notices is descriptive and does not imply
+endorsement.
+
+The MIT License grants copyright permissions but does not grant rights to use
+third-party trademarks. Distributors are responsible for reviewing names,
+icons, and promotional materials for their intended jurisdiction and channel.
