@@ -78,3 +78,24 @@ dotnet run --project src/Frontends/Calculator.Avalonia/Calculator.Avalonia.cspro
 
 Before committing, also run `scripts/verify-upstream-pristine.sh` and confirm
 both submodules have no unintended changes.
+
+## Versions and releases
+
+Every push to `main` that carries a version nobody has released builds the Windows installer and
+publishes it as a GitHub Release (tag `vMAJOR.MINOR.PATCH`, setup
+`redmond-calculator-setup-<version>-windows-x64.exe` plus its `.sha256`), then records it on
+dynamotivation.com. Pushes with an already released version build nothing.
+
+- The version is `<Version>` in `Directory.Build.props`, `MAJOR.MINOR.PATCH`, and nowhere else.
+- Every pull request that changes more than `.github/**` and `*.md` files must raise it above
+  every published release and add `release-notes/<version>.md`. The `Version` check fails
+  otherwise (`ci/check_version.py`, tested by `ci/test_check_version.py`).
+- Release notes are bullet points only: one change per line, each starting with `- `, written for
+  people who use the app. They become the GitHub release text and the website highlights.
+- A new version means regenerating the license inventory, which records the app version: run
+  `scripts/update-licensing.sh` and commit `licenses/sbom.spdx.json`.
+- Windows is used only to build the native engine (`installer/windows/build_native.ps1`). The app is
+  published for `win-x64` on Linux, signed with `osslsigncode` and packaged with Inno Setup under
+  Wine (`installer/linux/package_windows.py`), as in the Software Hub. `installer-toolkit/` is a git
+  subtree; change it in its own repository first.
+- Signing is mandatory (`SIGNING_CERT_PFX_BASE64`, `SIGNING_CERT_PASSWORD`). Release tags are never moved.
