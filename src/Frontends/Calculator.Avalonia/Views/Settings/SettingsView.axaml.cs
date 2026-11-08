@@ -34,13 +34,11 @@ public partial class SettingsView : UserControl
 
     private async void License_OnClick(object? sender, RoutedEventArgs e) =>
         await LaunchPackagedDocumentAsync(
-            "Redmond-Calculator-MIT.txt",
+            "redmond-calculator/LICENSE.txt",
             "https://github.com/Dynamotivation/port-redmond-calculator/blob/main/LICENSE");
 
     private async void ThirdPartyNotices_OnClick(object? sender, RoutedEventArgs e) =>
-        await LaunchPackagedDocumentAsync(
-            "THIRD_PARTY_NOTICES.md",
-            "https://github.com/Dynamotivation/port-redmond-calculator/blob/main/THIRD_PARTY_NOTICES.md");
+        await LaunchAsync("https://github.com/Dynamotivation/port-redmond-calculator#license");
 
     private async void Feedback_OnClick(object? sender, RoutedEventArgs e) =>
         await LaunchAsync("https://github.com/Dynamotivation/port-redmond-calculator/issues");

@@ -77,7 +77,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private static IReadOnlyList<LicenseGroupViewModel> LoadLicenseGroups()
     {
         var directory = LicenseBundle.FindDirectory();
-        return LicenseBundle.LoadGroups(directory, SettingsStrings.AppVersion)
+        return LicenseBundle.LoadGroups(directory)
             .Select(group => new LicenseGroupViewModel(group, directory))
             .ToArray();
     }

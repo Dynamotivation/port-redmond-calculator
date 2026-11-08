@@ -14,9 +14,9 @@ if [ ! -f "$publish_dir/libhostfxr.dylib" ] ||
     exit 1
 fi
 
-if [ ! -f "$publish_dir/Licenses/Redmond-Calculator-MIT.txt" ] ||
-   [ ! -f "$publish_dir/Licenses/THIRD_PARTY_NOTICES.md" ] ||
-   [ ! -f "$publish_dir/Licenses/Dotnet-Runtime/ThirdPartyNotices.txt" ]; then
+if [ ! -f "$publish_dir/Licenses/sbom.spdx.json" ] ||
+   [ ! -f "$publish_dir/Licenses/redmond-calculator/LICENSE.txt" ] ||
+   [ ! -f "$publish_dir/Licenses/dotnet-runtime/ThirdPartyNotices.txt" ]; then
     echo "Refusing to package a build without its license bundle." >&2
     echo "Publish Calculator.Avalonia again so Licenses is populated." >&2
     exit 1

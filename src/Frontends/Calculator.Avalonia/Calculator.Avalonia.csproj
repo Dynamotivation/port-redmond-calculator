@@ -49,31 +49,8 @@
     <AvaloniaResource Include="Assets/RedmondCalculatorIcon.png" />
     <AvaloniaResource Include="$(MicrosoftCalculatorRoot)/src/Calculator/Assets/CalculatorIcons.ttf" Link="Assets/CalculatorIcons.ttf" />
     <Content Include="$(MicrosoftCalculatorRoot)/src/Calculator/Resources/**/*.resw" Link="Resources/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildProjectDirectory)/../../../LICENSE"
-             Link="Licenses/Redmond-Calculator-MIT.txt"
-             CopyToOutputDirectory="PreserveNewest"
-             CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildProjectDirectory)/../../../THIRD_PARTY_NOTICES.md"
-             Link="Licenses/THIRD_PARTY_NOTICES.md"
-             CopyToOutputDirectory="PreserveNewest"
-             CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildProjectDirectory)/../../../redmond-commons/LICENSE"
-             Link="Licenses/Redmond-Commons-MIT.txt"
-             CopyToOutputDirectory="PreserveNewest"
-             CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="$(MSBuildProjectDirectory)/../../../redmond-commons/THIRD_PARTY_NOTICES.md"
-             Link="Licenses/Redmond-Commons-THIRD-PARTY-NOTICES.md"
-             CopyToOutputDirectory="PreserveNewest"
-             CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="$(MicrosoftCalculatorRoot)/LICENSE"
-             Link="Licenses/Microsoft-Calculator-MIT.txt"
-             CopyToOutputDirectory="PreserveNewest"
-             CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="$(MicrosoftCalculatorRoot)/NOTICE.txt"
-             Link="Licenses/Microsoft-Calculator-NOTICE.txt"
-             CopyToOutputDirectory="PreserveNewest"
-             CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="Packaging/licenses/**/*"
+    <Content Include="$(MSBuildProjectDirectory)/../../../licenses/**/*"
+             Exclude="$(MSBuildProjectDirectory)/../../../licenses/components.json"
              Link="Licenses/%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest"
              CopyToPublishDirectory="PreserveNewest" />
