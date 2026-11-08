@@ -10,3 +10,5 @@ build/
 *.user
 *.suo
 *.log
+
+__pycache__/

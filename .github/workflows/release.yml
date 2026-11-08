@@ -1,0 +1,151 @@
+name: Release
+
+# Pull requests: the Version check only. A change that ships must raise the version in
+# Directory.Build.props and add release-notes/<version>.md as bullet points (ci/check_version.py).
+#
+# Push to main: when that version has not been released, build the native engine on Windows,
+# publish the app and compile the signed installer on Linux, then publish a GitHub Release
+# (tag vMAJOR.MINOR.PATCH) and record it on dynamotivation.com. Pushes that carry an already
+# released version, such as workflow or documentation changes, build nothing.
+#
+# Manual runs build and sign without publishing, to verify the pipeline.
+#
+# Secrets (Settings > Secrets and variables > Actions):
+#   SIGNING_CERT_PFX_BASE64       the code-signing PFX, base64 encoded
+#   SIGNING_CERT_PASSWORD         the password of that PFX
+#   WEBSITE_RELEASE_DATA_TOKEN    fine-grained PAT on Dynamotivation/dynamotivation.com with
+#                                 Contents and Pull requests read/write
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  version:
+    name: Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+      release: ${{ steps.check.outputs.release }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Test the version gate
+        run: python3 -m unittest discover -s ci -p 'test_*.py'
+      - name: Require a new version with bullet-point release notes
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: python3 ci/check_version.py
+
+  native:
+    name: Native engine (Windows)
+    needs: version
+    if: github.event_name != 'pull_request' && (github.event_name == 'workflow_dispatch' || needs.version.outputs.release == 'true')
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      # Windows is needed for exactly one thing: the MSVC build of the native engine and the
+      # signing bridge. Everything else stays on Linux (see package).
+      - name: Build the native engine and the signing bridge
+        shell: pwsh
+        run: ./installer/windows/build_native.ps1 -Out build/installer
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-native
+          path: build/installer
+          if-no-files-found: error
+
+  package:
+    name: Signed Windows installer (Linux)
+    needs: [version, native]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      WINEDEBUG: -all
+      WINEDLLOVERRIDES: mscoree,mshtml=
+      WINEPREFIX: ${{ github.workspace }}/build/wine
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Require signing credentials
+        env:
+          SIGNING_CERT_PFX_BASE64: ${{ secrets.SIGNING_CERT_PFX_BASE64 }}
+          SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
+        run: |
+          test -n "$SIGNING_CERT_PFX_BASE64" || { echo 'Missing signing certificate'; exit 1; }
+          test -n "$SIGNING_CERT_PASSWORD" || { echo 'Missing signing password'; exit 1; }
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-native
+          path: build/installer
+      - name: Publish the app for Windows x64 (self-contained)
+        run: |
+          dotnet publish src/Frontends/Calculator.Avalonia/Calculator.Avalonia.csproj \
+            --configuration Release --runtime win-x64 --self-contained true \
+            -p:NuGetAudit=false \
+            -p:NativeCalculatorLibrary="$GITHUB_WORKSPACE/build/installer/native/calculator_engine.dll" \
+            --output build/installer/bundle
+          cp build/installer/crt/*.dll build/installer/bundle/
+      - name: Verify the published license bundle
+        run: scripts/verify-published-licenses.sh build/installer/bundle
+      - name: Install Wine, Inno Setup and signing tools
+        run: bash installer/linux/setup.sh
+      - name: Sign binaries and compile the signed Inno Setup installer
+        env:
+          SIGNING_CERT_PFX_BASE64: ${{ secrets.SIGNING_CERT_PFX_BASE64 }}
+          SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
+        run: xvfb-run -a python3 installer/linux/package_windows.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: redmond-calculator-installer
+          path: |
+            dist/redmond-calculator-setup-*.exe
+            dist/redmond-calculator-setup-*.exe.sha256
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    needs: [version, package]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: redmond-calculator-installer
+          path: dist
+      - name: Tag this main commit and publish the signed setup
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: bash ci/publish_release.sh
+      - name: Record the release on the website
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WEBSITE_RELEASE_DATA_TOKEN: ${{ secrets.WEBSITE_RELEASE_DATA_TOKEN }}
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        run: bash ci/website_release.sh

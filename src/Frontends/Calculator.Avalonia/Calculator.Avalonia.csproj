@@ -15,8 +15,14 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <NativeCalculatorLibrary Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(MSBuildProjectDirectory)/../../../build/windows-msvc/src/CalculatorNative/$(Configuration)/calculator_engine.dll</NativeCalculatorLibrary>
-    <NativeCalculatorLibrary Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(MSBuildProjectDirectory)/../../../build/portable/src/CalculatorNative/libcalculator_engine.dylib</NativeCalculatorLibrary>
+    <!-- The native engine is built per platform. A cross-platform publish (for example the Windows
+         setup, published on Linux) passes -p:NativeCalculatorLibrary=<path to the built library>. -->
+    <NativeCalculatorLibrary Condition="'$(NativeCalculatorLibrary)' == '' and $([MSBuild]::IsOSPlatform('Windows'))">$(MSBuildProjectDirectory)/../../../build/windows-msvc/src/CalculatorNative/$(Configuration)/calculator_engine.dll</NativeCalculatorLibrary>
+    <NativeCalculatorLibrary Condition="'$(NativeCalculatorLibrary)' == '' and $([MSBuild]::IsOSPlatform('OSX'))">$(MSBuildProjectDirectory)/../../../build/portable/src/CalculatorNative/libcalculator_engine.dylib</NativeCalculatorLibrary>
+    <NativeCalculatorFileName Condition="$([MSBuild]::IsOSPlatform('Windows'))">calculator_engine.dll</NativeCalculatorFileName>
+    <NativeCalculatorFileName Condition="$([MSBuild]::IsOSPlatform('OSX'))">libcalculator_engine.dylib</NativeCalculatorFileName>
+    <NativeCalculatorFileName Condition="$(RuntimeIdentifier.StartsWith('win-'))">calculator_engine.dll</NativeCalculatorFileName>
+    <NativeCalculatorFileName Condition="$(RuntimeIdentifier.StartsWith('osx-'))">libcalculator_engine.dylib</NativeCalculatorFileName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -55,8 +61,7 @@
              CopyToOutputDirectory="PreserveNewest"
              CopyToPublishDirectory="PreserveNewest" />
     <Content Include="$(NativeCalculatorLibrary)" Condition="'$(NativeCalculatorLibrary)' != '' and Exists('$(NativeCalculatorLibrary)')">
-      <Link Condition="$([MSBuild]::IsOSPlatform('Windows'))">calculator_engine.dll</Link>
-      <Link Condition="$([MSBuild]::IsOSPlatform('OSX'))">libcalculator_engine.dylib</Link>
+      <Link>$(NativeCalculatorFileName)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
